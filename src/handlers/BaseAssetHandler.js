@@ -44,8 +44,17 @@ export class BaseAssetHandler {
    * @returns {Promise<string>} The URL to use for loading
    */
   async getFileUrl(model) {
+    // For Google Drive files
+    if (model.googleDrive && model.googleDrive.isGoogleDrive) {
+      return model.googleDrive.downloadUrl;
+    }
+
     // For local files
-    return URL.createObjectURL(model.file);
+    if (model.file) {
+      return URL.createObjectURL(model.file);
+    }
+
+    throw new Error('No valid file source found');
   }
 
 

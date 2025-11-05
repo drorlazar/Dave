@@ -26,7 +26,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <link rel="stylesheet" href="src/styles/styles.css">
-  
+
+  <!-- Google Drive API -->
+  <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+  <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
 <script src="https://cdn.counter.dev/script.js" data-id="b3d284cd-1f4f-48d9-900c-c63b1d8fa0ca" data-utcoffset="2"></script>
 </head>
 <body class="dark-mode">
@@ -49,6 +53,9 @@
       </button>
       <button id="folderPicker" class="btn" title="Pick a local folder">
         <i class="fa fa-folder-open"></i> Local
+      </button>
+      <button id="gDriveBtn" class="btn" title="Open Google Drive folder">
+        <i class="fab fa-google-drive"></i> GDrive
       </button>
       <div class="dropdown">
         <button id="subfolderToggle" class="btn dropdown-btn" title="Set subfolder depth"><i class="fa fa-sitemap"></i><span></span><i class="fa fa-chevron-down"></i></button>
@@ -286,6 +293,43 @@
           <i class="fas fa-check"></i> Apply
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Google Drive Folder Selection Modal -->
+  <div id="gDriveModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="gDriveModalCloseButton" class="close-button" title="Close">&times;</span>
+      <h2>Open Google Drive Folder</h2>
+
+      <div class="gdrive-options">
+        <div class="gdrive-option-section">
+          <h3><i class="fas fa-link"></i> Open Shared Folder</h3>
+          <p>Paste a Google Drive folder link that's been shared with you:</p>
+          <input type="text" id="gDriveLinkInput" placeholder="https://drive.google.com/drive/folders/..." class="gdrive-input">
+          <button id="openSharedFolderBtn" class="btn gdrive-btn">
+            <i class="fas fa-folder-open"></i> Open Shared Folder
+          </button>
+        </div>
+
+        <div class="gdrive-divider">
+          <span>OR</span>
+        </div>
+
+        <div class="gdrive-option-section">
+          <h3><i class="fab fa-google-drive"></i> Access Your Google Drive</h3>
+          <p>Sign in to browse folders from your own Google Drive:</p>
+          <button id="authorizeGDriveBtn" class="btn gdrive-btn gdrive-signin">
+            <i class="fab fa-google"></i> Sign in with Google
+          </button>
+          <div id="gDriveFolderPicker" style="display:none;">
+            <p>Select a folder:</p>
+            <div id="gDriveFolderList" class="gdrive-folder-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="gDriveStatus" class="gdrive-status"></div>
     </div>
   </div>
 </body>

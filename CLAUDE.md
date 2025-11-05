@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Dave - Digital Assets Viewer Extraordiner is a client-side web application for viewing and managing digital assets (3D models, images, videos, audio files) in a grid layout. It runs directly in modern browsers without a build process.
 
+**Features:**
+- Local folder browsing
+- Google Drive integration (browse your own Drive or open shared folders)
+- Multiple file format support
+- Grid view with pagination, filtering, and sorting
+
 ## Development Commands
 
 ### Running the Application
@@ -141,6 +147,19 @@ window.APP_DEBUG.toggle('ui')  // Toggle specific module
 window.APP_DEBUG.toggle()      // Toggle global debugging
 ```
 
+### Google Drive Integration
+
+Dave includes Google Drive integration for browsing cloud-stored assets:
+- **Setup required**: See `GOOGLE_DRIVE_SETUP.md` for credential configuration
+- **Two access methods**:
+  - Shared folder links (no authentication required)
+  - OAuth sign-in (browse user's own Drive)
+- **Implementation**:
+  - `src/utils/googleDriveAPI.js` - API integration module
+  - Files are fetched via Google Drive API v3
+  - URLs are passed to existing asset handlers via `BaseAssetHandler.getFileUrl()`
+- **Configuration**: Edit `CLIENT_ID` and `API_KEY` in `googleDriveAPI.js`
+
 ### Important Considerations
 - **No build process**: Dependencies loaded via CDN using import maps
 - **No linting/formatting** tools configured
@@ -149,3 +168,4 @@ window.APP_DEBUG.toggle()      // Toggle global debugging
 - **Error handling**: Centralized error handler utility (`src/utils/errorHandler.js`)
 - **Memory management**: Active cleanup with `memoryManager` utility for large files
 - **Web Workers**: `folder_scanner_worker.js` for non-blocking file system operations
+- **Google Drive API**: External dependency for cloud file access (optional feature)

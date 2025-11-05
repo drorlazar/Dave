@@ -3014,17 +3014,266 @@ body:not(.dark-mode) .tooltip-content::-webkit-scrollbar-thumb:hover {
     left: 20px !important;
     right: 20px;
   }
-  
+
   .tooltip-content {
     padding: 16px;
     max-height: 80vh;
   }
-  
+
   .shortcuts-grid {
     gap: 12px;
   }
-  
+
   .shortcut-category {
     padding: 10px;
   }
+}
+
+/* ===== Google Drive Modal Styles ===== */
+#gDriveModal .modal-content {
+  max-width: 600px;
+  width: 90%;
+}
+
+.gdrive-options {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 20px 0;
+}
+
+.gdrive-option-section {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gdrive-option-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gdrive-option-section p {
+  margin: 0 0 12px 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+.gdrive-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.gdrive-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.gdrive-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.gdrive-btn {
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  background: #667eea;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.gdrive-btn:hover {
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.gdrive-btn:active {
+  transform: translateY(0);
+}
+
+.gdrive-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.gdrive-signin {
+  background: #4285f4;
+}
+
+.gdrive-signin:hover {
+  background: #3367d6;
+  box-shadow: 0 4px 8px rgba(66, 133, 244, 0.3);
+}
+
+.gdrive-divider {
+  text-align: center;
+  position: relative;
+  margin: 12px 0;
+}
+
+.gdrive-divider::before,
+.gdrive-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 45%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gdrive-divider::before {
+  left: 0;
+}
+
+.gdrive-divider::after {
+  right: 0;
+}
+
+.gdrive-divider span {
+  background: #1a1a2e;
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.gdrive-folder-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.gdrive-folder-item {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s ease;
+}
+
+.gdrive-folder-item:hover {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+.gdrive-folder-item:last-child {
+  border-bottom: none;
+}
+
+.gdrive-folder-item i {
+  color: #667eea;
+  font-size: 16px;
+}
+
+.gdrive-folder-name {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.gdrive-status {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  display: none;
+}
+
+.gdrive-status.success {
+  display: block;
+  background: rgba(76, 175, 80, 0.2);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  color: #4caf50;
+}
+
+.gdrive-status.error {
+  display: block;
+  background: rgba(244, 67, 54, 0.2);
+  border: 1px solid rgba(244, 67, 54, 0.4);
+  color: #f44336;
+}
+
+.gdrive-status.info {
+  display: block;
+  background: rgba(33, 150, 243, 0.2);
+  border: 1px solid rgba(33, 150, 243, 0.4);
+  color: #2196f3;
+}
+
+/* Light mode styles for Google Drive modal */
+body:not(.dark-mode) .gdrive-option-section {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode) .gdrive-option-section h3 {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+body:not(.dark-mode) .gdrive-option-section p {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+body:not(.dark-mode) .gdrive-input {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: white;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+body:not(.dark-mode) .gdrive-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+body:not(.dark-mode) .gdrive-divider::before,
+body:not(.dark-mode) .gdrive-divider::after {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body:not(.dark-mode) .gdrive-divider span {
+  background: white;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+body:not(.dark-mode) .gdrive-folder-list {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+body:not(.dark-mode) .gdrive-folder-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body:not(.dark-mode) .gdrive-folder-item:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+body:not(.dark-mode) .gdrive-folder-name {
+  color: rgba(0, 0, 0, 0.9);
 }

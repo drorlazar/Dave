@@ -5,6 +5,7 @@ import { detectFileType } from '../utils/fileTypeDetector.js';
 import { assetHandlerFactory } from '../handlers/AssetHandlerFactory.js';
 import { errorHandler, withErrorHandling } from '../utils/errorHandler.js';
 import { activeFilters } from '../shared/filters.js';
+import * as GoogleDriveAPI from '../utils/googleDriveAPI.js';
 import {
   getCurrentPage,
   getItemsPerPage,
@@ -41,6 +42,17 @@ const folderPickerButton = document.getElementById("folderPicker");
 const viewerContainer = document.getElementById("viewerContainer");
 const filterOptions = document.querySelectorAll('.filter-option');
 const itemsOptions = document.querySelectorAll('.items-option');
+
+// Google Drive UI elements
+const gDriveBtn = document.getElementById("gDriveBtn");
+const gDriveModal = document.getElementById("gDriveModal");
+const gDriveModalCloseButton = document.getElementById("gDriveModalCloseButton");
+const gDriveLinkInput = document.getElementById("gDriveLinkInput");
+const openSharedFolderBtn = document.getElementById("openSharedFolderBtn");
+const authorizeGDriveBtn = document.getElementById("authorizeGDriveBtn");
+const gDriveFolderPicker = document.getElementById("gDriveFolderPicker");
+const gDriveFolderList = document.getElementById("gDriveFolderList");
+const gDriveStatus = document.getElementById("gDriveStatus");
 // Use a specific selector to get the correct button by ID instead of class
 const itemsBtn = document.getElementById('itemsPerPageBtn');
 const sortOptions = document.querySelectorAll('.sort-option');
@@ -1126,6 +1138,256 @@ folderPickerButton.addEventListener("click", async () => {
   }
 });
 
+// ===== Google Drive Integration =====
+
+// Helper function to show status messages
+function showGDriveStatus(message, type = 'info') {
+  gDriveStatus.textContent = message;
+  gDriveStatus.className = `gdrive-status ${type}`;
+}
+
+// Helper function to hide status messages
+function hideGDriveStatus() {
+  gDriveStatus.className = 'gdrive-status';
+  gDriveStatus.textContent = '';
+}
+
+// Open Google Drive modal
+gDriveBtn.addEventListener('click', async () => {
+  console.log('Google Drive button clicked');
+
+  // Check if credentials are configured
+  if (!GoogleDriveAPI.areCredentialsConfigured()) {
+    showGDriveStatus('⚠️ Google Drive API credentials not configured. Please see console for setup instructions.', 'error');
+    console.error(`
+===========================================
+GOOGLE DRIVE API SETUP REQUIRED
+===========================================
+
+To use Google Drive integration, you need to set up API credentials:
+
+1. Go to https://console.cloud.google.com/
+2. Create a new project or select an existing one
+3. Enable the Google Drive API
+4. Create OAuth 2.0 Client ID (Web application type)
+   - Add authorized JavaScript origin: http://localhost:7777
+   - Add authorized redirect URI: http://localhost:7777
+5. Create an API Key (restrict it to Google Drive API)
+6. Edit src/utils/googleDriveAPI.js and replace:
+   - CLIENT_ID with your OAuth Client ID
+   - API_KEY with your API Key
+
+For detailed instructions, see:
+https://developers.google.com/workspace/drive/api/quickstart/js
+===========================================
+    `);
+  } else {
+    hideGDriveStatus();
+
+    // Initialize Google API if not already done
+    try {
+      await GoogleDriveAPI.initializeGoogleAPI();
+    } catch (err) {
+      console.error('Error initializing Google API:', err);
+      showGDriveStatus('Failed to initialize Google Drive API. Please check console.', 'error');
+    }
+  }
+
+  // Show modal
+  gDriveModal.style.display = 'block';
+});
+
+// Close modal
+gDriveModalCloseButton.addEventListener('click', () => {
+  gDriveModal.style.display = 'none';
+  hideGDriveStatus();
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', (event) => {
+  if (event.target === gDriveModal) {
+    gDriveModal.style.display = 'none';
+    hideGDriveStatus();
+  }
+});
+
+// Open shared folder by link
+openSharedFolderBtn.addEventListener('click', async () => {
+  const link = gDriveLinkInput.value.trim();
+
+  if (!link) {
+    showGDriveStatus('Please enter a Google Drive folder link', 'error');
+    return;
+  }
+
+  // Extract folder ID from link
+  const folderId = GoogleDriveAPI.extractFolderIdFromUrl(link);
+
+  if (!folderId) {
+    showGDriveStatus('Invalid Google Drive folder link', 'error');
+    return;
+  }
+
+  console.log('Opening shared folder:', folderId);
+  showGDriveStatus('Loading folder contents...', 'info');
+  openSharedFolderBtn.disabled = true;
+
+  try {
+    // Initialize API if needed
+    await GoogleDriveAPI.initializeGoogleAPI();
+
+    // Get folder metadata
+    const folderMetadata = await GoogleDriveAPI.getFolderMetadata(folderId);
+    console.log('Folder metadata:', folderMetadata);
+
+    // List files in folder
+    const files = await GoogleDriveAPI.listFilesInFolder(folderId, false);
+    console.log(`Found ${files.length} files in folder`);
+
+    // Convert to app's file format and filter out folders
+    const appFiles = files
+      .filter(file => file.mimeType !== 'application/vnd.google-apps.folder')
+      .map(file => GoogleDriveAPI.convertToAppFileFormat(file));
+
+    if (appFiles.length === 0) {
+      showGDriveStatus('No files found in this folder', 'info');
+      openSharedFolderBtn.disabled = false;
+      return;
+    }
+
+    // Load files into the app
+    await loadGoogleDriveFiles(appFiles, folderMetadata.name);
+
+    showGDriveStatus(`✓ Loaded ${appFiles.length} files from "${folderMetadata.name}"`, 'success');
+
+    // Close modal after 2 seconds
+    setTimeout(() => {
+      gDriveModal.style.display = 'none';
+      hideGDriveStatus();
+      gDriveLinkInput.value = '';
+    }, 2000);
+
+  } catch (error) {
+    console.error('Error loading shared folder:', error);
+    showGDriveStatus(`Error: ${error.message}`, 'error');
+  } finally {
+    openSharedFolderBtn.disabled = false;
+  }
+});
+
+// Authorize and browse user's Google Drive
+authorizeGDriveBtn.addEventListener('click', async () => {
+  console.log('Authorize button clicked');
+  showGDriveStatus('Connecting to Google Drive...', 'info');
+  authorizeGDriveBtn.disabled = true;
+
+  try {
+    // Initialize and authorize
+    await GoogleDriveAPI.initializeGoogleAPI();
+    await GoogleDriveAPI.authorizeGoogleDrive();
+
+    // List user's folders
+    const folders = await GoogleDriveAPI.listUserFolders();
+    console.log(`Found ${folders.length} folders in user's Drive`);
+
+    // Display folder list
+    gDriveFolderList.innerHTML = '';
+
+    if (folders.length === 0) {
+      gDriveFolderList.innerHTML = '<div style="padding: 12px; color: rgba(255,255,255,0.5);">No folders found in your Google Drive</div>';
+    } else {
+      folders.forEach(folder => {
+        const folderItem = document.createElement('div');
+        folderItem.className = 'gdrive-folder-item';
+        folderItem.innerHTML = `
+          <i class="fas fa-folder"></i>
+          <span class="gdrive-folder-name">${folder.name}</span>
+        `;
+
+        folderItem.addEventListener('click', async () => {
+          await openUserGoogleDriveFolder(folder);
+        });
+
+        gDriveFolderList.appendChild(folderItem);
+      });
+    }
+
+    gDriveFolderPicker.style.display = 'block';
+    showGDriveStatus('✓ Connected to Google Drive', 'success');
+
+  } catch (error) {
+    console.error('Error authorizing Google Drive:', error);
+    showGDriveStatus(`Error: ${error.message}`, 'error');
+  } finally {
+    authorizeGDriveBtn.disabled = false;
+  }
+});
+
+// Helper function to open a folder from user's Google Drive
+async function openUserGoogleDriveFolder(folder) {
+  console.log('Opening folder:', folder.name);
+  showGDriveStatus(`Loading "${folder.name}"...`, 'info');
+
+  try {
+    // List files in folder
+    const files = await GoogleDriveAPI.listFilesInFolder(folder.id, false);
+    console.log(`Found ${files.length} files in folder`);
+
+    // Convert to app's file format and filter out folders
+    const appFiles = files
+      .filter(file => file.mimeType !== 'application/vnd.google-apps.folder')
+      .map(file => GoogleDriveAPI.convertToAppFileFormat(file));
+
+    if (appFiles.length === 0) {
+      showGDriveStatus('No files found in this folder', 'info');
+      return;
+    }
+
+    // Load files into the app
+    await loadGoogleDriveFiles(appFiles, folder.name);
+
+    showGDriveStatus(`✓ Loaded ${appFiles.length} files from "${folder.name}"`, 'success');
+
+    // Close modal after 2 seconds
+    setTimeout(() => {
+      gDriveModal.style.display = 'none';
+      hideGDriveStatus();
+      gDriveFolderPicker.style.display = 'none';
+    }, 2000);
+
+  } catch (error) {
+    console.error('Error loading folder:', error);
+    showGDriveStatus(`Error: ${error.message}`, 'error');
+  }
+}
+
+// Helper function to load Google Drive files into the app
+async function loadGoogleDriveFiles(files, folderName) {
+  console.log(`Loading ${files.length} Google Drive files from "${folderName}"`);
+
+  // Clear current files
+  modelFiles = [];
+  filteredModelFiles = [];
+
+  // Process files
+  for (const file of files) {
+    // Add Google Drive identifier
+    file.isGoogleDrive = true;
+    file.googleDriveFolderName = folderName;
+
+    modelFiles.push(file);
+  }
+
+  // Update UI
+  updateFilteredModelFiles();
+  setCurrentPage(0);
+  updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
+  renderPage(getCurrentPage());
+
+  console.log(`[GoogleDrive] Loaded ${modelFiles.length} files`);
+}
+
+// ===== End Google Drive Integration =====
 
 itemsOptions.forEach(option => {
   option.addEventListener('click', () => {
