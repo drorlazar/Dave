@@ -10,21 +10,33 @@ Dave - Digital Assets Viewer Extraordiner is a client-side web application for v
 
 ### Running the Application
 ```bash
-# Start the server (port 7777) - From project root
-node scripts/server.cjs
+# Recommended: Use npm script (from project root)
+npm start
 
 # Or use the startup scripts
 ./scripts/Dave.sh    # Linux/macOS
 scripts\Dave.bat     # Windows
+
+# Or run server directly
+node scripts/server.cjs
 ```
-Access the application at: http://localhost:7777/
+Access at: http://localhost:7777/
+
+**Server Details:**
+- Default port: 7777
+- CORS enabled for local development
+- Serves static files with automatic MIME type detection
+- Rewrites URLs for /src/ resources (e.g., /styles/ → /src/styles/)
 
 ### Running Tests
 ```bash
-# Install test dependencies
-cd tests
-npm install
-npx playwright install chromium
+# From project root - runs all test suites with summary
+npm test
+
+# Or from tests directory for more control
+cd tests/e2e
+npm install                   # First time only
+npx playwright install chromium  # First time only
 
 # Run all tests
 npm test
@@ -38,37 +50,66 @@ npm run test:errors         # Error handling tests
 
 # Debug/interactive modes
 npm run test:watch          # Playwright UI mode
-npm run test:debug          # Debug mode
-npm run test:headed         # With visible browser
+npm run test:debug          # Debug mode with stepping
+npm run test:headed         # Show browser window
 npm run test:report         # View HTML test report
 ```
 
-**Note**: Tests expect the server to be running on port 8080 (not the default 7777).
+**Note**: Tests expect the server running on port 8080. Start with `PORT=8080 node scripts/server.cjs`
 
 ## Architecture
 
-### Module Structure
-- **Entry Point**: `index.html` - Main HTML file with import maps for Three.js
-- **Core Modules**: `src/core/` - Application core (main.js, ui.js, state.js, asset_loading.js)
-- **Asset Handlers**: `src/handlers/` - Factory pattern for handling different file types
-  - `BaseAssetHandler.js` - Abstract base class
-  - Type-specific handlers inherit from base (Image, Video, Audio, Model3D, Font, Document)
-  - `AssetHandlerFactory.js` - Creates appropriate handler based on file type
-- **Utilities**: `src/utils/` - Reusable functionality (debounce, error handling, keyboard shortcuts, memory management)
-- **Shared**: `src/shared/` - Shared modules (filters.js)
-- **Workers**: `src/workers/` - Web workers (folder_scanner_worker.js)
-- **Viewers**: `src/viewers/` - Specialized viewers (viewer_fbx.js, tree_folder_view.js)
-- **Styles**: `src/styles/` - CSS files
-- **Assets**: `assets/` - Images and icons
-- **Scripts**: `scripts/` - Server and utility scripts
-- **Tests**: `tests/` - E2E tests and fixtures
-- **Docs**: `docs/` - Documentation files
+### Module Structure & Data Flow
+```
+index.html (import maps)
+    ↓
+src/core/main.js (application entry point)
+    ↓
+    ├── src/core/ui.js (UI initialization & event handlers)
+    │       ↓
+    │   src/core/asset_loading.js (file processing orchestration)
+    │       ↓
+    │   src/handlers/AssetHandlerFactory.js (creates handlers)
+    │       ↓
+    │   src/handlers/*Handler.js (type-specific rendering)
+    │
+    ├── src/viewers/ (specialized viewers: FBX, folder tree)
+    ├── src/utils/ (error handling, memory, keyboard shortcuts)
+    ├── src/workers/folder_scanner_worker.js (async file scanning)
+    └── src/core/state.js (application state)
+```
 
-### Key Design Patterns
-- **Factory Pattern**: Asset handlers are created via factory based on file type
-- **Inheritance**: All handlers extend BaseAssetHandler
-- **ES6 Modules**: No bundling; modules loaded directly
-- **Event-Driven**: UI updates via custom events and state management
+**Key Directories:**
+- `src/core/` - Application bootstrap and orchestration
+- `src/handlers/` - Factory pattern for file type handling (all extend BaseAssetHandler)
+- `src/utils/` - Reusable utilities (error handling, debounce, memory management, keyboard shortcuts)
+- `src/viewers/` - Specialized viewers (FBX 3D viewer, tree folder view)
+- `src/workers/` - Web workers for non-blocking operations
+- `tests/e2e/` - Playwright test suites
+- `examples/` - Sample files for testing and demo purposes
+
+### Key Design Patterns & Architecture Decisions
+
+**Factory Pattern for Asset Handling:**
+- `AssetHandlerFactory.js` determines handler based on file extension
+- All handlers extend `BaseAssetHandler.js` with common interface
+- Each handler (Image, Video, Audio, Model3D, Font, Document) implements type-specific rendering
+- Handlers are stateless; can be reused for multiple files
+
+**Module Loading:**
+- Pure ES6 modules, no transpilation or bundling
+- Import maps (in index.html) for Three.js CDN resolution
+- Server rewrites /styles/ → /src/styles/ for clean imports
+
+**State & Events:**
+- Minimal global state in `src/core/state.js`
+- UI updates primarily event-driven
+- Custom events for cross-module communication
+
+**Performance Considerations:**
+- Web Worker (`folder_scanner_worker.js`) prevents UI blocking during file scans
+- Memory manager actively cleans up resources for large files/3D models
+- Lazy loading of asset previews with pagination
 
 ### External Dependencies
 - **Three.js v0.161.0**: 3D model rendering (loaded via CDN)
@@ -77,12 +118,34 @@ npm run test:report         # View HTML test report
 
 ### Testing Strategy
 - **Playwright**: E2E testing framework
-- Tests organized by functionality (file loading, UI, keyboard, memory, errors)
+- Tests located in `tests/e2e/` directory
+- Test suites organized by functionality (file loading, UI, keyboard, memory, errors)
 - Single worker configuration for predictable results
 - Screenshots/videos captured on failure
+- Test fixtures in `tests/fixtures/` and sample files in `examples/`
+- Custom `run_tests.js` provides comprehensive test summary with colored output
+
+### Debugging
+The application includes a global debug system accessible via browser console:
+```javascript
+// Enable all debug logging
+window.APP_DEBUG.enabled = true
+
+// Enable specific module debugging
+window.APP_DEBUG.modules.ui = true
+window.APP_DEBUG.modules.assetLoading = true
+window.APP_DEBUG.modules.treeFolderView = true
+
+// Toggle debugging for a module
+window.APP_DEBUG.toggle('ui')  // Toggle specific module
+window.APP_DEBUG.toggle()      // Toggle global debugging
+```
 
 ### Important Considerations
-- No linting or formatting tools configured
-- Server runs on port 7777 by default
-- Tests require server on port 8080
-- No package.json at root (dependencies via CDN)
+- **No build process**: Dependencies loaded via CDN using import maps
+- **No linting/formatting** tools configured
+- **Module loading**: ES6 modules with import maps for Three.js (defined in index.html)
+- **State management**: Centralized in `src/core/state.js`, minimal global state
+- **Error handling**: Centralized error handler utility (`src/utils/errorHandler.js`)
+- **Memory management**: Active cleanup with `memoryManager` utility for large files
+- **Web Workers**: `folder_scanner_worker.js` for non-blocking file system operations
