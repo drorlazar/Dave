@@ -1,0 +1,14 @@
+{
+  "name": "Dave",
+  "version": "1.0.0",
+  "description": "Digital Assets Viewer Extraordiner",
+  "features": ["3D models", "images", "video", "audio", "fonts", "text files"],
+  "settings": {
+    "port": 7777,
+    "theme": "dark",
+    "tileSize": 220
+  },
+  "authors": [
+    {"name": "Developer", "role": "creator"}
+  ]
+}

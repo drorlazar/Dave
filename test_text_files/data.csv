@@ -1,0 +1,8 @@
+name,type,size,supported
+model.glb,3d,1024,true
+photo.jpg,image,2048,true
+song.mp3,audio,4096,true
+clip.mp4,video,8192,true
+readme.md,text,512,true
+style.css,text,256,true
+config.yaml,text,128,true

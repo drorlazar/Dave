@@ -1,0 +1,13 @@
+[2026-02-06 10:00:01] INFO  Server started on port 7777
+[2026-02-06 10:00:02] INFO  Loading asset handlers...
+[2026-02-06 10:00:02] DEBUG Registered: Model3DHandler
+[2026-02-06 10:00:02] DEBUG Registered: ImageHandler
+[2026-02-06 10:00:02] DEBUG Registered: VideoHandler
+[2026-02-06 10:00:02] DEBUG Registered: AudioHandler
+[2026-02-06 10:00:02] DEBUG Registered: FontHandler
+[2026-02-06 10:00:02] DEBUG Registered: TextHandler
+[2026-02-06 10:00:03] INFO  All handlers loaded successfully
+[2026-02-06 10:00:05] WARN  No folder selected yet
+[2026-02-06 10:01:12] INFO  Folder picked: /home/user/assets
+[2026-02-06 10:01:13] INFO  Found 42 supported files
+[2026-02-06 10:01:14] INFO  Rendering page 1 of 3

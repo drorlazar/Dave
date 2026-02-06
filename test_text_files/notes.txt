@@ -1,0 +1,19 @@
+Dave - Digital Assets Viewer Extraordiner
+=========================================
+
+Quick Notes:
+- Supports drag and drop
+- Grid layout with lazy loading
+- Fullscreen view for each asset
+- Dark and light mode
+
+TODO:
+1. Add text file support (done!)
+2. Test all file types
+3. Check zoom controls
+4. Verify word wrap
+5. Test markdown rendering
+
+This is a plain text file to test the .txt handler.
+Line numbers should work in fullscreen mode.
+The preview tile should show the first ~15 lines.
