@@ -6,6 +6,7 @@ import { DocumentHandler } from './DocumentHandler.js';
 import { VideoHandler } from './VideoHandler.js';
 import { AudioHandler } from './AudioHandler.js';
 import { FontHandler } from './FontHandler.js';
+import { TextHandler } from './TextHandler.js';
 
 export class AssetHandlerFactory {
   constructor() {
@@ -16,7 +17,8 @@ export class AssetHandlerFactory {
       new DocumentHandler(),
       new VideoHandler(),
       new AudioHandler(),
-      new FontHandler()
+      new FontHandler(),
+      new TextHandler()
     ];
   }
 

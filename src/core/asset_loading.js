@@ -3,6 +3,7 @@ import FBXViewer from '../viewers/viewer_fbx.js';
 import { memoryManager } from '../utils/memoryManager.js';
 import { detectFileType } from '../utils/fileTypeDetector.js';
 import { assetHandlerFactory } from '../handlers/AssetHandlerFactory.js';
+import { TextHandler } from '../handlers/TextHandler.js';
 import { errorHandler, withErrorHandling } from '../utils/errorHandler.js';
 import { activeFilters } from '../shared/filters.js';
 import {
@@ -26,6 +27,9 @@ import {
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+// Text handler instance for legacy code paths
+const textHandler = new TextHandler();
 
 // Thumbnail Parameters
 const MAX_THUMBNAIL_WIDTH = 400; // Max width for generated thumbnails
@@ -136,7 +140,7 @@ const tileObserver = new IntersectionObserver((entries, observer) => {
         // For GLB, modelViewerElement.remove() is already done.
         // For FBX, fbxViewerInstance.dispose() also removes the renderer's DOM element.
         // This generic currentContent.remove() might be redundant for FBX but ensures other types are handled.
-        const currentContent = tile.querySelector('.three-viewer, .video-preview, .audio-tile, .image-preview, .font-preview');
+        const currentContent = tile.querySelector('.three-viewer, .video-preview, .audio-tile, .image-preview, .font-preview, .text-preview');
         if (currentContent) {
             currentContent.remove(); // model-viewer already removed if GLB
         }
@@ -429,7 +433,7 @@ async function loadTileContent(tile) {
     memoryManager.disposeFbxViewer(tile.fbxViewerInstance);
     tile.fbxViewerInstance = null;
   }
-  const existingContent = tile.querySelector('model-viewer, .three-viewer, .video-preview, .audio-tile, .image-preview, .font-preview');
+  const existingContent = tile.querySelector('model-viewer, .three-viewer, .video-preview, .audio-tile, .image-preview, .font-preview, .text-preview');
   if (existingContent) {
     existingContent.remove();
   }
@@ -680,6 +684,23 @@ async function loadTileContent(tile) {
       } catch (fontLoadError) {
         console.error(`Error loading font ${model.name}:`, fontLoadError);
         placeholder.innerHTML = `<i class="fa fa-exclamation-triangle"></i><br>Error loading font`;
+      }
+    } else if (model.type === "text") {
+      // Use TextHandler for text file preview
+      const textContainer = document.createElement('div');
+      textContainer.style.width = '100%';
+      textContainer.style.height = '100%';
+      try {
+        await textHandler.loadThumbnail(model, textContainer);
+        const textPreview = textContainer.querySelector('.text-preview');
+        if (textPreview) {
+          placeholder.replaceWith(textPreview);
+        } else {
+          placeholder.replaceWith(textContainer);
+        }
+      } catch (textError) {
+        console.error(`Error loading text file ${model.name}:`, textError);
+        placeholder.innerHTML = `<i class="fa fa-exclamation-triangle"></i><br>Error loading text`;
       }
     }
   } catch (error) {
@@ -1012,6 +1033,24 @@ async function showFullscreen(model) {
         console.error(`Error loading font ${model.name} for fullscreen:`, fontLoadError);
         fullscreenViewer.innerHTML = `<div class="fullscreen-error"><i class="fa fa-exclamation-triangle fa-2x"></i><br>Error loading font</div>`;
       }
+    } else if (model.type === "text") {
+      fullscreenViewer.style.display = 'flex';
+      fullscreenVideo.style.display = 'none';
+
+      try {
+        const result = await textHandler.loadFullscreen(model, fullscreenViewer);
+        currentFullscreenViewer = {
+          type: 'text',
+          fileName: model.name,
+          cleanup: () => {
+            if (result && result.cleanup) result.cleanup();
+            if (needsCleanup && fileUrl) URL.revokeObjectURL(fileUrl);
+          }
+        };
+      } catch (textError) {
+        console.error(`Error loading text file ${model.name} for fullscreen:`, textError);
+        fullscreenViewer.innerHTML = `<div class="fullscreen-error"><i class="fa fa-exclamation-triangle fa-2x"></i><br>Error loading text file</div>`;
+      }
     }
   } catch (error) {
     console.error("Error in showFullscreen:", error);
@@ -1277,7 +1316,7 @@ async function handleDrop(e) {
         console.log("View updated with new files");
       } else {
         console.log("No supported files found in drop");
-        alert("No supported files found. Please drop 3D models (GLB, GLTF, FBX, OBJ), videos (MP4, WebM, MOV), audio (MP3, WAV, OGG), images (JPG, PNG, GIF, WEBP, SVG), fonts (TTF, OTF, WOFF), documents (PDF), or a folder containing them.");
+        alert("No supported files found. Please drop 3D models (GLB, GLTF, FBX, OBJ), videos (MP4, WebM, MOV), audio (MP3, WAV, OGG), images (JPG, PNG, GIF, WEBP, SVG), fonts (TTF, OTF, WOFF), documents (PDF), text files (TXT, MD, JSON, XML, CSV, YAML), or a folder containing them.");
       }
     }
   } catch (error) {

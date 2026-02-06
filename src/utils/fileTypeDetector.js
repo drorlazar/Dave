@@ -44,7 +44,20 @@ const FILE_TYPE_MAPPINGS = {
   woff2: { type: 'font', subtype: 'woff2', extensions: ['.woff2'] },
   
   // Document formats
-  pdf: { type: 'document', subtype: 'pdf', extensions: ['.pdf'] }
+  pdf: { type: 'document', subtype: 'pdf', extensions: ['.pdf'] },
+
+  // Text formats
+  txt: { type: 'text', subtype: 'txt', extensions: ['.txt', '.text'] },
+  md: { type: 'text', subtype: 'md', extensions: ['.md', '.markdown'] },
+  json: { type: 'text', subtype: 'json', extensions: ['.json'] },
+  xml: { type: 'text', subtype: 'xml', extensions: ['.xml'] },
+  csv: { type: 'text', subtype: 'csv', extensions: ['.csv'] },
+  yaml: { type: 'text', subtype: 'yaml', extensions: ['.yaml', '.yml'] },
+  log: { type: 'text', subtype: 'log', extensions: ['.log'] },
+  ini: { type: 'text', subtype: 'ini', extensions: ['.ini'] },
+  cfg: { type: 'text', subtype: 'cfg', extensions: ['.cfg'] },
+  conf: { type: 'text', subtype: 'conf', extensions: ['.conf'] },
+  toml: { type: 'text', subtype: 'toml', extensions: ['.toml'] }
 };
 
 // Build reverse lookup map for faster detection
