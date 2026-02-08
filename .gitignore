@@ -62,3 +62,9 @@ docs/.vuepress/dist
 .env
 /ssl
 .aider*
+
+# Playwright test artifacts
+tests/test-results/
+tests/playwright-report/
+tests/e2e/test-results.json
+tests/package-lock.json

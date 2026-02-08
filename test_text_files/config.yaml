@@ -1,0 +1,22 @@
+server:
+  host: localhost
+  port: 7777
+  debug: false
+
+database:
+  driver: sqlite
+  path: ./data/dave.db
+
+features:
+  text_support:
+    enabled: true
+    formats:
+      - txt
+      - md
+      - json
+      - yaml
+      - xml
+      - csv
+      - log
+      - ini
+      - toml

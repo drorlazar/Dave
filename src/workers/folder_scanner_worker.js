@@ -47,7 +47,23 @@ const FILE_TYPE_MAPPINGS = {
   '.woff2': { type: 'font', subtype: 'woff2' },
   
   // Document formats
-  '.pdf': { type: 'document', subtype: 'pdf' }
+  '.pdf': { type: 'document', subtype: 'pdf' },
+
+  // Text formats
+  '.txt': { type: 'text', subtype: 'txt' },
+  '.text': { type: 'text', subtype: 'txt' },
+  '.md': { type: 'text', subtype: 'md' },
+  '.markdown': { type: 'text', subtype: 'md' },
+  '.json': { type: 'text', subtype: 'json' },
+  '.xml': { type: 'text', subtype: 'xml' },
+  '.csv': { type: 'text', subtype: 'csv' },
+  '.yaml': { type: 'text', subtype: 'yaml' },
+  '.yml': { type: 'text', subtype: 'yaml' },
+  '.log': { type: 'text', subtype: 'log' },
+  '.ini': { type: 'text', subtype: 'ini' },
+  '.cfg': { type: 'text', subtype: 'cfg' },
+  '.conf': { type: 'text', subtype: 'conf' },
+  '.toml': { type: 'text', subtype: 'toml' }
 };
 
 function detectFileType(filename) {
