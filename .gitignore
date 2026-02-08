@@ -61,6 +61,8 @@ docs/.vuepress/.temp
 docs/.vuepress/dist
 .env
 /ssl
+config/gdrive-credentials.json
+config/gdrive-tokens.json
 .aider*
 
 # Playwright test artifacts

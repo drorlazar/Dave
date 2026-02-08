@@ -6,6 +6,10 @@ import { assetHandlerFactory } from '../handlers/AssetHandlerFactory.js';
 import { TextHandler } from '../handlers/TextHandler.js';
 import { errorHandler, withErrorHandling } from '../utils/errorHandler.js';
 import { activeFilters } from '../shared/filters.js';
+import { CloudBrowserModal } from '../cloud/CloudBrowserModal.js';
+import { GDriveAuth } from '../cloud/GDriveAuth.js';
+import { SettingsModal } from '../cloud/SettingsModal.js';
+import * as CloudStorage from '../cloud/CloudStorageProvider.js';
 import {
   getCurrentPage,
   getItemsPerPage,
@@ -99,8 +103,8 @@ const tileObserver = new IntersectionObserver((entries, observer) => {
       if (model && loadingState === 'loaded') {
         // Delay cleanup to avoid issues during rapid scrolling
         const cleanupTimeout = setTimeout(() => {
-        // Revoke blob URL if it exists
-        if (model.blobUrl) {
+        // Revoke blob URL if it exists (only for local files, cloud files don't have blob URLs)
+        if (model.blobUrl && !model.source) {
           URL.revokeObjectURL(model.blobUrl);
           model.blobUrl = null;
           model.blobData = null; // Clear blob data as well
@@ -283,13 +287,13 @@ function sortFiles() {
         comparison = a.name.localeCompare(b.name);
         break;
       case 'size':
-        comparison = a.file.size - b.file.size;
+        comparison = (a.size ?? a.file?.size ?? 0) - (b.size ?? b.file?.size ?? 0);
         break;
       case 'type':
         comparison = a.type.localeCompare(b.type);
         break;
       case 'date':
-        comparison = a.file.lastModified - b.file.lastModified;
+        comparison = (a.lastModified ?? a.file?.lastModified ?? 0) - (b.lastModified ?? b.file?.lastModified ?? 0);
         break;
     }
     return currentSort.direction === 'asc' ? comparison : -comparison;
@@ -455,11 +459,15 @@ async function loadTileContent(tile) {
 
 
   try {
-    // For local files
+    // Get file URL - local files use blob URLs, cloud files use signed/proxy URLs
     let fileUrl;
-    // For local files, use createObjectURL
-    fileUrl = URL.createObjectURL(model.file);
-    // Don't track local file URLs in memory manager as they're temporary
+    let isCloudFile = false;
+    if (model.file) {
+      fileUrl = URL.createObjectURL(model.file);
+    } else if (model.source === 's3' || model.source === 'gdrive') {
+      fileUrl = await CloudStorage.getFileUrl(model);
+      isCloudFile = true;
+    }
 
     // Check if we should use the new asset handler system
     const useNewHandler = false; // Temporarily disabled to fix issues
@@ -761,9 +769,11 @@ function renderPage(pageIndex) {
 
     const fileInfo = document.createElement("div");
     fileInfo.className = "file-info";
+    const fileSize = model.size ?? model.file?.size ?? 0;
+    const fileDate = model.lastModified ?? model.file?.lastModified ?? 0;
     fileInfo.innerHTML = `
-      ${formatFileSize(model.file.size)} •
-      ${formatDate(model.file.lastModified)}
+      ${formatFileSize(fileSize)} •
+      ${formatDate(fileDate)}
     `;
     tile.appendChild(fileInfo);
 
@@ -785,7 +795,9 @@ async function showFullscreen(model) {
 
   // Update file information
   fullscreenFilename.textContent = model.name;
-  fullscreenDetails.textContent = `${formatFileSize(model.file.size)} • ${model.type.toUpperCase()} • ${formatDate(model.file.lastModified)}`;
+  const fsSize = model.size ?? model.file?.size ?? 0;
+  const fsDate = model.lastModified ?? model.file?.lastModified ?? 0;
+  fullscreenDetails.textContent = `${formatFileSize(fsSize)} • ${model.type.toUpperCase()} • ${formatDate(fsDate)}`;
   fullscreenPath.textContent = model.fullPath || '';
 
   fullscreenOverlay.style.display = 'flex';
@@ -821,9 +833,14 @@ async function showFullscreen(model) {
   let needsCleanup = false;
 
   try {
-    // For local files, create a new object URL
-    fileUrl = URL.createObjectURL(model.file);
-    needsCleanup = true;
+    // Get file URL - local or cloud
+    if (model.file) {
+      fileUrl = URL.createObjectURL(model.file);
+      needsCleanup = true;
+    } else if (model.source === 's3' || model.source === 'gdrive') {
+      fileUrl = await CloudStorage.getFileUrl(model);
+      needsCleanup = false;
+    }
     
     // Now process based on file type
     if (model.subtype === "glb") {
@@ -1155,14 +1172,79 @@ async function loadFolderFromPath(path) {
 }
 
 
-folderPickerButton.addEventListener("click", async () => {
-  console.log("Folder picker button clicked");
-  try {
-    await handleFolderSelection();
-  } catch (error) {
-    console.error("Error in folderPicker click:", error);
-    alert(`Error: ${error.message}`);
-  }
+// Cloud browser modal instance
+const cloudBrowser = new CloudBrowserModal();
+
+// Source dropdown option handlers
+document.querySelectorAll('.source-option').forEach(option => {
+  option.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const source = option.dataset.source;
+    const sourceDropdown = document.getElementById('sourceDropdown');
+    if (sourceDropdown) sourceDropdown.classList.remove('active');
+
+    switch (source) {
+      case 'local':
+        try {
+          await handleFolderSelection();
+        } catch (error) {
+          console.error("Error in local folder pick:", error);
+          alert(`Error: ${error.message}`);
+        }
+        break;
+      case 's3':
+        cloudBrowser.open('s3');
+        break;
+      case 'gdrive':
+        try {
+          const isAuth = await GDriveAuth.checkStatus();
+          if (!isAuth) {
+            const success = await GDriveAuth.login();
+            if (!success) {
+              alert('Google Drive login failed or was cancelled. Please try again.');
+              return;
+            }
+            GDriveAuth.updateStatusIndicator(true);
+          }
+          cloudBrowser.open('gdrive');
+        } catch (error) {
+          console.error("Error with Google Drive:", error);
+          alert(`Google Drive error: ${error.message}`);
+        }
+        break;
+    }
+  });
+});
+
+// Settings button
+const settingsModal = new SettingsModal();
+const settingsBtn = document.getElementById('settingsBtn');
+if (settingsBtn) {
+  settingsBtn.addEventListener('click', () => settingsModal.open());
+}
+
+// Also keep backward compatibility if folderPickerButton is clicked directly (shouldn't happen with dropdown, but just in case)
+if (folderPickerButton && !document.getElementById('sourceDropdown')) {
+  folderPickerButton.addEventListener("click", async () => {
+    try {
+      await handleFolderSelection();
+    } catch (error) {
+      console.error("Error in folderPicker click:", error);
+      alert(`Error: ${error.message}`);
+    }
+  });
+}
+
+// Listen for cloud files loaded from CloudBrowserModal or URL parsing
+window.addEventListener('cloudFilesLoaded', (event) => {
+  const { files } = event.detail;
+  memoryManager.disposeAllFbxViewers();
+  modelFiles = files;
+  modelFiles.sort((a, b) => a.name.localeCompare(b.name));
+  updateFilteredModelFiles();
+  setCurrentPage(0);
+  updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
+  renderPage(getCurrentPage());
 });
 
 
@@ -1247,7 +1329,15 @@ async function handleDrop(e) {
   viewerContainer.classList.remove('drag-over');
 
   console.log("Drop event triggered");
-  
+
+  // Check for dropped cloud URLs (text/links dragged from browser)
+  const droppedText = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list');
+  if (droppedText && CloudStorage.isCloudUrl(droppedText)) {
+    console.log("Cloud URL dropped:", droppedText);
+    handleCloudUrl(droppedText);
+    return;
+  }
+
   let folderProcessed = false;
 
   try {
@@ -1338,6 +1428,73 @@ viewerContainer.addEventListener('dragenter', handleDragOver);
 viewerContainer.addEventListener('dragover', handleDragOver);
 viewerContainer.addEventListener('dragleave', handleDragLeave);
 viewerContainer.addEventListener('drop', handleDrop);
+
+// Handle cloud URLs (pasted or dragged)
+async function handleCloudUrl(url) {
+  const source = CloudStorage.detectCloudSource(url);
+  if (!source) return;
+
+  // Check if subfolder loading is enabled
+  const loadSubs = getLoadSubfolders();
+  const depthSetting = getSubfolderDepth();
+  const useRecursive = loadSubs && depthSetting !== 'off';
+
+  try {
+    if (source === 's3') {
+      const parsed = CloudStorage.parseS3Url(url);
+      if (parsed) {
+        viewerContainer.innerHTML = `<div class="loading-message"><i class="fa fa-spinner fa-spin"></i> Loading from S3...</div>`;
+        let files;
+        if (useRecursive) {
+          files = await CloudStorage.listFilesRecursive('s3', { bucket: parsed.bucket, prefix: parsed.prefix, maxDepth: depthSetting });
+        } else {
+          ({ files } = await CloudStorage.listFiles('s3', { bucket: parsed.bucket, prefix: parsed.prefix }));
+        }
+        if (files.length > 0) {
+          window.dispatchEvent(new CustomEvent('cloudFilesLoaded', { detail: { files } }));
+        } else {
+          cloudBrowser.open('s3', { bucket: parsed.bucket, prefix: parsed.prefix });
+        }
+      }
+    } else if (source === 'gdrive') {
+      const parsed = CloudStorage.parseGDriveUrl(url);
+      if (parsed && parsed.type === 'folder') {
+        const isAuth = await GDriveAuth.checkStatus();
+        if (!isAuth) {
+          const success = await GDriveAuth.login();
+          if (!success) {
+            alert('Google Drive login required to access this link.');
+            return;
+          }
+          GDriveAuth.updateStatusIndicator(true);
+        }
+        viewerContainer.innerHTML = `<div class="loading-message"><i class="fa fa-spinner fa-spin"></i> Loading from Google Drive...</div>`;
+        let files;
+        if (useRecursive) {
+          files = await CloudStorage.listFilesRecursive('gdrive', { folderId: parsed.folderId, maxDepth: depthSetting });
+        } else {
+          ({ files } = await CloudStorage.listFiles('gdrive', { folderId: parsed.folderId }));
+        }
+        if (files.length > 0) {
+          window.dispatchEvent(new CustomEvent('cloudFilesLoaded', { detail: { files } }));
+        } else {
+          cloudBrowser.open('gdrive', { folderId: parsed.folderId });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error handling cloud URL:', error);
+    alert(`Failed to load cloud URL: ${error.message}`);
+  }
+}
+
+// Expose handleCloudUrl for use from ui.js
+window.handleCloudUrl = handleCloudUrl;
+
+// Check GDrive status on startup
+try {
+  GDriveAuth.updateStatusIndicator(GDriveAuth.checkStatus());
+} catch { /* ignore */ }
 
 // Expose key functions to window for external access
 window.assetLoading = {

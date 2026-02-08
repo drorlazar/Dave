@@ -14,6 +14,17 @@ let _currentSort = { field: 'name', direction: 'asc' };
 let _selectedFiles = new Set();
 let _searchTerm = '';
 
+// Cloud URL detection helper
+function _isCloudUrl(text) {
+  if (!text || text.length < 10) return false;
+  return !!(
+    text.match(/console\.aws\.amazon\.com\/s3/i) ||
+    text.match(/^s3:\/\//i) ||
+    text.match(/\.s3[.-].*\.amazonaws\.com/i) ||
+    text.match(/drive\.google\.com/i)
+  );
+}
+
 function clearSearch(searchInput) {
   searchInput.value = '';
   _searchTerm = '';
@@ -119,14 +130,33 @@ function initializeElements() {
       // Initialize event listeners
       if (searchInput) {
         const debouncedSearch = debounce((value) => {
+          // Check if the value is a cloud storage URL
+          if (window.handleCloudUrl && _isCloudUrl(value.trim())) {
+            window.handleCloudUrl(value.trim());
+            searchInput.value = '';
+            _searchTerm = '';
+            return;
+          }
           _searchTerm = value.toLowerCase();
           setCurrentPage(0);
           updateFilteredModelFiles();
           renderPage(getCurrentPage());
         }, 300);
-        
+
         searchInput.addEventListener('input', (e) => {
           debouncedSearch(e.target.value);
+        });
+
+        // Also handle paste events for instant cloud URL detection
+        searchInput.addEventListener('paste', (e) => {
+          setTimeout(() => {
+            const val = searchInput.value.trim();
+            if (window.handleCloudUrl && _isCloudUrl(val)) {
+              window.handleCloudUrl(val);
+              searchInput.value = '';
+              _searchTerm = '';
+            }
+          }, 50);
         });
       }
 
@@ -741,10 +771,19 @@ export async function downloadSelected(modelFiles) {
       
       try {
         let blob;
-        
-        // For local files
-        console.log(`DOWNLOAD DIAGNOSTICS: Creating blob from local file ${fileName}`);
-        blob = new Blob([await model.file.arrayBuffer()]);
+
+        if (model.file) {
+          // Local file
+          console.log(`DOWNLOAD DIAGNOSTICS: Creating blob from local file ${fileName}`);
+          blob = new Blob([await model.file.arrayBuffer()]);
+        } else if (model.source === 's3' || model.source === 'gdrive') {
+          // Cloud file - fetch via URL
+          console.log(`DOWNLOAD DIAGNOSTICS: Fetching cloud file ${fileName}`);
+          const { getFileUrl } = await import('../cloud/CloudStorageProvider.js');
+          const url = await getFileUrl(model);
+          const response = await fetch(url);
+          blob = await response.blob();
+        }
         
         // Create download link and trigger download
         console.log(`DOWNLOAD DIAGNOSTICS: Creating object URL for ${fileName}`);

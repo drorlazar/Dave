@@ -1,98 +1,65 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
 const path = require('path');
+const fs = require('fs');
 
-const PORT = 7777;
+// Load environment variables from .env at project root
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-const MIME_TYPES = {
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'text/javascript',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.ttf': 'font/ttf',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.otf': 'font/otf',
-  '.eot': 'application/vnd.ms-fontobject'
-};
+const PORT = process.env.PORT || 7777;
+const app = express();
 
-const server = http.createServer((req, res) => {
-  // Handle favicon requests
-  if (req.url === '/favicon.ico') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
+// JSON body parsing for API routes
+app.use(express.json());
 
-  // Parse URL and remove query string for file path resolution
-  let pathname = req.url.split('?')[0];
-  console.log(`Request: ${pathname}`);
-  
-  // Default to index.html if root path
-  if (pathname === '/') {
-    pathname = '/index.html';
-  }
-  
-  // URL rewriting for resources referenced from index.html
-  // When index.html references "styles/styles.css", it becomes "/styles/styles.css"
-  // We need to map these to "/src/styles/styles.css"
-  if (!pathname.startsWith('/src/') && !pathname.startsWith('/assets/')) {
-    // Check if this is a resource that should be under /src/
-    const srcResources = ['/styles/', '/core/', '/handlers/', '/utils/', '/shared/', '/viewers/', '/workers/'];
+// CORS headers
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
+
+// Handle favicon
+app.get('/favicon.ico', (req, res) => res.sendStatus(204));
+
+// API routes (mounted before static files)
+app.use('/api/s3', require('./routes/s3.cjs'));
+app.use('/api/gdrive', require('./routes/gdrive.cjs'));
+app.use('/api/config', require('./routes/config.cjs'));
+
+// URL rewriting middleware (preserve existing behavior)
+// When index.html references "styles/styles.css", it becomes "/styles/styles.css"
+// We need to map these to "/src/styles/styles.css"
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/src/') && !req.path.startsWith('/assets/')) {
+    const srcResources = ['/styles/', '/core/', '/handlers/', '/utils/', '/shared/', '/viewers/', '/workers/', '/cloud/'];
     for (const resource of srcResources) {
-      if (pathname.startsWith(resource)) {
-        pathname = '/src' + pathname;
+      if (req.path.startsWith(resource)) {
+        req.url = '/src' + req.url;
         break;
       }
     }
   }
-
-  // Map URL to local file path
-  // Server.js is now in scripts/, so go up one level to project root
-  const filePath = path.join(__dirname, '..', pathname);
-  
-  // Get file extension to determine MIME type
-  const extname = path.extname(filePath).toLowerCase();
-  
-  // Set content type based on file extension
-  const contentType = MIME_TYPES[extname] || 'text/plain';
-  
-  // Read and serve the file
-  fs.readFile(filePath, (err, content) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        // File not found
-        console.error(`File not found: ${filePath}`);
-        res.writeHead(404);
-        res.end('404 Not Found');
-      } else {
-        // Server error
-        console.error(`Server error: ${err.code}`);
-        res.writeHead(500);
-        res.end(`Server Error: ${err.code}`);
-      }
-    } else {
-      // Success
-      const headers = {
-        'Content-Type': contentType,
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      };
-      
-      res.writeHead(200, headers);
-      res.end(content, 'utf-8');
-    }
-  });
+  next();
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
+// Static file serving from project root
+app.use(express.static(path.join(__dirname, '..'), {
+  setHeaders: (res, filePath) => {
+    // Set proper MIME types for font files not covered by express.static defaults
+    const ext = path.extname(filePath).toLowerCase();
+    const extraMimes = {
+      '.otf': 'font/otf',
+      '.eot': 'application/vnd.ms-fontobject'
+    };
+    if (extraMimes[ext]) {
+      res.setHeader('Content-Type', extraMimes[ext]);
+    }
+  }
+}));
+
+app.listen(PORT, () => {
+  console.log(`DAVE server running at http://localhost:${PORT}/`);
   console.log(`Open http://localhost:${PORT}/ in your browser`);
 });

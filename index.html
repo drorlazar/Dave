@@ -26,7 +26,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <link rel="stylesheet" href="src/styles/styles.css">
-  
+
+  <!-- Google Identity Services - for Google Drive OAuth (client-side) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <script src="https://cdn.counter.dev/script.js" data-id="b3d284cd-1f4f-48d9-900c-c63b1d8fa0ca" data-utcoffset="2"></script>
 </head>
 <body class="dark-mode">
@@ -47,9 +50,26 @@
       <button id="treeFolderToggle" class="btn" title="Toggle Folder Tree View">
         <i class="fa fa-folder-tree"></i>
       </button>
-      <button id="folderPicker" class="btn" title="Pick a local folder">
-        <i class="fa fa-folder-open"></i> Local
-      </button>
+      <div class="dropdown" id="sourceDropdown">
+        <button id="folderPicker" class="btn dropdown-btn" title="Choose file source">
+          <i class="fa fa-folder-open"></i> Source <i class="fa fa-chevron-down"></i>
+        </button>
+        <div class="dropdown-content source-dropdown-content">
+          <label class="source-option" data-source="local">
+            <i class="fa fa-folder-open source-option-icon"></i>
+            <span>Local Folder</span>
+          </label>
+          <label class="source-option" data-source="s3">
+            <i class="fa fa-cloud source-option-icon"></i>
+            <span>AWS S3</span>
+          </label>
+          <label class="source-option" data-source="gdrive">
+            <i class="fab fa-google-drive source-option-icon"></i>
+            <span>Google Drive</span>
+            <span id="gdriveStatus" class="source-status"></span>
+          </label>
+        </div>
+      </div>
       <div class="dropdown">
         <button id="subfolderToggle" class="btn dropdown-btn" title="Set subfolder depth"><i class="fa fa-sitemap"></i><span></span><i class="fa fa-chevron-down"></i></button>
         <div id="subfolderDropdown" class="dropdown-content">
@@ -154,6 +174,9 @@
       </div>
       <button id="darkModeToggle" class="btn" title="Toggle dark mode">
         <i class="fa fa-moon"></i>
+      </button>
+      <button id="settingsBtn" class="btn" title="Cloud Storage Settings">
+        <i class="fa fa-gear"></i>
       </button>
     </div>
   </div>

@@ -10,6 +10,15 @@ A powerful web-based viewer for previewing and managing digital assets including
   - Audio files
   - Image files
 
+- **Cloud Storage Integration**
+  - Browse and view assets from AWS S3 buckets
+  - Browse and view assets from Google Drive
+  - Paste S3 or Google Drive URLs into the search bar
+  - Drag and drop cloud links to load content
+  - Subfolder scanning with depth control
+  - In-app settings for credential configuration (gear icon)
+  - See [Cloud Storage Setup Guide](./CLOUD_STORAGE.md) for details
+
 - **Grid View Interface**
   - Adjustable thumbnail sizes
   - Customizable items per page (20/50/100/150)
