@@ -255,12 +255,12 @@ export class TextHandler extends BaseAssetHandler {
       toolbar.appendChild(lineNumBtn);
 
       // MD/JSON render toggle
-      let renderMode = false;
+      let renderMode = isMd; // Markdown starts rendered, JSON starts raw
       let renderToggleBtn = null;
       if (isMd || isJson) {
         toolbar.appendChild(this.createToolbarSeparator());
         renderToggleBtn = document.createElement('button');
-        renderToggleBtn.className = 'text-toolbar-btn';
+        renderToggleBtn.className = 'text-toolbar-btn' + (renderMode ? ' active' : '');
         renderToggleBtn.innerHTML = isMd
           ? '<i class="fa fa-eye"></i>'
           : '<i class="fa fa-indent"></i>';
