@@ -25,6 +25,7 @@ Then open http://localhost:7777/ in your browser.
 
 See the [docs](./docs) directory for detailed documentation:
 - [Full README](./docs/README.md) - Complete feature list and usage guide
+- [Cloud Storage Setup](./docs/CLOUD_STORAGE.md) - Connect to AWS S3 and Google Drive
 - [Development Guide](./docs/CLAUDE.md) - Architecture and development information
 
 ## License

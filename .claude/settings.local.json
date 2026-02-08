@@ -47,8 +47,16 @@
       "Bash(tar:*)",
       "Bash(ffmpeg:*)",
       "Bash(echo:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "WebFetch(domain:developers.google.com)",
+      "Bash(if not exist \"C:\\\\Users\\\\drorl\\\\Documents\\\\Sett\\\\MyTools\\\\Dave\\\\plans\" mkdir \"C:\\\\Users\\\\drorl\\\\Documents\\\\Sett\\\\MyTools\\\\Dave\\\\plans\")",
+      "Bash(git pull:*)",
+      "Bash(git status:*)"
     ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "asset_generation"
+  ]
 }

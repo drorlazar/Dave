@@ -44,8 +44,12 @@ export class BaseAssetHandler {
    * @returns {Promise<string>} The URL to use for loading
    */
   async getFileUrl(model) {
-    // For local files
-    return URL.createObjectURL(model.file);
+    if (model.file) {
+      return URL.createObjectURL(model.file);
+    }
+    // Cloud file - get URL from server
+    const { getFileUrl } = await import('../cloud/CloudStorageProvider.js');
+    return getFileUrl(model);
   }
 
 

@@ -20,14 +20,30 @@ export class TextHandler extends BaseAssetHandler {
   }
 
   /**
-   * Read a File object as text
+   * Read file content as text - supports both local File objects and cloud files
    */
-  async readFileAsText(file) {
+  async readFileAsText(fileOrModel) {
+    // If it's a File object, use FileReader
+    if (fileOrModel instanceof File) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(fileOrModel);
+      });
+    }
+    // If it's a model object without a File (cloud), fetch via URL
+    if (fileOrModel && !fileOrModel.file && (fileOrModel.source === 's3' || fileOrModel.source === 'gdrive')) {
+      const url = await this.getFileUrl(fileOrModel);
+      const response = await fetch(url);
+      return await response.text();
+    }
+    // Default: treat as File
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
       reader.onerror = () => reject(reader.error);
-      reader.readAsText(file);
+      reader.readAsText(fileOrModel);
     });
   }
 
@@ -134,7 +150,7 @@ export class TextHandler extends BaseAssetHandler {
 
   async loadThumbnail(model, container, options = {}) {
     try {
-      const text = await this.readFileAsText(model.file);
+      const text = await this.readFileAsText(model.file || model);
       const label = this.getFormatLabel(model.subtype);
       const isJson = model.subtype === 'json';
       const isMd = model.subtype === 'md' || model.subtype === 'markdown';
@@ -175,7 +191,7 @@ export class TextHandler extends BaseAssetHandler {
 
   async loadFullscreen(model, container, options = {}) {
     try {
-      const text = await this.readFileAsText(model.file);
+      const text = await this.readFileAsText(model.file || model);
       const label = this.getFormatLabel(model.subtype);
       const isJson = model.subtype === 'json';
       const isMd = model.subtype === 'md' || model.subtype === 'markdown';

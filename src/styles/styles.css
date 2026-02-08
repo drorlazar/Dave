@@ -3374,3 +3374,590 @@ body:not(.dark-mode) .text-rendered-md h1 {
 body:not(.dark-mode) .text-rendered-md h2 {
   border-bottom-color: #eee;
 }
+
+/* ===== Cloud Storage UI ===== */
+
+/* Source dropdown options */
+.source-dropdown-content {
+  min-width: 180px;
+}
+
+.source-option {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.source-option:hover {
+  background-color: #444;
+}
+
+.source-option-icon {
+  width: 18px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.source-status {
+  font-size: 0.7rem;
+  margin-left: auto;
+  color: #888;
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.source-status.connected {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.15);
+}
+
+body:not(.dark-mode) .source-option:hover {
+  background-color: #f0f0f0;
+}
+
+/* Cloud Browser Modal */
+.cloud-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+}
+
+.cloud-modal-content {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  max-width: 650px;
+  width: 90vw;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.cloud-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #444;
+  background: #333;
+}
+
+.cloud-modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cloud-modal-title i {
+  color: #9b77ff;
+}
+
+.cloud-modal-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.cloud-modal-close:hover {
+  color: #fff;
+}
+
+/* Breadcrumb */
+.cloud-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 18px;
+  background: #262626;
+  border-bottom: 1px solid #3a3a3a;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+  min-height: 38px;
+}
+
+.cloud-breadcrumb-item {
+  color: #888;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.cloud-breadcrumb-item.clickable {
+  color: #9b77ff;
+  cursor: pointer;
+}
+
+.cloud-breadcrumb-item.clickable:hover {
+  background: rgba(155, 119, 255, 0.1);
+  text-decoration: underline;
+}
+
+.cloud-breadcrumb-sep {
+  color: #555;
+  margin: 0 2px;
+}
+
+/* File list */
+.cloud-file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  min-height: 200px;
+  max-height: 50vh;
+}
+
+.cloud-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  font-size: 0.9rem;
+}
+
+.cloud-item:hover {
+  background: #3a3a3a;
+}
+
+.cloud-folder-icon {
+  color: #f0c040;
+  font-size: 1rem;
+}
+
+.cloud-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cloud-item-arrow {
+  color: #555;
+  font-size: 0.75rem;
+}
+
+.cloud-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.cloud-empty {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+}
+
+.cloud-error {
+  text-align: center;
+  padding: 30px;
+  color: #e57373;
+}
+
+.cloud-error i {
+  margin-right: 6px;
+}
+
+/* Modal footer */
+.cloud-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  border-top: 1px solid #444;
+  background: #333;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cloud-footer-left {
+  flex: 1;
+  min-width: 120px;
+}
+
+.cloud-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cloud-file-count {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.cloud-subfolder-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.cloud-subfolder-toggle:hover {
+  background: rgba(155, 119, 255, 0.1);
+}
+
+.cloud-subfolder-toggle input[type="checkbox"] {
+  accent-color: #9b77ff;
+  cursor: pointer;
+}
+
+.cloud-subfolder-toggle .fa-sitemap {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.cloud-subfolder-toggle input:checked ~ .fa-sitemap {
+  color: #9b77ff;
+}
+
+.cloud-depth-select {
+  background: #444;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.cloud-depth-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+body:not(.dark-mode) .cloud-depth-select {
+  background: #f0f0f0;
+  color: #333;
+  border-color: #ccc;
+}
+
+body:not(.dark-mode) .cloud-subfolder-toggle {
+  color: #555;
+}
+
+.cloud-load-btn {
+  background: #9b77ff !important;
+  border-color: #9b77ff !important;
+  color: #fff !important;
+  font-weight: 500;
+}
+
+.cloud-load-btn:hover {
+  background: #8a66ee !important;
+}
+
+.cloud-load-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Light mode */
+body:not(.dark-mode) .cloud-modal-content {
+  background: #fff;
+  border-color: #ddd;
+}
+
+body:not(.dark-mode) .cloud-modal-header {
+  background: #f5f5f5;
+  border-bottom-color: #ddd;
+}
+
+body:not(.dark-mode) .cloud-breadcrumb {
+  background: #fafafa;
+  border-bottom-color: #eee;
+}
+
+body:not(.dark-mode) .cloud-breadcrumb-item {
+  color: #666;
+}
+
+body:not(.dark-mode) .cloud-item:hover {
+  background: #f0f0f0;
+}
+
+body:not(.dark-mode) .cloud-modal-footer {
+  background: #f5f5f5;
+  border-top-color: #ddd;
+}
+
+body:not(.dark-mode) .cloud-modal-close {
+  color: #999;
+}
+
+body:not(.dark-mode) .cloud-modal-close:hover {
+  color: #333;
+}
+
+/* ── Settings Modal ── */
+.settings-modal-content {
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.settings-body {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-section {
+  border: 1px solid #444;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.settings-section-header {
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-status {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #888;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+}
+
+.settings-status.configured {
+  color: #4caf50;
+  background: rgba(76,175,80,0.12);
+}
+
+.settings-form {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-description {
+  font-size: 0.85rem;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.settings-description a {
+  color: #64b5f6;
+  text-decoration: underline;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  flex: 1;
+}
+
+.settings-field label {
+  font-size: 0.8rem;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.settings-field input,
+.settings-field textarea {
+  background: #1e1e1e;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.settings-field input:focus,
+.settings-field textarea:focus {
+  border-color: #64b5f6;
+}
+
+.settings-field textarea {
+  resize: vertical;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.78rem;
+  min-height: 80px;
+}
+
+.settings-field-row {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-toggle-vis {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+}
+
+.settings-toggle-vis:hover {
+  color: #fff;
+}
+
+.settings-hint {
+  font-size: 0.78rem;
+  color: #888;
+  min-height: 1.2em;
+}
+
+.settings-hint.success {
+  color: #4caf50;
+}
+
+.settings-hint.error {
+  color: #ef5350;
+}
+
+.settings-save-btn {
+  align-self: flex-end;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.settings-save-btn:hover {
+  background: #1565c0;
+}
+
+.settings-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.settings-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-clear-btn {
+  background: transparent;
+  border: 1px solid #555;
+  color: #aaa;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.settings-clear-btn:hover {
+  color: #ef5350;
+  border-color: #ef5350;
+}
+
+.settings-warning {
+  font-size: 0.8rem;
+  color: #ffa726;
+  background: rgba(255,167,38,0.08);
+  border: 1px solid rgba(255,167,38,0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-help {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.settings-help a {
+  color: #64b5f6;
+  text-decoration: underline;
+}
+
+/* Settings modal - light mode */
+body:not(.dark-mode) .settings-section {
+  border-color: #ddd;
+}
+
+body:not(.dark-mode) .settings-section-header {
+  background: rgba(0,0,0,0.03);
+}
+
+body:not(.dark-mode) .settings-status {
+  background: rgba(0,0,0,0.05);
+  color: #888;
+}
+
+body:not(.dark-mode) .settings-field input,
+body:not(.dark-mode) .settings-field textarea {
+  background: #fff;
+  border-color: #ccc;
+  color: #333;
+}
+
+body:not(.dark-mode) .settings-field label {
+  color: #666;
+}
+
+body:not(.dark-mode) .settings-description {
+  color: #666;
+}
+
+body:not(.dark-mode) .settings-toggle-vis:hover {
+  color: #333;
+}
