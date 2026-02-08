@@ -2,7 +2,7 @@
 // Shared filter state to avoid circular dependencies
 
 // Initialize active filters
-export const activeFilters = new Set(['fbx', 'glb', 'video', 'mp3', 'wav', 'ogg', 'image', 'font']);
+export const activeFilters = new Set(['fbx', 'glb', 'video', 'mp3', 'wav', 'ogg', 'image', 'font', 'text']);
 
 // Make activeFilters accessible globally for UI components
 window.activeFilters = activeFilters;
