@@ -1,0 +1,454 @@
+/* ============================================
+   Easter Egg - Dangerous Dave on a Retro CRT PC
+   ============================================ */
+
+/* Full-screen overlay */
+.dave-easter-egg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.dave-easter-egg-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* The whole PC assembly */
+.retro-pc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: scale(0.85);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dave-easter-egg-overlay.active .retro-pc {
+  transform: scale(1);
+}
+
+/* ---- CRT Monitor ---- */
+.crt-monitor {
+  background: linear-gradient(180deg, #d9d0b0 0%, #c8bc96 20%, #bfb38d 50%, #b5a880 80%, #a89a70 100%);
+  border-radius: 18px 18px 12px 12px;
+  padding: 22px 28px 12px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+/* Subtle texture on the beige plastic */
+.crt-monitor::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.015) 2px,
+    rgba(0, 0, 0, 0.015) 4px
+  );
+  pointer-events: none;
+}
+
+/* Screen bezel - dark inset frame */
+.crt-screen-bezel {
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d, #1a1a1a);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow:
+    inset 0 2px 10px rgba(0, 0, 0, 0.9),
+    0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* The actual screen area */
+.crt-screen {
+  position: relative;
+  width: 640px;
+  height: 400px;
+  background: #0a0a0a;
+  border-radius: 6px / 8px;
+  overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(0, 180, 0, 0.05);
+}
+
+/* CRT curvature + vignette */
+.crt-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.35) 100%);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Scanlines */
+.crt-screen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.12) 0px,
+    rgba(0, 0, 0, 0.12) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Controls bar at bottom of screen */
+.crt-controls-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 5px 12px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #33ff33;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  text-align: center;
+  z-index: 6;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  border-top: 1px solid rgba(51, 255, 51, 0.2);
+}
+
+.crt-controls-bar b {
+  color: #88ff88;
+}
+
+/* Screen reflection glare */
+.crt-screen-glare {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 40%;
+  height: 30%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
+  transform: rotate(-10deg);
+}
+
+/* Game iframe */
+.crt-screen iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  position: relative;
+  z-index: 1;
+}
+
+/* Loading state */
+.crt-screen-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  color: #33ff33;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  gap: 16px;
+}
+
+.crt-screen-loading .blink {
+  animation: blink-cursor 1s step-end infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Fallback message when iframe fails */
+.crt-screen-fallback {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+  color: #33ff33;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+  gap: 12px;
+  background: #0a0a0a;
+}
+
+.crt-screen-fallback a {
+  color: #66ff66;
+  text-decoration: underline;
+  font-size: 16px;
+}
+
+.crt-screen-fallback a:hover {
+  color: #99ff99;
+}
+
+/* ---- Monitor Bottom Panel ---- */
+.crt-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 4px;
+}
+
+.crt-panel-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crt-panel-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Power LED */
+.power-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff00;
+  box-shadow:
+    0 0 4px #00ff00,
+    0 0 8px rgba(0, 255, 0, 0.4);
+  transition: all 0.3s;
+}
+
+.power-led.off {
+  background: #333;
+  box-shadow: none;
+}
+
+/* Brand label */
+.crt-brand {
+  font-family: 'Arial', sans-serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: #7a7060;
+  font-weight: bold;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* OFF Button */
+.crt-off-btn {
+  background: linear-gradient(180deg, #666 0%, #444 100%);
+  color: #ddd;
+  border: 2px solid #333;
+  border-radius: 4px;
+  padding: 5px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+
+.crt-off-btn:hover {
+  background: linear-gradient(180deg, #cc3333, #991111);
+  color: #fff;
+  border-color: #880000;
+}
+
+.crt-off-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Mute Button */
+.crt-mute-btn {
+  background: linear-gradient(180deg, #666 0%, #444 100%);
+  color: #ddd;
+  border: 2px solid #333;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.crt-mute-btn:hover {
+  background: linear-gradient(180deg, #777, #555);
+  color: #fff;
+}
+
+.crt-mute-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Monitor Stand ---- */
+.crt-stand-neck {
+  width: 70px;
+  height: 24px;
+  background: linear-gradient(180deg, #a89a70 0%, #958a64 100%);
+  box-shadow:
+    inset 2px 0 0 rgba(255, 255, 255, 0.1),
+    inset -2px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+.crt-stand-base {
+  width: 220px;
+  height: 14px;
+  background: linear-gradient(180deg, #bfb38d 0%, #a89a70 100%);
+  border-radius: 0 0 8px 8px;
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ---- CRT Boot Animation ---- */
+@keyframes crt-boot {
+  0% {
+    filter: brightness(0);
+    transform: scaleY(0.005) scaleX(0.5);
+  }
+  20% {
+    filter: brightness(3);
+    transform: scaleY(0.005) scaleX(1);
+  }
+  40% {
+    filter: brightness(1.5);
+    transform: scaleY(0.3) scaleX(1);
+  }
+  60% {
+    filter: brightness(1.2);
+    transform: scaleY(0.8) scaleX(1);
+  }
+  80% {
+    filter: brightness(1);
+    transform: scaleY(1.02) scaleX(1);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scaleY(1) scaleX(1);
+  }
+}
+
+.crt-screen.booting {
+  animation: crt-boot 0.7s ease-out;
+}
+
+/* ---- CRT Shutdown Animation ---- */
+@keyframes crt-shutdown {
+  0% {
+    filter: brightness(1);
+    transform: scaleY(1) scaleX(1);
+  }
+  30% {
+    filter: brightness(2);
+    transform: scaleY(1) scaleX(1);
+  }
+  60% {
+    filter: brightness(3);
+    transform: scaleY(0.005) scaleX(1);
+  }
+  100% {
+    filter: brightness(0);
+    transform: scaleY(0) scaleX(0);
+  }
+}
+
+.crt-screen.shutting-down {
+  animation: crt-shutdown 0.5s ease-in forwards;
+}
+
+/* ---- Hint on logo ---- */
+.logo-main.has-easter-egg {
+  cursor: pointer;
+  transition: text-shadow 0.3s;
+}
+
+.logo-main.has-easter-egg:hover {
+  text-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .crt-screen {
+    width: 85vw;
+    height: 53vw;
+  }
+
+  .crt-monitor {
+    padding: 14px 18px 10px;
+    border-radius: 12px 12px 8px 8px;
+  }
+
+  .crt-stand-base {
+    width: 160px;
+  }
+}
+
+@media (max-height: 600px) {
+  .crt-screen {
+    width: 520px;
+    height: 325px;
+  }
+
+  .retro-pc {
+    transform: scale(0.85);
+  }
+
+  .dave-easter-egg-overlay.active .retro-pc {
+    transform: scale(0.85);
+  }
+}

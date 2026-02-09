@@ -7,6 +7,7 @@ import { KeyboardShortcutManager, setupNavigationShortcuts, GridNavigator } from
 import { errorHandler } from '../utils/errorHandler.js';
 import { memoryManager } from '../utils/memoryManager.js';
 import { initHelpTooltip } from '../utils/helpTooltip.js';
+import { initEasterEgg } from '../easter_egg.js';
 
 // Global debugging configuration
 window.APP_DEBUG = {
@@ -50,6 +51,9 @@ UI.initializeUI().then(() => {
     console.error('[Main] Error initializing help tooltip:', error);
     // Continue with app initialization even if tooltip fails
   }
+
+  // Initialize easter egg (click D.A.V.E title to play Dangerous Dave!)
+  initEasterEgg();
   
   // Initial render
   AssetLoading.renderPage(UI.getCurrentPage());
