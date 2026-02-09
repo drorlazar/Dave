@@ -87,19 +87,29 @@ async function scanDirectory(dirHandle, currentRecursiveDepth, maxDepth, pathPre
           const file = await handle.getFile();
           const typeInfo = detectFileType(file.name);
 
+          // Get extension for unknown file types
+          let finalType, finalSubtype;
           if (typeInfo) {
-            self.postMessage({
-              status: 'fileFound',
-              fileEntry: {
-                name: file.name,
-                file: file, // The File object itself
-                type: typeInfo.type,
-                subtype: typeInfo.subtype,
-                fullPath: pathPrefix + file.name // Construct full path
-              }
-            });
-            fileCountInDir++;
+            finalType = typeInfo.type;
+            finalSubtype = typeInfo.subtype;
+          } else {
+            const lastDot = file.name.lastIndexOf('.');
+            if (lastDot === -1) continue; // Skip files with no extension
+            finalType = 'other';
+            finalSubtype = file.name.slice(lastDot + 1).toLowerCase();
           }
+
+          self.postMessage({
+            status: 'fileFound',
+            fileEntry: {
+              name: file.name,
+              file: file,
+              type: finalType,
+              subtype: finalSubtype,
+              fullPath: pathPrefix + file.name
+            }
+          });
+          fileCountInDir++;
         } catch (fileError) {
           console.error(`Worker: Error getting file handle for ${name} in ${pathPrefix}:`, fileError);
           self.postMessage({ status: 'scanError', error: `Error processing file ${pathPrefix}${name}: ${fileError.message}` });

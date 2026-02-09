@@ -687,7 +687,11 @@ export function exitFullscreen(currentFullscreenViewer) {
   // Hide the fullscreen overlay and info panel
   fullscreenOverlay.style.display = 'none';
   fullscreenOverlay.style.opacity = '0';
-  
+
+  // Remove edit button
+  const editBtn = document.getElementById('fullscreenEditBtn');
+  if (editBtn) editBtn.remove();
+
   // Clear file information
   const fullscreenFilename = document.querySelector('.fullscreen-filename');
   const fullscreenDetails = document.querySelector('.fullscreen-details');

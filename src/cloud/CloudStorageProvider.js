@@ -135,12 +135,13 @@ async function listS3Files({ bucket, prefix = '' }) {
     .map(obj => {
       const name = obj.key.split('/').pop();
       const typeInfo = detectFileType(name);
-      if (!typeInfo) return null;
+      const lastDot = name.lastIndexOf('.');
+      if (!typeInfo && lastDot === -1) return null;
       return {
         name,
         file: null,
-        type: typeInfo.type,
-        subtype: typeInfo.subtype,
+        type: typeInfo ? typeInfo.type : 'other',
+        subtype: typeInfo ? typeInfo.subtype : name.slice(lastDot + 1).toLowerCase(),
         fullPath: obj.key,
         size: obj.size,
         lastModified: new Date(obj.lastModified).getTime(),
@@ -166,12 +167,13 @@ async function listGDriveFiles({ folderId = 'root' }) {
     .filter(i => i.type === 'file')
     .map(f => {
       const typeInfo = detectFileType(f.name);
-      if (!typeInfo) return null;
+      const lastDot = f.name.lastIndexOf('.');
+      if (!typeInfo && lastDot === -1) return null;
       return {
         name: f.name,
         file: null,
-        type: typeInfo.type,
-        subtype: typeInfo.subtype,
+        type: typeInfo ? typeInfo.type : 'other',
+        subtype: typeInfo ? typeInfo.subtype : f.name.slice(lastDot + 1).toLowerCase(),
         fullPath: f.name,
         size: f.size,
         lastModified: new Date(f.modifiedTime).getTime(),
@@ -204,12 +206,13 @@ async function listS3FilesRecursive({ bucket, prefix = '', maxDepth = 'all' }) {
   return result.files.map(obj => {
     const name = obj.key.split('/').pop();
     const typeInfo = detectFileType(name);
-    if (!typeInfo) return null;
+    const lastDot = name.lastIndexOf('.');
+    if (!typeInfo && lastDot === -1) return null;
     return {
       name,
       file: null,
-      type: typeInfo.type,
-      subtype: typeInfo.subtype,
+      type: typeInfo ? typeInfo.type : 'other',
+      subtype: typeInfo ? typeInfo.subtype : name.slice(lastDot + 1).toLowerCase(),
       fullPath: obj.key,
       size: obj.size,
       lastModified: new Date(obj.lastModified).getTime(),
@@ -226,12 +229,13 @@ async function listGDriveFilesRecursive({ folderId = 'root', maxDepth = 'all' })
 
   return result.files.map(f => {
     const typeInfo = detectFileType(f.name);
-    if (!typeInfo) return null;
+    const lastDot = f.name.lastIndexOf('.');
+    if (!typeInfo && lastDot === -1) return null;
     return {
       name: f.name,
       file: null,
-      type: typeInfo.type,
-      subtype: typeInfo.subtype,
+      type: typeInfo ? typeInfo.type : 'other',
+      subtype: typeInfo ? typeInfo.subtype : f.name.slice(lastDot + 1).toLowerCase(),
       fullPath: f.fullPath || f.name,
       size: f.size,
       lastModified: new Date(f.modifiedTime).getTime(),

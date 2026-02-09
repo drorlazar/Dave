@@ -10,6 +10,7 @@ import { CloudBrowserModal } from '../cloud/CloudBrowserModal.js';
 import { GDriveAuth } from '../cloud/GDriveAuth.js';
 import { SettingsModal } from '../cloud/SettingsModal.js';
 import * as CloudStorage from '../cloud/CloudStorageProvider.js';
+import { getEditorForType, openInEditor } from '../utils/externalEditors.js';
 import {
   getCurrentPage,
   getItemsPerPage,
@@ -437,7 +438,7 @@ async function loadTileContent(tile) {
     memoryManager.disposeFbxViewer(tile.fbxViewerInstance);
     tile.fbxViewerInstance = null;
   }
-  const existingContent = tile.querySelector('model-viewer, .three-viewer, .video-preview, .audio-tile, .image-preview, .font-preview, .text-preview');
+  const existingContent = tile.querySelector('model-viewer, .three-viewer, .video-preview, .audio-tile, .image-preview, .font-preview, .text-preview, .other-tile');
   if (existingContent) {
     existingContent.remove();
   }
@@ -710,6 +711,12 @@ async function loadTileContent(tile) {
         console.error(`Error loading text file ${model.name}:`, textError);
         placeholder.innerHTML = `<i class="fa fa-exclamation-triangle"></i><br>Error loading text`;
       }
+    } else if (model.type === "other") {
+      const otherTile = document.createElement("div");
+      otherTile.className = "other-tile";
+      const ext = model.name.split('.').pop().toUpperCase();
+      otherTile.innerHTML = `<i class="fa fa-file"></i><span class="other-ext">.${ext}</span>`;
+      placeholder.replaceWith(otherTile);
     }
   } catch (error) {
     console.error(`Error loading ${model.type} content:`, error);
@@ -759,6 +766,16 @@ function renderPage(pageIndex) {
     fsBtn.onclick = () => showFullscreen(model);
     tile.appendChild(fsBtn);
 
+    const editorInfo = getEditorForType(model.type, model.subtype);
+    if (editorInfo) {
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
+      editBtn.title = `Open in ${editorInfo.name}`;
+      editBtn.onclick = (e) => { e.stopPropagation(); openInEditor(model); };
+      tile.appendChild(editBtn);
+    }
+
     tile.appendChild(createPlaceholder(model.type));
     tile.model = model;
 
@@ -804,7 +821,21 @@ async function showFullscreen(model) {
   fullscreenOverlay.style.opacity = '1';
   fullscreenViewer.innerHTML = '';
   fullscreenVideo.style.display = 'none';
-  
+
+  // Edit button in fullscreen
+  const oldEditBtn = document.getElementById('fullscreenEditBtn');
+  if (oldEditBtn) oldEditBtn.remove();
+  const fsEditorInfo = getEditorForType(model.type, model.subtype);
+  if (fsEditorInfo) {
+    const editBtn = document.createElement('button');
+    editBtn.id = 'fullscreenEditBtn';
+    editBtn.className = 'fullscreen-edit-btn';
+    editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
+    editBtn.title = `Open in ${fsEditorInfo.name}`;
+    editBtn.onclick = () => openInEditor(model);
+    fullscreenOverlay.appendChild(editBtn);
+  }
+
   // Check if we should use the new asset handler system
   const useNewHandler = false; // Temporarily disabled to fix issues
   
@@ -1144,6 +1175,22 @@ async function showFullscreen(model) {
         console.error(`Error loading text file ${model.name} for fullscreen:`, textError);
         fullscreenViewer.innerHTML = `<div class="fullscreen-error"><i class="fa fa-exclamation-triangle fa-2x"></i><br>Error loading text file</div>`;
       }
+    } else if (model.type === "other") {
+      fullscreenViewer.style.display = 'flex';
+      fullscreenVideo.style.display = 'none';
+      const ext = model.name.split('.').pop().toUpperCase();
+      const otherContainer = document.createElement("div");
+      otherContainer.className = "fullscreen-other";
+      otherContainer.innerHTML = `<i class="fa fa-file fa-4x"></i><span class="fullscreen-other-ext">.${ext}</span><span class="fullscreen-other-hint">No preview available for this file type</span>`;
+      fullscreenViewer.innerHTML = "";
+      fullscreenViewer.appendChild(otherContainer);
+      currentFullscreenViewer = {
+        type: 'other',
+        fileName: model.name,
+        cleanup: () => {
+          if (needsCleanup && fileUrl) URL.revokeObjectURL(fileUrl);
+        }
+      };
     }
   } catch (error) {
     console.error("Error in showFullscreen:", error);
