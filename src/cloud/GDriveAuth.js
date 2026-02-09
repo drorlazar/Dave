@@ -1,4 +1,4 @@
-// GDriveAuth.js - Google Drive authentication handling (client-side via GIS)
+// GDriveAuth.js - Google Drive authentication handling (via Apps Script popup bridge)
 
 import { getGDriveClient } from './CloudStorageProvider.js';
 
@@ -17,8 +17,8 @@ export class GDriveAuth {
       const client = getGDriveClient();
       return await client.requestToken();
     } catch (e) {
-      console.error('Google Drive login error:', e);
-      alert(e.message || 'Google Drive login failed.');
+      console.error('Google Drive connection error:', e);
+      alert(e.message || 'Google Drive connection failed.');
       return false;
     }
   }
@@ -35,7 +35,14 @@ export class GDriveAuth {
   static updateStatusIndicator(isConnected) {
     const statusEl = document.getElementById('gdriveStatus');
     if (statusEl) {
-      statusEl.textContent = isConnected ? 'Connected' : '';
+      if (isConnected) {
+        const client = getGDriveClient();
+        statusEl.textContent = client.userEmail
+          ? `Connected (${client.userEmail})`
+          : 'Connected';
+      } else {
+        statusEl.textContent = '';
+      }
       statusEl.classList.toggle('connected', isConnected);
     }
   }

@@ -78,32 +78,17 @@ export class SettingsModal {
             </div>
           </div>
 
-          <!-- Google Drive Section -->
+          <!-- Google Drive Info -->
           <div class="settings-section">
             <div class="settings-section-header">
               <i class="fab fa-google-drive"></i> Google Drive
-              <span class="settings-status" id="gdriveConfigStatus"></span>
+              <span class="settings-status configured">Ready</span>
             </div>
-            <div class="settings-form" id="gdriveForm">
+            <div class="settings-form">
               <p class="settings-description">
-                Create a <strong>Web application</strong> OAuth 2.0 Client ID in
-                <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console</a>,
-                enable the Google Drive API, and add this site's URL as an authorized JavaScript origin.
-                Then paste the Client ID below.
+                Google Drive works automatically. Click <strong>Source &gt; Google Drive</strong> to connect.
+                A popup will open for Google authorization (first time only). No setup needed.
               </p>
-              <div class="settings-field">
-                <label for="gdriveClientId">OAuth Client ID</label>
-                <input type="text" id="gdriveClientId" placeholder="123456789.apps.googleusercontent.com" autocomplete="off">
-              </div>
-              <div class="settings-hint" id="gdriveHint"></div>
-              <div class="settings-btn-row">
-                <button class="btn settings-save-btn" id="gdriveSave">
-                  <i class="fa fa-save"></i> Save
-                </button>
-                <button class="btn settings-clear-btn" id="gdriveClear" title="Remove saved Google Drive config">
-                  <i class="fa fa-trash"></i>
-                </button>
-              </div>
             </div>
           </div>
 
@@ -140,8 +125,7 @@ export class SettingsModal {
     // Save/clear buttons
     this.modal.querySelector('#s3Save').addEventListener('click', () => this.saveS3());
     this.modal.querySelector('#s3Clear').addEventListener('click', () => this.clearS3());
-    this.modal.querySelector('#gdriveSave').addEventListener('click', () => this.saveGDrive());
-    this.modal.querySelector('#gdriveClear').addEventListener('click', () => this.clearGDrive());
+    // Google Drive no longer needs settings (handled via Apps Script popup)
 
     this._escHandler = (e) => { if (e.key === 'Escape') this.close(); };
     document.addEventListener('keydown', this._escHandler);
@@ -151,7 +135,6 @@ export class SettingsModal {
     const data = CredentialStore.getStatus();
 
     const s3Status = this.modal.querySelector('#s3Status');
-    const gdriveStatus = this.modal.querySelector('#gdriveConfigStatus');
 
     if (data.s3.configured) {
       s3Status.textContent = 'Configured';
@@ -165,18 +148,7 @@ export class SettingsModal {
       s3Status.className = 'settings-status';
     }
 
-    if (data.gdrive.credentialsConfigured) {
-      gdriveStatus.textContent = 'Configured';
-      gdriveStatus.className = 'settings-status configured';
-      // Pre-fill the client ID (not sensitive)
-      const config = CredentialStore.getGDriveConfig();
-      if (config) {
-        this.modal.querySelector('#gdriveClientId').value = config.clientId;
-      }
-    } else {
-      gdriveStatus.textContent = 'Not configured';
-      gdriveStatus.className = 'settings-status';
-    }
+    // Google Drive status is always ready (no credentials needed)
   }
 
   saveS3() {
@@ -214,47 +186,6 @@ export class SettingsModal {
     this.modal.querySelector('#s3Hint').className = 'settings-hint';
     this.modal.querySelector('#s3AccessKey').value = '';
     this.modal.querySelector('#s3SecretKey').value = '';
-  }
-
-  async saveGDrive() {
-    const hint = this.modal.querySelector('#gdriveHint');
-    const clientId = this.modal.querySelector('#gdriveClientId').value.trim();
-
-    if (!clientId) {
-      hint.textContent = 'Please enter the OAuth Client ID.';
-      hint.className = 'settings-hint error';
-      return;
-    }
-
-    if (!clientId.includes('.apps.googleusercontent.com')) {
-      hint.textContent = 'Client ID should end with .apps.googleusercontent.com';
-      hint.className = 'settings-hint error';
-      return;
-    }
-
-    try {
-      CredentialStore.saveGDriveConfig({ clientId });
-      hint.textContent = 'Google Drive Client ID saved! You can now sign in via Source > Google Drive.';
-      hint.className = 'settings-hint success';
-      this.modal.querySelector('#gdriveConfigStatus').textContent = 'Configured';
-      this.modal.querySelector('#gdriveConfigStatus').className = 'settings-status configured';
-      // Reinitialize the GDrive client with new client ID
-      const { getGDriveClient } = await import('./CloudStorageProvider.js');
-      const client = getGDriveClient();
-      client.init(clientId);
-    } catch (e) {
-      hint.textContent = e.message;
-      hint.className = 'settings-hint error';
-    }
-  }
-
-  clearGDrive() {
-    CredentialStore.clearGDriveConfig();
-    this.modal.querySelector('#gdriveConfigStatus').textContent = 'Not configured';
-    this.modal.querySelector('#gdriveConfigStatus').className = 'settings-status';
-    this.modal.querySelector('#gdriveHint').textContent = 'Google Drive config removed.';
-    this.modal.querySelector('#gdriveHint').className = 'settings-hint';
-    this.modal.querySelector('#gdriveClientId').value = '';
   }
 
   close() {

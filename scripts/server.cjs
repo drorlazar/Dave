@@ -25,7 +25,6 @@ app.get('/favicon.ico', (req, res) => res.sendStatus(204));
 
 // API routes (mounted before static files)
 app.use('/api/s3', require('./routes/s3.cjs'));
-app.use('/api/gdrive', require('./routes/gdrive.cjs'));
 app.use('/api/config', require('./routes/config.cjs'));
 
 // URL rewriting middleware (preserve existing behavior)

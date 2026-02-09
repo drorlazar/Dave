@@ -464,6 +464,15 @@ async function loadTileContent(tile) {
     let isCloudFile = false;
     if (model.file) {
       fileUrl = URL.createObjectURL(model.file);
+    } else if (model.source === 'gdrive' && model.size > 30 * 1024 * 1024) {
+      // Large Google Drive file — embed Drive's native viewer/player in an iframe
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://drive.google.com/file/d/${model.cloudFileId}/preview`;
+      iframe.style.cssText = 'width:100%;height:100%;border:none;border-radius:4px;';
+      iframe.setAttribute('allow', 'autoplay');
+      iframe.setAttribute('allowfullscreen', '');
+      placeholder.replaceWith(iframe);
+      return;
     } else if (model.source === 's3' || model.source === 'gdrive') {
       fileUrl = await CloudStorage.getFileUrl(model);
       isCloudFile = true;
@@ -837,11 +846,21 @@ async function showFullscreen(model) {
     if (model.file) {
       fileUrl = URL.createObjectURL(model.file);
       needsCleanup = true;
+    } else if (model.source === 'gdrive' && model.size > 30 * 1024 * 1024) {
+      // Large Google Drive file — embed Drive's native viewer/player
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://drive.google.com/file/d/${model.cloudFileId}/preview`;
+      iframe.style.cssText = 'width:100%;height:100%;border:none;';
+      iframe.setAttribute('allow', 'autoplay');
+      iframe.setAttribute('allowfullscreen', '');
+      fullscreenViewer.innerHTML = '';
+      fullscreenViewer.appendChild(iframe);
+      return;
     } else if (model.source === 's3' || model.source === 'gdrive') {
       fileUrl = await CloudStorage.getFileUrl(model);
       needsCleanup = false;
     }
-    
+
     // Now process based on file type
     if (model.subtype === "glb") {
       if (!customElements.get('model-viewer')) {

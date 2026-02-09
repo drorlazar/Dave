@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+    }
+    .status-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .status-text {
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .status-email {
+      font-size: 13px;
+      color: #8888aa;
+      margin-bottom: 20px;
+    }
+    .status-hint {
+      font-size: 12px;
+      color: #666680;
+      text-align: center;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #444;
+      border-top-color: #7c7cff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .activity {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #666680;
+      display: none;
+    }
+    .activity.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="status-icon" id="icon">&#128268;</div>
+  <div class="status-text" id="statusText">Connecting to Google Drive...</div>
+  <div class="status-email" id="statusEmail"></div>
+  <div class="status-hint" id="statusHint">This window must stay open while browsing Drive files in Dave.</div>
+  <div class="activity" id="activity"><span class="spinner"></span> <span id="activityText">Working...</span></div>
+
+  <script>
+    var ready = false;
+    var daveWindow = null; // Will store the opener (Dave) window reference
+
+    // Apps Script serves HTML inside a sandboxed iframe, so window.opener is null.
+    // We need to walk up the frame chain to find the opener.
+    function findOpener() {
+      try { if (window.opener) return window.opener; } catch(e) {}
+      try { if (window.parent && window.parent.opener) return window.parent.opener; } catch(e) {}
+      try { if (window.top && window.top.opener) return window.top.opener; } catch(e) {}
+      return null;
+    }
+
+    daveWindow = findOpener();
+
+    // On load, verify connection and notify the opener
+    google.script.run
+      .withSuccessHandler(function(result) {
+        ready = true;
+        document.getElementById('icon').textContent = '\u2705';
+        document.getElementById('statusText').textContent = 'Connected to Google Drive';
+        document.getElementById('statusEmail').textContent = result.email || '';
+        sendToDave({ type: 'ready', email: result.email || '' });
+      })
+      .withFailureHandler(function(err) {
+        document.getElementById('icon').textContent = '\u274C';
+        document.getElementById('statusText').textContent = 'Connection failed';
+        document.getElementById('statusHint').textContent = err.message || 'Unknown error';
+        sendToDave({ type: 'error', message: err.message || 'Connection failed' });
+      })
+      .ping();
+
+    // Listen for messages from Dave on all possible targets
+    // (Dave may post to the iframe directly if it captured our source)
+    window.addEventListener('message', onMessage);
+    try { if (window.parent !== window) window.parent.addEventListener('message', onMessage); } catch(e) {}
+
+    function onMessage(event) {
+      if (!ready) return;
+      var msg = event.data;
+      if (!msg || !msg.type) return;
+
+      // If Dave sent us a message, remember its window for replies
+      if (event.source && event.source !== window) {
+        daveWindow = event.source;
+      }
+
+      var requestId = msg.requestId || null;
+
+      switch (msg.type) {
+        case 'ping':
+          handlePing(requestId);
+          break;
+        case 'list':
+          handleList(msg.folderId || 'root', requestId);
+          break;
+        case 'listRecursive':
+          handleListRecursive(msg.folderId || 'root', msg.maxDepth || 'all', requestId);
+          break;
+        case 'download':
+          handleDownload(msg.fileId, requestId);
+          break;
+      }
+    }
+
+    function handlePing(requestId) {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          sendToDave({ type: 'pong', requestId: requestId, data: result });
+        })
+        .withFailureHandler(function(err) {
+          sendToDave({ type: 'error', requestId: requestId, message: err.message });
+        })
+        .ping();
+    }
+
+    function handleList(folderId, requestId) {
+      showActivity('Loading folder...');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideActivity();
+          sendToDave({ type: 'files', requestId: requestId, data: result });
+        })
+        .withFailureHandler(function(err) {
+          hideActivity();
+          sendToDave({ type: 'error', requestId: requestId, message: err.message });
+        })
+        .listFiles(folderId);
+    }
+
+    function handleListRecursive(folderId, maxDepth, requestId) {
+      showActivity('Scanning folders...');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideActivity();
+          sendToDave({ type: 'filesRecursive', requestId: requestId, data: result });
+        })
+        .withFailureHandler(function(err) {
+          hideActivity();
+          sendToDave({ type: 'error', requestId: requestId, message: err.message });
+        })
+        .listFilesRecursive(folderId, maxDepth);
+    }
+
+    function handleDownload(fileId, requestId) {
+      if (!fileId) {
+        sendToDave({ type: 'error', requestId: requestId, message: 'fileId is required' });
+        return;
+      }
+      showActivity('Downloading file...');
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideActivity();
+          sendToDave({ type: 'fileContent', requestId: requestId, data: result });
+        })
+        .withFailureHandler(function(err) {
+          hideActivity();
+          sendToDave({ type: 'error', requestId: requestId, message: err.message });
+        })
+        .downloadFile(fileId);
+    }
+
+    function sendToDave(msg) {
+      // Try the stored Dave window reference
+      if (daveWindow && !daveWindow.closed) {
+        try {
+          daveWindow.postMessage(msg, '*');
+          return;
+        } catch(e) {}
+      }
+      // Retry finding the opener in case it wasn't available at load time
+      daveWindow = findOpener();
+      if (daveWindow && !daveWindow.closed) {
+        try {
+          daveWindow.postMessage(msg, '*');
+        } catch(e) {
+          console.error('Cannot reach Dave window:', e);
+        }
+      }
+    }
+
+    function showActivity(text) {
+      document.getElementById('activityText').textContent = text;
+      document.getElementById('activity').className = 'activity active';
+    }
+
+    function hideActivity() {
+      document.getElementById('activity').className = 'activity';
+    }
+  </script>
+</body>
+</html>

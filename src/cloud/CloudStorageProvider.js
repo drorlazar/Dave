@@ -26,10 +26,6 @@ function getS3Client() {
 export function getGDriveClient() {
   if (!gdriveClient) {
     gdriveClient = new GDriveClient();
-    const config = CredentialStore.getGDriveConfig();
-    if (config) {
-      gdriveClient.init(config.clientId);
-    }
   }
   return gdriveClient;
 }
