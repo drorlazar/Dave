@@ -4,7 +4,7 @@
 // Falls back to a popup only for first-time authorization.
 // All Drive API calls happen server-side in Apps Script (as the authorized user).
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjrJVi4egaeVlqFO4eJpQfcqcxNX9nIaUCA76HWS3Q9t1NeWI0JzMutCCTHIi4YuZk2Q/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3U0FMgoNk_a1-9EiJ2vK3LShKHYBYfE8-hBLZojA5nW3ohh8Fyww3R5WoFTEqlqbhag/exec';
 
 export class GDriveClient {
   constructor() {
