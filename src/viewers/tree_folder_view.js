@@ -239,7 +239,7 @@ function handleTreeDragOver(e) {
 function handleTreeDragLeave(e) {
     e.preventDefault();
     e.stopPropagation();
-    if (e.target === e.currentTarget) {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
         e.currentTarget.classList.remove('tree-drag-over');
     }
 }

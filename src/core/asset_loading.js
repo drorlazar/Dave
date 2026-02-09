@@ -1394,7 +1394,8 @@ function handleDragOver(e) {
 function handleDragLeave(e) {
   e.preventDefault();
   e.stopPropagation();
-  if (e.target === viewerContainer) {
+  // Remove overlay when the cursor leaves the container entirely
+  if (!viewerContainer.contains(e.relatedTarget)) {
     viewerContainer.classList.remove('drag-over');
   }
 }
