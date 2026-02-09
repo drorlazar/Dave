@@ -1,7 +1,7 @@
 {
   "name": "dave-digital-assets-viewer",
   "version": "1.0.0",
-  "description": "Digital Assets Viewer Extraordinaire - A client-side web application for viewing and managing digital assets",
+  "description": "Dror's Assets Viewing Experience - A client-side web application for viewing and managing digital assets",
   "main": "index.html",
   "type": "module",
   "scripts": {

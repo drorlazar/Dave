@@ -1,7 +1,7 @@
 {
   "name": "Dave",
   "version": "1.0.0",
-  "description": "Digital Assets Viewer Extraordiner",
+  "description": "Dror's Assets Viewing Experience",
   "features": ["3D models", "images", "video", "audio", "fonts", "text files"],
   "settings": {
     "port": 7777,

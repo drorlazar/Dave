@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# setup_tests.sh - Setup script for Dave - Digital Assets Viewer Extraordiner tests
+# setup_tests.sh - Setup script for Dave - Dror's Assets Viewing Experience tests
 
-echo "🚀 Setting up Dave - Digital Assets Viewer Extraordiner Test Suite"
+echo "🚀 Setting up Dave - Dror's Assets Viewing Experience Test Suite"
 echo "============================================"
 
 # Colors for output

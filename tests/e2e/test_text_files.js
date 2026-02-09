@@ -125,7 +125,7 @@ test.describe('Text File Support', () => {
     const pre = page.locator('.text-fullscreen-pre');
     await expect(pre).toBeVisible();
     const text = await pre.textContent();
-    expect(text).toContain('Digital Assets Viewer');
+    expect(text).toContain('Assets Viewing Experience');
   });
 
   test('Fullscreen zoom controls work', async ({ page }) => {

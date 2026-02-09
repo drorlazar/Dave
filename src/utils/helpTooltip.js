@@ -44,7 +44,9 @@ export class HelpTooltip {
       ],
       zoom: [
         { keys: 'Ctrl + +/-', description: 'Zoom in/out' },
-        { keys: 'Ctrl + 0', description: 'Reset zoom' }
+        { keys: 'Ctrl + 0', description: 'Reset zoom' },
+        { keys: 'Scroll (fullscreen)', description: 'Zoom image' },
+        { keys: 'Drag (fullscreen)', description: 'Pan zoomed image' }
       ],
       tree: [
         { keys: 'Ctrl+Shift+←', description: 'Collapse all folders' },
@@ -67,42 +69,47 @@ export class HelpTooltip {
         
         <div class="tooltip-section about-section">
           <h4><i class="fa fa-info-circle"></i> About</h4>
-          <p><strong>Digital Assets Viewer Extraordinaire</strong></p>
+          <p><strong>Dror's Assets Viewing Experience</strong></p>
           <p class="about-description">A powerful client-side web application for viewing and managing your digital assets including 3D models, images, videos, audio files, fonts, and documents.</p>
         </div>
 
-        <div class="tooltip-section shortcuts-section">
-          <h4><i class="fa fa-keyboard"></i> Keyboard Shortcuts</h4>
-          <div class="shortcuts-grid">
-            ${this.renderShortcutCategories()}
-          </div>
-        </div>
-
         <div class="tooltip-section features-section">
-          <h4><i class="fa fa-star"></i> Key Features</h4>
+          <h4><i class="fa fa-star"></i> Supported Assets</h4>
           <ul class="features-list">
-            <li><i class="fa fa-cube"></i> 3D model viewer (FBX, GLB, OBJ, STL)</li>
-            <li><i class="fa fa-image"></i> Image gallery with fullscreen</li>
-            <li><i class="fa fa-video"></i> Video & audio playback</li>
-            <li><i class="fa fa-font"></i> Font preview with custom text</li>
-            <li><i class="fa fa-folder-tree"></i> Folder tree navigation</li>
-            <li><i class="fa fa-search"></i> Powerful search & filtering</li>
-            <li><i class="fa fa-download"></i> Batch download & ZIP export</li>
+            <li><i class="fa fa-cube" style="color:#4e9af5;"></i> 3D Models (FBX, GLB, OBJ, STL)</li>
+            <li><i class="fa fa-image" style="color:#3dd68c;"></i> Images (PNG, JPG, GIF, SVG, WebP...)</li>
+            <li><i class="fa fa-video" style="color:#f5a623;"></i> Video (MP4, WebM, MOV...)</li>
+            <li><i class="fa fa-music" style="color:#9b77ff;"></i> Audio (MP3, WAV, OGG, FLAC...)</li>
+            <li><i class="fa fa-font" style="color:#f56565;"></i> Fonts (TTF, OTF, WOFF, WOFF2)</li>
+            <li><i class="fa fa-file-lines" style="color:#8a8fa0;"></i> Text & Code (TXT, JSON, XML, MD...)</li>
+            <li><i class="fa fa-file" style="color:#8a8fa0;"></i> Other file types (tagged by extension)</li>
+            <li><i class="fa fa-cloud" style="color:#7c7cff;"></i> Cloud Storage (AWS S3, Google Drive)</li>
           </ul>
         </div>
 
-        <div class="tooltip-section links-section">
-          <h4><i class="fa fa-link"></i> Resources</h4>
-          <div class="resource-links">
-            <a href="https://github.com/drorlazar-sett/Dave" target="_blank" rel="noopener">
-              <i class="fa fa-github"></i> GitHub Repository
-            </a>
-            <a href="https://drorlazar-sett.github.io/Dave/" target="_blank" rel="noopener">
-              <i class="fa fa-globe"></i> Documentation
-            </a>
-            <a href="https://github.com/drorlazar-sett/Dave/issues" target="_blank" rel="noopener">
-              <i class="fa fa-bug"></i> Report Issues
-            </a>
+        <div class="tooltip-section tooltip-collapsible collapsed">
+          <h4 class="tooltip-collapsible-header"><i class="fa fa-keyboard"></i> Keyboard Shortcuts <span class="tooltip-collapse-icon">&#9656;</span></h4>
+          <div class="tooltip-collapsible-body">
+            <div class="shortcuts-grid">
+              ${this.renderShortcutCategories()}
+            </div>
+          </div>
+        </div>
+
+        <div class="tooltip-section tooltip-collapsible collapsed">
+          <h4 class="tooltip-collapsible-header"><i class="fa fa-link"></i> Resources <span class="tooltip-collapse-icon">&#9656;</span></h4>
+          <div class="tooltip-collapsible-body">
+            <div class="resource-links">
+              <a href="docs/cloud-setup.html" target="_blank" rel="noopener">
+                <i class="fa fa-cloud"></i> Cloud Storage Setup Guide
+              </a>
+              <a href="https://github.com/drorlazar-sett/Dave" target="_blank" rel="noopener">
+                <i class="fab fa-github"></i> GitHub Repository
+              </a>
+              <a href="https://github.com/drorlazar-sett/Dave/issues" target="_blank" rel="noopener">
+                <i class="fa fa-bug"></i> Report Issues
+              </a>
+            </div>
           </div>
         </div>
 
@@ -193,6 +200,14 @@ export class HelpTooltip {
       if (this.isVisible && !logo.contains(e.target) && !this.tooltip.contains(e.target)) {
         this.hide();
       }
+    });
+
+    // Collapsible section toggling
+    this.tooltip.querySelectorAll('.tooltip-collapsible-header').forEach(header => {
+      header.addEventListener('click', (e) => {
+        e.stopPropagation();
+        header.closest('.tooltip-collapsible').classList.toggle('collapsed');
+      });
     });
 
     // Hide on Escape

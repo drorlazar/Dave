@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dave - Digital Assets Viewer Extraordiner</title>
+  <title>Dave - Dror's Assets Viewing Experience</title>
 
   <script>
     // Check if user has explicitly chosen light mode
@@ -37,7 +37,7 @@
   <div id="topBar">
     <div class="logo-container">
       <div class="logo-main">D.A.V.E</div>
-      <div class="logo-subtitle">Digital Assets Viewer Extraordiner</div>
+      <div class="logo-subtitle">Dror's Assets Viewing Experience</div>
     </div>
     <div class="searchControls">
       <div class="search-wrapper">
@@ -135,52 +135,55 @@
         <button id="assetTypeFilterToggleBtn" class="btn dropdown-btn" title="Toggle asset type visibility"><i class="fa fa-eye"></i> <i class="fa fa-chevron-down"></i></button>
         <div class="dropdown-content">
           <label class="filter-option" data-type="fbx">
-            <i class="fa fa-check"></i>
-            <span>FBX</span>
+            <i class="fa fa-cube filter-type-icon" style="color: #4e9af5;"></i>
+            <span style="color: #4e9af5;">FBX</span>
           </label>
           <label class="filter-option" data-type="glb">
-            <i class="fa fa-check"></i>
-            <span>GLB</span>
+            <i class="fa fa-cube filter-type-icon" style="color: #4e9af5;"></i>
+            <span style="color: #4e9af5;">GLB</span>
           </label>
           <label class="filter-option" data-type="video">
-            <i class="fa fa-check"></i>
-            <span>Video</span>
+            <i class="fa fa-video filter-type-icon" style="color: #f5a623;"></i>
+            <span style="color: #f5a623;">Video</span>
           </label>
           <label class="filter-option" data-type="mp3">
-            <i class="fa fa-check"></i>
-            <span>MP3</span>
+            <i class="fa fa-music filter-type-icon" style="color: #9b77ff;"></i>
+            <span style="color: #9b77ff;">MP3</span>
           </label>
           <label class="filter-option" data-type="wav">
-            <i class="fa fa-check"></i>
-            <span>WAV</span>
+            <i class="fa fa-music filter-type-icon" style="color: #9b77ff;"></i>
+            <span style="color: #9b77ff;">WAV</span>
           </label>
           <label class="filter-option" data-type="ogg">
-            <i class="fa fa-check"></i>
-            <span>OGG</span>
+            <i class="fa fa-music filter-type-icon" style="color: #9b77ff;"></i>
+            <span style="color: #9b77ff;">OGG</span>
           </label>
           <label class="filter-option" data-type="image">
-            <i class="fa fa-check"></i>
-            <span>Images</span>
+            <i class="fa fa-image filter-type-icon" style="color: #3dd68c;"></i>
+            <span style="color: #3dd68c;">Images</span>
           </label>
           <label class="filter-option" data-type="font">
-            <i class="fa fa-check"></i>
-            <span>Fonts</span>
+            <i class="fa fa-font filter-type-icon" style="color: #f56565;"></i>
+            <span style="color: #f56565;">Fonts</span>
           </label>
           <label class="filter-option" data-type="text">
-            <i class="fa fa-check"></i>
-            <span>Text</span>
+            <i class="fa fa-file-lines filter-type-icon" style="color: #8a8fa0;"></i>
+            <span style="color: #8a8fa0;">Text</span>
           </label>
           <label class="filter-option" data-type="other">
-            <i class="fa fa-check"></i>
-            <span>Other</span>
+            <i class="fa fa-file filter-type-icon" style="color: #8a8fa0;"></i>
+            <span style="color: #8a8fa0;">Other</span>
           </label>
         </div>
       </div>
       <button id="darkModeToggle" class="btn" title="Toggle dark mode">
         <i class="fa fa-moon"></i>
       </button>
-      <button id="settingsBtn" class="btn" title="Cloud Storage Settings">
-        <i class="fa fa-gear"></i>
+      <button id="settingsBtn" class="btn cloud-settings-btn" title="Cloud Storage Settings">
+        <span class="cloud-settings-icon">
+          <i class="fa fa-cloud"></i>
+          <i class="fa fa-gear cloud-settings-cog"></i>
+        </span>
       </button>
     </div>
   </div>
@@ -229,6 +232,15 @@
       </div>
     </div>
     <div class="tree-folder-resizer" id="treeFolderResizer"></div>
+  </div>
+
+  <!-- Cloud path bar (visible when browsing cloud storage) -->
+  <div id="cloudPathBar" class="cloud-path-bar" style="display:none">
+    <i class="fa fa-cloud cloud-path-icon" id="cloudPathIcon"></i>
+    <div id="cloudPathBreadcrumb" class="cloud-path-breadcrumb"></div>
+    <button id="cloudPathBrowse" class="cloud-path-btn" title="Browse this folder">
+      <i class="fa fa-folder-open"></i>
+    </button>
   </div>
 
   <div id="viewerContainer"></div>

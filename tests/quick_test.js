@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🔍 Dave - Digital Assets Viewer Extraordiner - Quick Test Environment Check\n');
+console.log('🔍 Dave - Dror's Assets Viewing Experience - Quick Test Environment Check\n');
 
 // Check 1: Server running
 console.log('1. Checking server...');

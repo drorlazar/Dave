@@ -1,6 +1,6 @@
 # DAVE Example Assets Collection
 
-This directory contains copyright-free example files for testing DAVE (Digital Assets Viewer Extraordiner). All files are either public domain, Creative Commons Zero (CC0), or have open-source licenses that allow free use.
+This directory contains copyright-free example files for testing DAVE (Dror's Assets Viewing Experience). All files are either public domain, Creative Commons Zero (CC0), or have open-source licenses that allow free use.
 
 ## Images (`/images/`)
 

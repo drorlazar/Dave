@@ -1,4 +1,4 @@
-# Dave - Digital Assets Viewer Extraordiner
+# Dave - Dror's Assets Viewing Experience
 
 A powerful web-based viewer for previewing and managing digital assets including 3D models (FBX, GLB), videos, audio files, and images in a grid layout.
 

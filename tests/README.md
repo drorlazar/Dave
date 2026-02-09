@@ -1,6 +1,6 @@
-# Dave - Digital Assets Viewer Extraordiner Test Suite
+# Dave - Dror's Assets Viewing Experience Test Suite
 
-This comprehensive test suite ensures all functionality of Dave - Digital Assets Viewer Extraordiner is working correctly.
+This comprehensive test suite ensures all functionality of Dave - Dror's Assets Viewing Experience is working correctly.
 
 ## Prerequisites
 
@@ -106,7 +106,7 @@ After running tests, you'll find:
 
 ## Success Criteria
 
-Dave - Digital Assets Viewer Extraordiner is considered working correctly when:
+Dave - Dror's Assets Viewing Experience is considered working correctly when:
 - ✅ All file types load properly
 - ✅ UI controls respond correctly
 - ✅ Keyboard shortcuts work as expected

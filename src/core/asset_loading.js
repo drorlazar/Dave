@@ -343,6 +343,7 @@ async function handleFolderPick(dirHandle) {
   memoryManager.disposeAllFbxViewers();
 
   modelFiles = []; // Clear existing model files
+  hideCloudPathBar(); // Hide cloud path bar when loading local files
   viewerContainer.innerHTML = `<div class="loading-message"><i class="fa fa-spinner fa-spin"></i> Scanning folder... <span id="file-scan-count">0</span> files found.</div>`;
   const fileScanCountElement = document.getElementById('file-scan-count');
 
@@ -1360,7 +1361,7 @@ if (folderPickerButton && !document.getElementById('sourceDropdown')) {
 
 // Listen for cloud files loaded from CloudBrowserModal or URL parsing
 window.addEventListener('cloudFilesLoaded', (event) => {
-  const { files } = event.detail;
+  const { files, context } = event.detail;
   memoryManager.disposeAllFbxViewers();
   modelFiles = files;
   modelFiles.sort((a, b) => a.name.localeCompare(b.name));
@@ -1368,7 +1369,58 @@ window.addEventListener('cloudFilesLoaded', (event) => {
   setCurrentPage(0);
   updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
   renderPage(getCurrentPage());
+
+  // Show cloud path bar if context is available
+  if (context) {
+    showCloudPathBar(context);
+  }
 });
+
+function showCloudPathBar(context) {
+  const pathBar = document.getElementById('cloudPathBar');
+  const pathIcon = document.getElementById('cloudPathIcon');
+  const pathBreadcrumb = document.getElementById('cloudPathBreadcrumb');
+  const browseBtn = document.getElementById('cloudPathBrowse');
+  if (!pathBar) return;
+
+  // Update icon based on source
+  pathIcon.className = context.source === 'gdrive'
+    ? 'fab fa-google-drive cloud-path-icon'
+    : 'fa fa-cloud cloud-path-icon';
+
+  // Render breadcrumbs
+  pathBreadcrumb.innerHTML = '';
+  if (context.breadcrumbs) {
+    context.breadcrumbs.forEach((crumb, i) => {
+      if (i > 0) {
+        const sep = document.createElement('span');
+        sep.className = 'cloud-path-sep';
+        sep.textContent = ' / ';
+        pathBreadcrumb.appendChild(sep);
+      }
+      const item = document.createElement('span');
+      item.className = 'cloud-path-item';
+      item.textContent = crumb.name;
+      pathBreadcrumb.appendChild(item);
+    });
+  }
+
+  // Browse button reopens the cloud browser at the current location
+  browseBtn.onclick = () => {
+    if (context.source === 's3') {
+      cloudBrowser.open('s3', { bucket: context.bucket, prefix: context.path });
+    } else {
+      cloudBrowser.open('gdrive', { folderId: context.folderId });
+    }
+  };
+
+  pathBar.style.display = 'flex';
+}
+
+function hideCloudPathBar() {
+  const pathBar = document.getElementById('cloudPathBar');
+  if (pathBar) pathBar.style.display = 'none';
+}
 
 
 itemsOptions.forEach(option => {

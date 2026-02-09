@@ -1,4 +1,4 @@
-# Dave - Digital Assets Viewer Extraordinaire
+# Dave - Dror's Assets Viewing Experience
 
 A powerful web-based viewer for digital assets including 3D models, videos, audio files, and images.
 

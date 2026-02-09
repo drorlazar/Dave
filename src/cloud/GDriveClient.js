@@ -177,6 +177,121 @@ export class GDriveClient {
     return { files: allFiles };
   }
 
+  // List files shared with the current user
+  async listSharedWithMe(pageSize = 200) {
+    const allItems = [];
+    let pageToken = null;
+
+    do {
+      const params = new URLSearchParams({
+        q: 'sharedWithMe = true and trashed = false',
+        fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime)',
+        orderBy: 'folder, name',
+        pageSize: String(pageSize),
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true'
+      });
+      if (pageToken) params.set('pageToken', pageToken);
+
+      const response = await this._fetch(`${DRIVE_API}/files?${params}`);
+      const data = await response.json();
+
+      if (data.files) {
+        for (const file of data.files) {
+          allItems.push({
+            id: file.id,
+            name: file.name,
+            mimeType: file.mimeType,
+            type: file.mimeType === 'application/vnd.google-apps.folder' ? 'directory' : 'file',
+            size: file.size ? parseInt(file.size, 10) : 0,
+            modifiedTime: file.modifiedTime || ''
+          });
+        }
+      }
+
+      pageToken = data.nextPageToken || null;
+    } while (pageToken);
+
+    return { items: allItems };
+  }
+
+  // List starred files and folders
+  async listStarred(pageSize = 200) {
+    const allItems = [];
+    let pageToken = null;
+
+    do {
+      const params = new URLSearchParams({
+        q: 'starred = true and trashed = false',
+        fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime)',
+        orderBy: 'folder, name',
+        pageSize: String(pageSize),
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true'
+      });
+      if (pageToken) params.set('pageToken', pageToken);
+
+      const response = await this._fetch(`${DRIVE_API}/files?${params}`);
+      const data = await response.json();
+
+      if (data.files) {
+        for (const file of data.files) {
+          allItems.push({
+            id: file.id,
+            name: file.name,
+            mimeType: file.mimeType,
+            type: file.mimeType === 'application/vnd.google-apps.folder' ? 'directory' : 'file',
+            size: file.size ? parseInt(file.size, 10) : 0,
+            modifiedTime: file.modifiedTime || ''
+          });
+        }
+      }
+
+      pageToken = data.nextPageToken || null;
+    } while (pageToken);
+
+    return { items: allItems };
+  }
+
+  // List recently modified files (last 30 days)
+  async listRecent(pageSize = 100) {
+    const allItems = [];
+    let pageToken = null;
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    do {
+      const params = new URLSearchParams({
+        q: `modifiedTime > '${thirtyDaysAgo}' and trashed = false`,
+        fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime)',
+        orderBy: 'modifiedTime desc',
+        pageSize: String(pageSize),
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true'
+      });
+      if (pageToken) params.set('pageToken', pageToken);
+
+      const response = await this._fetch(`${DRIVE_API}/files?${params}`);
+      const data = await response.json();
+
+      if (data.files) {
+        for (const file of data.files) {
+          allItems.push({
+            id: file.id,
+            name: file.name,
+            mimeType: file.mimeType,
+            type: file.mimeType === 'application/vnd.google-apps.folder' ? 'directory' : 'file',
+            size: file.size ? parseInt(file.size, 10) : 0,
+            modifiedTime: file.modifiedTime || ''
+          });
+        }
+      }
+
+      pageToken = data.nextPageToken || null;
+    } while (pageToken);
+
+    return { items: allItems };
+  }
+
   // Download file content as a Blob
   async getFileBlob(fileId) {
     const response = await this._fetch(

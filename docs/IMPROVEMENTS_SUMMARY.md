@@ -1,6 +1,6 @@
-# Dave - Digital Assets Viewer Extraordiner Improvements Summary
+# Dave - Dror's Assets Viewing Experience Improvements Summary
 
-This document summarizes all the improvements made to Dave - Digital Assets Viewer Extraordiner during the refactoring phase.
+This document summarizes all the improvements made to Dave - Dror's Assets Viewing Experience during the refactoring phase.
 
 ## Phase 1: Foundation Improvements
 

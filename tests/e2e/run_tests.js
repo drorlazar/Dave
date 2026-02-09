@@ -63,7 +63,7 @@ class TestRunner {
 
   printHeader() {
     console.log(colors.cyan + colors.bright + '╔══════════════════════════════════════════════════════════════╗' + colors.reset);
-    console.log(colors.cyan + colors.bright + '║   Dave - Digital Assets Viewer Extraordiner Test Suite      ║' + colors.reset);
+    console.log(colors.cyan + colors.bright + '║   Dave - Dror's Assets Viewing Experience Test Suite         ║' + colors.reset);
     console.log(colors.cyan + colors.bright + '╚══════════════════════════════════════════════════════════════╝' + colors.reset);
     console.log();
     console.log(colors.blue + 'Test Configuration:' + colors.reset);
@@ -213,7 +213,7 @@ class TestRunner {
     // Final status
     console.log('\n' + colors.bright + 'Test Status:' + colors.reset);
     if (this.failedTests === 0 && !this.results.some(r => r.failed)) {
-      console.log(colors.green + colors.bright + '✓ All tests passed! Dave - Digital Assets Viewer Extraordiner is working correctly.' + colors.reset);
+      console.log(colors.green + colors.bright + '✓ All tests passed! Dave - Dror's Assets Viewing Experience is working correctly.' + colors.reset);
       process.exit(0);
     } else {
       console.log(colors.red + colors.bright + '✗ Some tests failed. Please review the errors above.' + colors.reset);

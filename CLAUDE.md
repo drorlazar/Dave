@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Dave - Digital Assets Viewer Extraordiner is a client-side web application for viewing and managing digital assets (3D models, images, videos, audio files) in a grid layout. It runs directly in modern browsers without a build process.
+Dave - Dror's Assets Viewing Experience is a client-side web application for viewing and managing digital assets (3D models, images, videos, audio files) in a grid layout. It runs directly in modern browsers without a build process.
 
 ## Development Commands
 

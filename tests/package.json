@@ -1,7 +1,7 @@
 {
   "name": "digital-asset-viewer-tests",
   "version": "1.0.0",
-  "description": "Comprehensive test suite for Dave - Digital Assets Viewer Extraordiner",
+  "description": "Comprehensive test suite for Dave - Dror's Assets Viewing Experience",
   "type": "module",
   "scripts": {
     "test": "node run_tests.js",

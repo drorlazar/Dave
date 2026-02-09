@@ -1,4 +1,4 @@
-// tree_folder_view.js - Tree Folder View functionality for Dave - Digital Assets Viewer Extraordiner
+// tree_folder_view.js - Tree Folder View functionality for Dave - Dror's Assets Viewing Experience
 
 // Import necessary functions and variables from other modules
 import { 

@@ -54,7 +54,10 @@
       "Bash(git status:*)",
       "WebFetch(domain:www.photopea.com)",
       "WebFetch(domain:twistedwave.com)",
-      "WebFetch(domain:edit.video)"
+      "WebFetch(domain:edit.video)",
+      "Bash(gh pr view:*)",
+      "WebFetch(domain:patch-diff.githubusercontent.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": []
   },

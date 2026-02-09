@@ -128,7 +128,7 @@ export function setupNavigationShortcuts(shortcutManager, navigationCallbacks) {
   shortcutManager.register('Shift+/', showKeyboardHelp, 'Show keyboard shortcuts');
 }
 
-// Show keyboard shortcuts help
+// Show help / about dialog
 function showKeyboardHelp() {
   const shortcuts = [
     { keys: '←/→', description: 'Previous/Next page' },
@@ -138,14 +138,16 @@ function showKeyboardHelp() {
     { keys: 'T', description: 'Toggle theme' },
     { keys: 'B', description: 'Toggle tree view' },
     { keys: 'Enter/Space', description: 'Open in fullscreen' },
-    { keys: 'Escape', description: 'Close fullscreen' },
+    { keys: 'Escape', description: 'Close fullscreen / deselect' },
     { keys: 'Ctrl+A', description: 'Select all' },
     { keys: 'Ctrl+D', description: 'Deselect all' },
     { keys: 'Ctrl+/- /0', description: 'Zoom in/out/reset' },
+    { keys: 'Scroll (fullscreen)', description: 'Zoom image' },
+    { keys: 'Drag (fullscreen)', description: 'Pan zoomed image' },
     { keys: '?', description: 'Show this help' }
   ];
 
-  const helpContent = shortcuts.map(s => 
+  const helpContent = shortcuts.map(s =>
     `<div class="shortcut-item">
       <span class="shortcut-keys">${s.keys}</span>
       <span class="shortcut-desc">${s.description}</span>
@@ -157,15 +159,57 @@ function showKeyboardHelp() {
   modal.className = 'keyboard-help-modal';
   modal.innerHTML = `
     <div class="keyboard-help-content">
-      <h2>Keyboard Shortcuts</h2>
-      <div class="shortcuts-list">
-        ${helpContent}
+      <h2><i class="fa fa-cube" style="color:#9b77ff;margin-right:8px;"></i>D.A.V.E</h2>
+      <p class="help-subtitle">Dror's Assets Viewing Experience</p>
+
+      <div class="help-features">
+        <div class="help-feature"><i class="fa fa-cube" style="color:#4e9af5;"></i> 3D Models (FBX, GLB)</div>
+        <div class="help-feature"><i class="fa fa-image" style="color:#3dd68c;"></i> Images (PNG, JPG, GIF, SVG, WebP...)</div>
+        <div class="help-feature"><i class="fa fa-video" style="color:#f5a623;"></i> Video (MP4, WebM, MOV...)</div>
+        <div class="help-feature"><i class="fa fa-music" style="color:#9b77ff;"></i> Audio (MP3, WAV, OGG, FLAC...)</div>
+        <div class="help-feature"><i class="fa fa-font" style="color:#f56565;"></i> Fonts (TTF, OTF, WOFF, WOFF2)</div>
+        <div class="help-feature"><i class="fa fa-file-lines" style="color:#8a8fa0;"></i> Text &amp; Code (TXT, JSON, XML, MD...)</div>
+        <div class="help-feature"><i class="fa fa-file" style="color:#8a8fa0;"></i> Other file types (tagged by extension)</div>
+        <div class="help-feature"><i class="fa fa-cloud" style="color:#7c7cff;"></i> Cloud Storage (AWS S3, Google Drive)</div>
       </div>
+
+      <div class="help-collapsible collapsed">
+        <div class="help-collapsible-header">
+          <i class="fa fa-keyboard" style="margin-right:8px;"></i>Keyboard Shortcuts
+          <span class="help-collapse-icon">&#9656;</span>
+        </div>
+        <div class="help-collapsible-body">
+          <div class="shortcuts-list">
+            ${helpContent}
+          </div>
+        </div>
+      </div>
+
+      <div class="help-collapsible collapsed">
+        <div class="help-collapsible-header">
+          <i class="fa fa-link" style="margin-right:8px;"></i>Resources
+          <span class="help-collapse-icon">&#9656;</span>
+        </div>
+        <div class="help-collapsible-body">
+          <div class="help-resources">
+            <a href="docs/cloud-setup.html" target="_blank"><i class="fa fa-cloud"></i> Cloud Storage Setup Guide</a>
+            <a href="https://github.com/DrorLazar-Sett/Dave" target="_blank"><i class="fab fa-github"></i> GitHub Repository</a>
+          </div>
+        </div>
+      </div>
+
       <button class="close-help">Close (Esc)</button>
     </div>
   `;
 
   document.body.appendChild(modal);
+
+  // Collapsible section toggling
+  modal.querySelectorAll('.help-collapsible-header').forEach(header => {
+    header.addEventListener('click', () => {
+      header.parentElement.classList.toggle('collapsed');
+    });
+  });
 
   // Close handlers
   const closeHelp = () => {

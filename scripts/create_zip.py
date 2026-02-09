@@ -50,7 +50,7 @@ def create_digital_asset_viewer_zip():
 <body class="dark-mode">
   <!-- Top bar with header and all UI controls -->
   <div id="topBar">
-    <h1>Dave - Digital Assets Viewer Extraordiner</h1>
+    <h1>Dave - Dror's Assets Viewing Experience</h1>
     <div class="fileControls">
       <input type="text" id="folderPath" class="folder-input" placeholder="Enter folder path">
       <button id="folderPicker" class="btn" title="Pick a folder">

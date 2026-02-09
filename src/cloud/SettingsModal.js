@@ -24,7 +24,7 @@ export class SettingsModal {
       <div class="cloud-modal-content settings-modal-content">
         <div class="cloud-modal-header">
           <span class="cloud-modal-title">
-            <i class="fa fa-gear"></i>
+            <i class="fa fa-cloud"></i>
             Cloud Storage Settings
           </span>
           <button class="cloud-modal-close" id="settingsClose" title="Close">&times;</button>
@@ -36,12 +36,13 @@ export class SettingsModal {
           </div>
 
           <!-- S3 Section -->
-          <div class="settings-section">
-            <div class="settings-section-header">
+          <div class="settings-section collapsed">
+            <div class="settings-section-header settings-collapsible-header">
               <i class="fa fa-cloud"></i> AWS S3
               <span class="settings-status" id="s3Status"></span>
+              <span class="settings-collapse-icon">&#9656;</span>
             </div>
-            <div class="settings-form" id="s3Form">
+            <div class="settings-form settings-collapsible-body" id="s3Form">
               <div class="settings-field">
                 <label for="s3AccessKey">Access Key ID</label>
                 <input type="text" id="s3AccessKey" placeholder="AKIA..." autocomplete="off">
@@ -79,12 +80,13 @@ export class SettingsModal {
           </div>
 
           <!-- Google Drive Section -->
-          <div class="settings-section">
-            <div class="settings-section-header">
+          <div class="settings-section collapsed">
+            <div class="settings-section-header settings-collapsible-header">
               <i class="fab fa-google-drive"></i> Google Drive
               <span class="settings-status" id="gdriveConfigStatus"></span>
+              <span class="settings-collapse-icon">&#9656;</span>
             </div>
-            <div class="settings-form" id="gdriveForm">
+            <div class="settings-form settings-collapsible-body" id="gdriveForm">
               <p class="settings-description">
                 Create a <strong>Web application</strong> OAuth 2.0 Client ID in
                 <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console</a>,
@@ -122,6 +124,14 @@ export class SettingsModal {
     this.modal.querySelector('#settingsClose').addEventListener('click', () => this.close());
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) this.close();
+    });
+
+    // Collapsible section toggling
+    this.modal.querySelectorAll('.settings-collapsible-header').forEach(header => {
+      header.addEventListener('click', (e) => {
+        if (e.target.closest('.settings-status')) return;
+        header.closest('.settings-section').classList.toggle('collapsed');
+      });
     });
 
     // Toggle password visibility
