@@ -2,6 +2,144 @@
    Easter Egg - Dangerous Dave on a Retro CRT PC
    ============================================ */
 
+/* ========== GLITCH ENTRANCE/EXIT EFFECT ========== */
+
+/* Phase 1: Page glitch - applied to <body> */
+@keyframes page-glitch {
+  0%   { transform: translate(0); filter: none; }
+  5%   { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
+  10%  { transform: translate(2px, -2px); filter: hue-rotate(-90deg) saturate(2); }
+  15%  { transform: translate(0); filter: none; }
+  20%  { transform: translate(5px, 0) skewX(-2deg); filter: hue-rotate(180deg); }
+  25%  { transform: translate(-4px, 2px) skewX(3deg); filter: saturate(3) brightness(1.3); }
+  30%  { transform: translate(0) skewX(0); filter: none; }
+  35%  { transform: translate(1px, -3px); filter: hue-rotate(-60deg) contrast(1.5); }
+  40%  { transform: translate(-2px, 1px); filter: invert(1); }
+  42%  { transform: translate(0); filter: none; }
+  45%  { transform: translate(3px, 2px) skewX(-1deg); filter: hue-rotate(120deg) brightness(1.5); }
+  50%  { transform: translate(0); filter: none; }
+  55%  { transform: translate(-1px, -1px); filter: saturate(0) brightness(2); }
+  57%  { transform: translate(0); filter: none; }
+  100% { transform: translate(0); filter: none; }
+}
+
+/* RGB split pseudo-elements on body during glitch */
+body.glitching {
+  animation: page-glitch 0.8s ease-out;
+  overflow: hidden;
+}
+
+body.glitching::before,
+body.glitching::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9998;
+  pointer-events: none;
+  animation: rgb-split 0.8s ease-out;
+}
+
+body.glitching::before {
+  background: rgba(255, 0, 0, 0.04);
+  animation: rgb-split-red 0.8s ease-out;
+}
+
+body.glitching::after {
+  background: rgba(0, 255, 255, 0.04);
+  animation: rgb-split-cyan 0.8s ease-out;
+}
+
+@keyframes rgb-split-red {
+  0%   { transform: translate(0); opacity: 0; }
+  10%  { transform: translate(8px, -2px); opacity: 1; }
+  20%  { transform: translate(-5px, 1px); opacity: 0.8; }
+  30%  { transform: translate(3px, -1px); opacity: 0.5; }
+  50%  { transform: translate(-2px, 0); opacity: 0.3; }
+  70%  { transform: translate(1px, 0); opacity: 0.1; }
+  100% { transform: translate(0); opacity: 0; }
+}
+
+@keyframes rgb-split-cyan {
+  0%   { transform: translate(0); opacity: 0; }
+  10%  { transform: translate(-8px, 2px); opacity: 1; }
+  20%  { transform: translate(5px, -1px); opacity: 0.8; }
+  30%  { transform: translate(-3px, 1px); opacity: 0.5; }
+  50%  { transform: translate(2px, 0); opacity: 0.3; }
+  70%  { transform: translate(-1px, 0); opacity: 0.1; }
+  100% { transform: translate(0); opacity: 0; }
+}
+
+/* Horizontal tear lines that sweep during glitch */
+@keyframes glitch-scanlines {
+  0%   { background-position: 0 0; opacity: 0; }
+  10%  { opacity: 1; }
+  50%  { background-position: 0 100%; opacity: 0.6; }
+  100% { background-position: 0 200%; opacity: 0; }
+}
+
+body.glitching > .glitch-tear-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 255, 0, 0.06) 2px,
+      rgba(0, 255, 0, 0.06) 4px
+    ),
+    linear-gradient(
+      0deg,
+      transparent 0%,
+      rgba(0, 255, 0, 0.15) 10%,
+      transparent 20%,
+      transparent 40%,
+      rgba(0, 255, 0, 0.1) 50%,
+      transparent 60%,
+      transparent 80%,
+      rgba(0, 255, 0, 0.08) 90%,
+      transparent 100%
+    );
+  background-size: 100% 4px, 100% 200%;
+  animation: glitch-scanlines 0.8s ease-out;
+}
+
+/* Exit glitch - faster, reverse feel */
+body.glitching-out {
+  animation: page-glitch 0.5s ease-in;
+  overflow: hidden;
+}
+
+body.glitching-out::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 9998;
+  pointer-events: none;
+  background: rgba(255, 0, 0, 0.04);
+  animation: rgb-split-red 0.5s ease-in;
+}
+
+body.glitching-out::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 9998;
+  pointer-events: none;
+  background: rgba(0, 255, 255, 0.04);
+  animation: rgb-split-cyan 0.5s ease-in;
+}
+
+/* ========== PC MATERIALIZE ========== */
+
 /* Full-screen overlay */
 .dave-easter-egg-overlay {
   position: fixed;
@@ -15,8 +153,11 @@
   justify-content: center;
   align-items: center;
   opacity: 0;
-  transition: opacity 0.4s ease;
   pointer-events: none;
+}
+
+.dave-easter-egg-overlay.entering {
+  animation: overlay-materialize 0.5s ease-out forwards;
 }
 
 .dave-easter-egg-overlay.active {
@@ -24,17 +165,161 @@
   pointer-events: auto;
 }
 
+.dave-easter-egg-overlay.exiting {
+  animation: overlay-dissolve 0.4s ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes overlay-materialize {
+  0%   { opacity: 0; }
+  15%  { opacity: 0.7; }
+  25%  { opacity: 0.3; }
+  40%  { opacity: 0.9; }
+  50%  { opacity: 0.5; }
+  65%  { opacity: 0.95; }
+  100% { opacity: 1; pointer-events: auto; }
+}
+
+@keyframes overlay-dissolve {
+  0%   { opacity: 1; }
+  40%  { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
 /* The whole PC assembly */
 .retro-pc {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: scale(0.85);
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+/* PC entrance: bright flash -> digital corruption -> slam into place */
+.dave-easter-egg-overlay.entering .retro-pc {
+  animation: pc-flash-in 0.9s 0.15s ease-out forwards;
 }
 
 .dave-easter-egg-overlay.active .retro-pc {
+  opacity: 1;
   transform: scale(1);
+}
+
+.dave-easter-egg-overlay.exiting .retro-pc {
+  animation: pc-dissolve 0.35s ease-in forwards;
+}
+
+/* Bright white flash -> glitch distortion -> slam to solid */
+@keyframes pc-flash-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.01) scaleY(0.01);
+    filter: brightness(10) blur(20px);
+  }
+  /* Bright horizontal line appears (like CRT turning on) */
+  8% {
+    opacity: 1;
+    transform: scale(0.8) scaleY(0.008);
+    filter: brightness(8) blur(2px) saturate(0);
+  }
+  /* Line expands vertically with bright flash */
+  16% {
+    opacity: 1;
+    transform: scale(0.95) scaleY(0.15);
+    filter: brightness(5) blur(1px) saturate(0);
+  }
+  /* Rapid vertical expansion */
+  24% {
+    opacity: 1;
+    transform: scale(1.02) scaleY(0.7);
+    filter: brightness(2.5) saturate(0.3);
+  }
+  /* Almost full, glitch flicker */
+  30% {
+    transform: scale(0.97) scaleY(1) skewX(3deg);
+    filter: brightness(3) hue-rotate(90deg);
+  }
+  34% {
+    transform: scale(1.03) skewX(-2deg);
+    filter: brightness(0.3);
+  }
+  38% {
+    transform: scale(0.99) skewX(1deg);
+    filter: brightness(4) hue-rotate(-60deg);
+  }
+  42% {
+    transform: scale(1.01) skewX(0deg);
+    filter: brightness(0.5) saturate(2);
+  }
+  /* Stabilizing */
+  50% {
+    transform: scale(1.015);
+    filter: brightness(1.8) saturate(1);
+  }
+  60% {
+    transform: scale(0.995) translateY(1px);
+    filter: brightness(1.3);
+  }
+  75% {
+    transform: scale(1.005);
+    filter: brightness(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+  }
+}
+
+@keyframes pc-dissolve {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+  }
+  30% {
+    opacity: 0.8;
+    transform: scale(1.03) rotate(0.5deg);
+    filter: brightness(1.5) blur(1px);
+  }
+  60% {
+    opacity: 0.4;
+    transform: scale(0.9) rotate(-1deg);
+    filter: brightness(3) blur(4px) saturate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(2deg);
+    filter: brightness(5) blur(10px) saturate(0);
+  }
+}
+
+/* Static noise flash overlay during materialize */
+.glitch-static-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10001;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: overlay;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  animation: static-flash 0.8s ease-out;
+}
+
+@keyframes static-flash {
+  0%   { opacity: 0; }
+  8%   { opacity: 0.8; }
+  15%  { opacity: 0.2; }
+  22%  { opacity: 0.9; }
+  30%  { opacity: 0.3; }
+  40%  { opacity: 0.6; }
+  50%  { opacity: 0.1; }
+  60%  { opacity: 0.4; }
+  75%  { opacity: 0.05; }
+  100% { opacity: 0; }
 }
 
 /* ---- CRT Monitor ---- */
