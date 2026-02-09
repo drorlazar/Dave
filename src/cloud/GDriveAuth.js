@@ -1,4 +1,4 @@
-// GDriveAuth.js - Google Drive authentication handling (via Apps Script popup bridge)
+// GDriveAuth.js - Google Drive authentication handling (via Apps Script iframe/popup bridge)
 
 import { getGDriveClient } from './CloudStorageProvider.js';
 

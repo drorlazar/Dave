@@ -237,6 +237,52 @@ async function listGDriveFilesRecursive({ folderId = 'root', maxDepth = 'all' })
   }).filter(Boolean);
 }
 
+// ── Special GDrive Listings (Shared, Starred, Recent) ──
+
+export async function listGDriveSpecial(section) {
+  const client = getGDriveClient();
+  let data;
+
+  switch (section) {
+    case 'shared':
+      data = await client.listSharedWithMe();
+      break;
+    case 'starred':
+      data = await client.listStarred();
+      break;
+    case 'recent':
+      data = await client.listRecent();
+      break;
+    default:
+      throw new Error(`Unknown GDrive section: ${section}`);
+  }
+
+  const folders = data.items
+    .filter(i => i.type === 'directory')
+    .map(f => ({ name: f.name, id: f.id, type: 'directory' }));
+
+  const files = data.items
+    .filter(i => i.type === 'file')
+    .map(f => {
+      const typeInfo = detectFileType(f.name);
+      if (!typeInfo) return null;
+      return {
+        name: f.name,
+        file: null,
+        type: typeInfo.type,
+        subtype: typeInfo.subtype,
+        fullPath: f.name,
+        size: f.size,
+        lastModified: new Date(f.modifiedTime).getTime(),
+        source: 'gdrive',
+        cloudFileId: f.id
+      };
+    })
+    .filter(Boolean);
+
+  return { folders, files };
+}
+
 // ── File URL Generation ──
 
 export async function getFileUrl(model) {

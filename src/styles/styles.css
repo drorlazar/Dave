@@ -1803,6 +1803,12 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
   margin: 0;
 }
 
+.tree-empty-hint {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
 .tree-container {
   display: none; /* Hidden initially until folders are loaded */
   height: 100%;
@@ -2054,6 +2060,158 @@ body:not(.dark-mode) .tree-container li.selected .chevron-icon {
   border-radius: 8px;
   pointer-events: none;
   z-index: 11;
+}
+
+/* ── Viewer Empty State ── */
+.viewer-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  grid-column: 1 / -1;
+  min-height: 50vh;
+  color: #666;
+  transition: color 0.2s;
+  user-select: none;
+}
+
+.viewer-empty-state:hover {
+  color: #999;
+}
+
+.viewer-empty-state i {
+  font-size: 64px;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+.viewer-empty-state:hover i {
+  opacity: 0.5;
+}
+
+.viewer-empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.viewer-empty-state span {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+body:not(.dark-mode) .viewer-empty-state {
+  color: #999;
+}
+
+body:not(.dark-mode) .viewer-empty-state:hover {
+  color: #666;
+}
+
+/* ── Source option active state ── */
+.source-option.active {
+  background: rgba(155, 119, 255, 0.15);
+  color: #9b77ff;
+}
+
+/* ── Cloud path bar (shown in main view when browsing cloud files) ── */
+.cloud-path-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #1e1e2e;
+  border-bottom: 1px solid #333;
+  padding: 0 4px;
+  min-height: 34px;
+  font-size: 0.8rem;
+  z-index: 5;
+}
+
+.cloud-path-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #9b77ff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.cloud-path-btn:hover {
+  background: rgba(155, 119, 255, 0.12);
+  border-color: rgba(155, 119, 255, 0.2);
+}
+
+.cloud-path-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow-x: auto;
+  gap: 2px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.cloud-path-breadcrumb::-webkit-scrollbar { height: 3px; }
+.cloud-path-breadcrumb::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+.cloud-path-crumb {
+  color: #888;
+  padding: 3px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cloud-path-crumb:hover {
+  background: rgba(155, 119, 255, 0.1);
+  color: #ccc;
+}
+
+.cloud-path-crumb.current {
+  color: #ddd;
+  cursor: default;
+}
+
+.cloud-path-crumb.current:hover {
+  background: none;
+  color: #ddd;
+}
+
+.cloud-path-crumb i {
+  margin-right: 4px;
+}
+
+.cloud-path-sep {
+  color: #555;
+  font-size: 0.7rem;
+  margin: 0 1px;
+}
+
+body:not(.dark-mode) .cloud-path-bar {
+  background: #f5f5f5;
+  border-bottom-color: #ddd;
+}
+
+body:not(.dark-mode) .cloud-path-crumb {
+  color: #777;
+}
+
+body:not(.dark-mode) .cloud-path-crumb:hover {
+  background: rgba(124, 92, 255, 0.08);
+  color: #444;
+}
+
+body:not(.dark-mode) .cloud-path-crumb.current {
+  color: #333;
 }
 
 /* Light theme styles - Color scheme overrides for light mode */
@@ -3483,17 +3641,66 @@ body:not(.dark-mode) .source-option:hover {
   color: #fff;
 }
 
+/* Navigation bar (back button + breadcrumb) */
+.cloud-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #262626;
+  border-bottom: 1px solid #3a3a3a;
+  min-height: 38px;
+}
+
+.cloud-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: none;
+  border: none;
+  border-right: 1px solid #3a3a3a;
+  color: #9b77ff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.cloud-nav-btn:hover:not(:disabled) {
+  background: rgba(155, 119, 255, 0.1);
+}
+
+.cloud-nav-btn:disabled {
+  color: #444;
+  cursor: not-allowed;
+}
+
+body:not(.dark-mode) .cloud-nav-bar {
+  background: #fafafa;
+  border-bottom-color: #eee;
+}
+
+body:not(.dark-mode) .cloud-nav-btn {
+  border-right-color: #eee;
+  color: #7c5cff;
+}
+
+body:not(.dark-mode) .cloud-nav-btn:disabled {
+  color: #ccc;
+}
+
 /* Breadcrumb */
 .cloud-breadcrumb {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 10px 18px;
-  background: #262626;
-  border-bottom: 1px solid #3a3a3a;
+  padding: 10px 14px;
   font-size: 0.85rem;
   flex-wrap: wrap;
+  flex: 1;
   min-height: 38px;
+  overflow: hidden;
 }
 
 .cloud-breadcrumb-item {
@@ -3556,6 +3763,58 @@ body:not(.dark-mode) .source-option:hover {
 .cloud-item-arrow {
   color: #555;
   font-size: 0.75rem;
+}
+
+.cloud-file-icon {
+  font-size: 1rem;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.cloud-item-size {
+  font-size: 0.75rem;
+  color: #666;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cloud-file-item {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.cloud-file-item:hover {
+  background: transparent;
+  opacity: 1;
+}
+
+/* GDrive home section items */
+.cloud-section-item {
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-bottom: 1px solid #333;
+}
+
+.cloud-section-item:last-child {
+  border-bottom: none;
+}
+
+.cloud-section-icon {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+  color: #9b77ff;
+  flex-shrink: 0;
+}
+
+body:not(.dark-mode) .cloud-section-item {
+  border-bottom-color: #eee;
+}
+
+body:not(.dark-mode) .cloud-section-icon {
+  color: #7c5cff;
 }
 
 .cloud-loading {
@@ -3697,8 +3956,7 @@ body:not(.dark-mode) .cloud-modal-header {
 }
 
 body:not(.dark-mode) .cloud-breadcrumb {
-  background: #fafafa;
-  border-bottom-color: #eee;
+  /* background now on .cloud-nav-bar */
 }
 
 body:not(.dark-mode) .cloud-breadcrumb-item {

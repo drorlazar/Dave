@@ -155,3 +155,103 @@ function downloadFile(fileId) {
     encoding: 'base64'
   };
 }
+
+/**
+ * Lists files shared with the current user.
+ * Returns folders and files, sorted with folders first.
+ * @returns {Object} { items: Array<{id, name, mimeType, type, size, modifiedTime}> }
+ */
+function listSharedWithMe() {
+  var items = [];
+  var files = DriveApp.searchFiles('sharedWithMe = true');
+  var count = 0;
+  var MAX_ITEMS = 200;
+
+  while (files.hasNext() && count < MAX_ITEMS) {
+    var file = files.next();
+    var isFolder = file.getMimeType() === 'application/vnd.google-apps.folder';
+    items.push({
+      id: file.getId(),
+      name: file.getName(),
+      mimeType: file.getMimeType(),
+      type: isFolder ? 'directory' : 'file',
+      size: isFolder ? 0 : file.getSize(),
+      modifiedTime: file.getLastUpdated().toISOString()
+    });
+    count++;
+  }
+
+  items.sort(function(a, b) {
+    if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return { items: items };
+}
+
+/**
+ * Lists starred files/folders.
+ * @returns {Object} { items: Array }
+ */
+function listStarred() {
+  var items = [];
+  var files = DriveApp.searchFiles('starred = true');
+  var count = 0;
+  var MAX_ITEMS = 200;
+
+  while (files.hasNext() && count < MAX_ITEMS) {
+    var file = files.next();
+    var isFolder = file.getMimeType() === 'application/vnd.google-apps.folder';
+    items.push({
+      id: file.getId(),
+      name: file.getName(),
+      mimeType: file.getMimeType(),
+      type: isFolder ? 'directory' : 'file',
+      size: isFolder ? 0 : file.getSize(),
+      modifiedTime: file.getLastUpdated().toISOString()
+    });
+    count++;
+  }
+
+  items.sort(function(a, b) {
+    if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return { items: items };
+}
+
+/**
+ * Lists recently modified files (last 30 days).
+ * @returns {Object} { items: Array }
+ */
+function listRecent() {
+  var items = [];
+  var thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  var dateStr = Utilities.formatDate(thirtyDaysAgo, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss");
+
+  var files = DriveApp.searchFiles('modifiedDate > "' + dateStr + '" and mimeType != "application/vnd.google-apps.folder"');
+  var count = 0;
+  var MAX_ITEMS = 100;
+
+  while (files.hasNext() && count < MAX_ITEMS) {
+    var file = files.next();
+    items.push({
+      id: file.getId(),
+      name: file.getName(),
+      mimeType: file.getMimeType(),
+      type: 'file',
+      size: file.getSize(),
+      modifiedTime: file.getLastUpdated().toISOString()
+    });
+    count++;
+  }
+
+  // Sort by modified time descending (most recent first)
+  items.sort(function(a, b) {
+    return new Date(b.modifiedTime) - new Date(a.modifiedTime);
+  });
+
+  return { items: items };
+}

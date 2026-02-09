@@ -217,13 +217,25 @@
     <div class="tree-folder-content">
       <div class="tree-empty-state">
         <i class="fa fa-folder-open fa-3x"></i>
-        <p>Drag a local folder here to browse.</p>
+        <p>Drag a local folder here to browse</p>
+        <span class="tree-empty-hint">Or use <strong>Source</strong> to pick Google Drive or S3</span>
       </div>
       <div class="tree-container" id="folderTreeContainer" role="tree" aria-label="File and folder structure">
         <!-- Tree structure will be populated here by JavaScript -->
       </div>
     </div>
     <div class="tree-folder-resizer" id="treeFolderResizer"></div>
+  </div>
+
+  <!-- Cloud path bar (visible when browsing cloud storage) -->
+  <div id="cloudPathBar" class="cloud-path-bar" style="display:none">
+    <button id="cloudPathUp" class="cloud-path-btn" title="Go up one folder">
+      <i class="fa fa-arrow-up"></i>
+    </button>
+    <div id="cloudPathBreadcrumb" class="cloud-path-breadcrumb"></div>
+    <button id="cloudPathBrowse" class="cloud-path-btn" title="Browse this folder">
+      <i class="fa fa-folder-open"></i>
+    </button>
   </div>
 
   <div id="viewerContainer"></div>
