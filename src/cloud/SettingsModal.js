@@ -111,7 +111,7 @@ export class SettingsModal {
           <div class="settings-help">
             <i class="fa fa-circle-info"></i>
             For setup instructions, see the
-            <a href="docs/CLOUD_STORAGE.md" target="_blank">Cloud Storage Guide</a>.
+            <a href="docs/cloud-setup.html" target="_blank">Cloud Storage Guide</a>.
           </div>
         </div>
       </div>

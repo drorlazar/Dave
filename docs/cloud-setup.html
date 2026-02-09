@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAVE - Cloud Storage Setup Guide</title>
+<link rel="icon" href="../assets/images/DaveLogo.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-card-hover: #222633;
+  --bg-code: #151821;
+  --border: #2a2e3a;
+  --text: #e0e0e0;
+  --text-dim: #8a8fa0;
+  --accent-blue: #4e9af5;
+  --accent-green: #3dd68c;
+  --accent-orange: #f5a623;
+  --accent-purple: #9b77ff;
+  --accent-red: #f56565;
+  --s3-color: #ff9900;
+  --gdrive-color: #4285f4;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+a { color: var(--accent-blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Layout ── */
+.page-wrapper {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ── Hero ── */
+.hero {
+  text-align: center;
+  padding: 48px 24px 40px;
+  margin-bottom: 40px;
+  background: linear-gradient(135deg, rgba(78,154,245,0.08) 0%, rgba(155,119,255,0.08) 100%);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.hero-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.hero h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+/* ── Picker Cards ── */
+.picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 20px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none !important;
+  color: var(--text);
+}
+
+.pick-card:hover {
+  border-color: var(--accent-blue);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+}
+
+.pick-card i {
+  font-size: 2.2rem;
+}
+
+.pick-card.s3 i { color: var(--s3-color); }
+.pick-card.gdrive i { color: var(--gdrive-color); }
+
+.pick-card .pick-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.pick-card .pick-desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* ── Section ── */
+.guide-section {
+  margin-bottom: 56px;
+  scroll-margin-top: 24px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-header i {
+  font-size: 1.6rem;
+}
+
+.section-header.s3 i { color: var(--s3-color); }
+.section-header.gdrive i { color: var(--gdrive-color); }
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* ── Step Cards ── */
+.step {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.s3 .step-number, .step.s3-step .step-number {
+  background: rgba(255, 153, 0, 0.15);
+  color: var(--s3-color);
+}
+
+.gdrive .step-number, .step.gdrive-step .step-number {
+  background: rgba(66, 133, 244, 0.15);
+  color: var(--gdrive-color);
+}
+
+.step-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.step p, .step li {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.step ol, .step ul {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.step ol li { margin-bottom: 8px; }
+
+.step strong { color: var(--text); font-weight: 600; }
+
+/* ── Inline badges for UI elements ── */
+.ui-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(78, 154, 245, 0.12);
+  color: var(--accent-blue);
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ui-ref i { font-size: 0.8rem; }
+
+/* ── Code blocks ── */
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 14px 0;
+  position: relative;
+}
+
+pre code { color: var(--text-dim); font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; }
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover { background: rgba(255,255,255,0.15); color: var(--text); }
+.copy-btn.copied { color: var(--accent-green); border-color: var(--accent-green); }
+
+/* ── Callouts ── */
+.callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  margin: 14px 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.callout i { margin-top: 3px; flex-shrink: 0; }
+.callout p { color: var(--text-dim); }
+
+.callout.tip {
+  background: rgba(61, 214, 140, 0.08);
+  border: 1px solid rgba(61, 214, 140, 0.2);
+}
+.callout.tip i { color: var(--accent-green); }
+
+.callout.warn {
+  background: rgba(245, 166, 35, 0.08);
+  border: 1px solid rgba(245, 166, 35, 0.2);
+}
+.callout.warn i { color: var(--accent-orange); }
+
+.callout.info {
+  background: rgba(78, 154, 245, 0.08);
+  border: 1px solid rgba(78, 154, 245, 0.2);
+}
+.callout.info i { color: var(--accent-blue); }
+
+/* ── Time estimate ── */
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(155,119,255,0.1);
+  color: var(--accent-purple);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+/* ── Expandable troubleshooting ── */
+details {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+summary {
+  padding: 14px 18px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.15s;
+}
+
+summary:hover { background: var(--bg-card-hover); }
+
+summary::marker { content: ''; }
+
+summary .arrow {
+  transition: transform 0.2s;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+details[open] summary .arrow { transform: rotate(90deg); }
+
+details .details-body {
+  padding: 0 18px 16px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* ── Divider ── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 48px 0;
+}
+
+/* ── Back link ── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+}
+
+.back-link:hover { color: var(--accent-blue); text-decoration: none; }
+
+/* ── Security section ── */
+.security-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.security-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.security-item i {
+  color: var(--accent-green);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .picker { grid-template-columns: 1fr; }
+  .security-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 1.6rem; }
+  .page-wrapper { padding: 24px 16px 60px; }
+  .step { padding: 18px 20px; }
+  pre { font-size: 0.78rem; padding: 12px 14px; }
+}
+
+/* ── Smooth scroll ── */
+html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <a href="../index.html" class="back-link"><i class="fa fa-arrow-left"></i> Back to DAVE</a>
+
+  <!-- ════════ Hero ════════ -->
+  <div class="hero">
+    <img src="../assets/images/DaveLogo.png" alt="DAVE" class="hero-logo">
+    <h1>Cloud Storage Setup</h1>
+    <p>Connect DAVE to your cloud files in minutes. Pick a service below and follow the steps &mdash; no coding required.</p>
+  </div>
+
+  <!-- ════════ Picker ════════ -->
+  <div class="picker">
+    <a href="#s3-section" class="pick-card s3">
+      <i class="fab fa-aws"></i>
+      <span class="pick-title">Amazon S3</span>
+      <span class="pick-desc">Best for large asset libraries already on AWS</span>
+    </a>
+    <a href="#gdrive-section" class="pick-card gdrive">
+      <i class="fab fa-google-drive"></i>
+      <span class="pick-title">Google Drive</span>
+      <span class="pick-desc">Easiest option &mdash; just link your Google account</span>
+    </a>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--                  AWS S3                        -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="guide-section" id="s3-section">
+    <div class="section-header s3">
+      <i class="fab fa-aws"></i>
+      <h2>Amazon S3 Setup</h2>
+    </div>
+
+    <div class="time-badge"><i class="fa fa-clock"></i> About 10 minutes</div>
+
+    <!-- Step 1 -->
+    <div class="step s3-step">
+      <div class="step-title"><span class="step-number">1</span> Allow DAVE to talk to your S3 bucket (CORS)</div>
+      <p>By default, browsers block websites from reading files on other servers. You need to tell AWS "it's OK for DAVE to access this bucket." This is a one-time setting called <strong>CORS</strong>.</p>
+      <ol>
+        <li>Open the <a href="https://s3.console.aws.amazon.com/" target="_blank" rel="noopener">AWS S3 Console</a></li>
+        <li>Click on your <strong>bucket name</strong></li>
+        <li>Go to the <strong>Permissions</strong> tab</li>
+        <li>Scroll down to <strong>Cross-origin resource sharing (CORS)</strong> and click <strong>Edit</strong></li>
+        <li>Delete anything already there, then paste this:</li>
+      </ol>
+      <pre><code id="corsCode">[
+  {
+    "AllowedHeaders": [
+      "Authorization",
+      "x-amz-date",
+      "x-amz-content-sha256",
+      "content-type"
+    ],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedOrigins": ["*"],
+    "ExposeHeaders": [],
+    "MaxAgeSeconds": 3600
+  }
+]</code><button class="copy-btn" onclick="copyCode('corsCode', this)"><i class="fa fa-copy"></i> Copy</button></pre>
+      <ol start="6">
+        <li>Click <strong>Save changes</strong></li>
+      </ol>
+
+      <div class="callout tip">
+        <i class="fa fa-lightbulb"></i>
+        <p>The <code>"*"</code> in AllowedOrigins means "allow any website." This is fine for getting started. Later you can lock it down to just <code>https://drorlazar-sett.github.io</code> and <code>http://localhost:7777</code>.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step s3-step">
+      <div class="step-title"><span class="step-number">2</span> Get your AWS access keys</div>
+      <p>You need an <strong>Access Key ID</strong> and <strong>Secret Access Key</strong> &mdash; think of them like a username and password for programs to access your bucket.</p>
+
+      <div class="callout warn">
+        <i class="fa fa-shield-halved"></i>
+        <p><strong>Safety tip:</strong> Don't use your main AWS account keys. Create a separate user with <strong>read-only</strong> access to your bucket. That way even if the keys leak, nobody can delete or change your files.</p>
+      </div>
+
+      <p><strong>If you already have keys</strong>, skip to Step 3. Otherwise:</p>
+      <ol>
+        <li>Open the <a href="https://console.aws.amazon.com/iam/" target="_blank" rel="noopener">AWS IAM Console</a></li>
+        <li>Go to <strong>Users</strong> &rarr; <strong>Create user</strong></li>
+        <li>Give it a name like <code>dave-viewer</code></li>
+        <li>On the permissions step, click <strong>Attach policies directly</strong> and search for <code>AmazonS3ReadOnlyAccess</code>. Check the box and continue.</li>
+        <li>After creating the user, go to <strong>Security credentials</strong> tab &rarr; <strong>Create access key</strong></li>
+        <li>Choose <strong>"Application running outside AWS"</strong></li>
+        <li>Copy both the <strong>Access Key ID</strong> (starts with <code>AKIA...</code>) and the <strong>Secret Access Key</strong></li>
+      </ol>
+
+      <div class="callout info">
+        <i class="fa fa-circle-info"></i>
+        <p>Write down the Secret Access Key now &mdash; AWS won't show it again after you leave this page.</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step s3-step">
+      <div class="step-title"><span class="step-number">3</span> Enter your credentials in DAVE</div>
+      <ol>
+        <li>Open DAVE and click the <span class="ui-ref"><i class="fa fa-gear"></i> Settings</span> button in the top bar</li>
+        <li>In the <strong>AWS S3</strong> section, fill in:
+          <ul>
+            <li><strong>Access Key ID</strong> &mdash; the one starting with <code>AKIA...</code></li>
+            <li><strong>Secret Access Key</strong> &mdash; your secret key</li>
+            <li><strong>Region</strong> &mdash; the AWS region your bucket is in (e.g. <code>eu-central-1</code>)</li>
+            <li><strong>Default Bucket</strong> &mdash; the name of your bucket</li>
+          </ul>
+        </li>
+        <li>Click <strong>Save</strong></li>
+      </ol>
+
+      <div class="callout tip">
+        <i class="fa fa-lightbulb"></i>
+        <p>Not sure what region your bucket is in? In the AWS S3 console, click your bucket &rarr; <strong>Properties</strong> tab. The region is shown near the top (e.g. "EU (Frankfurt) eu-central-1").</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step s3-step">
+      <div class="step-title"><span class="step-number">4</span> Browse your files!</div>
+      <p>Click <span class="ui-ref"><i class="fa fa-cloud"></i> Source</span> in the toolbar and choose <strong>AWS S3</strong>. A folder browser will open where you can navigate your bucket and load files into the DAVE grid.</p>
+
+      <p style="margin-top: 12px;"><strong>Other ways to open S3 content:</strong></p>
+      <ul>
+        <li><strong>Paste a URL</strong> &mdash; copy any S3 console URL from your browser and paste it into DAVE's search bar</li>
+        <li><strong>Drag &amp; drop</strong> &mdash; drag an S3 URL from your browser into the DAVE window</li>
+        <li><strong>s3:// links</strong> &mdash; type <code>s3://bucket-name/folder/</code> into the search bar</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--              Google Drive                      -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="guide-section" id="gdrive-section">
+    <div class="section-header gdrive">
+      <i class="fab fa-google-drive"></i>
+      <h2>Google Drive Setup</h2>
+    </div>
+
+    <div class="time-badge"><i class="fa fa-clock"></i> About 5&ndash;10 minutes</div>
+
+    <!-- Step 1 -->
+    <div class="step gdrive-step">
+      <div class="step-title"><span class="step-number">1</span> Create a Google Cloud project</div>
+      <p>Google needs a "project" to manage your app's access. Don't worry &mdash; it's free and takes a minute.</p>
+      <ol>
+        <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a></li>
+        <li>If this is your first time, agree to the terms of service</li>
+        <li>Click the project dropdown at the top &rarr; <strong>New Project</strong></li>
+        <li>Name it something like <code>DAVE Viewer</code> and click <strong>Create</strong></li>
+        <li>Make sure your new project is selected in the dropdown at the top</li>
+      </ol>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step gdrive-step">
+      <div class="step-title"><span class="step-number">2</span> Turn on the Google Drive API</div>
+      <ol>
+        <li>In Google Cloud Console, go to <strong>APIs &amp; Services</strong> &rarr; <strong>Library</strong> (in the left sidebar)</li>
+        <li>Search for <strong>Google Drive API</strong></li>
+        <li>Click on it and press the big blue <strong>Enable</strong> button</li>
+      </ol>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step gdrive-step">
+      <div class="step-title"><span class="step-number">3</span> Set up the consent screen</div>
+      <p>This tells Google what to show users when they sign in. You only need to do this once.</p>
+      <ol>
+        <li>Go to <strong>APIs &amp; Services</strong> &rarr; <strong>OAuth consent screen</strong></li>
+        <li>Choose <strong>External</strong> and click <strong>Create</strong></li>
+        <li>Fill in the required fields:
+          <ul>
+            <li><strong>App name:</strong> <code>DAVE Viewer</code> (or anything you like)</li>
+            <li><strong>User support email:</strong> your email</li>
+            <li><strong>Developer contact email:</strong> your email</li>
+          </ul>
+        </li>
+        <li>Click <strong>Save and Continue</strong> through the remaining steps (Scopes, Test users &mdash; you can skip these for now)</li>
+      </ol>
+
+      <div class="callout info">
+        <i class="fa fa-circle-info"></i>
+        <p>Since the app is in "Testing" mode, only your Google account (and accounts you add as test users) can sign in. This is perfectly fine for personal use.</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step gdrive-step">
+      <div class="step-title"><span class="step-number">4</span> Create your OAuth Client ID</div>
+      <p>This is the key piece DAVE needs &mdash; a Client ID that lets the sign-in popup work.</p>
+      <ol>
+        <li>Go to <strong>APIs &amp; Services</strong> &rarr; <strong>Credentials</strong></li>
+        <li>Click <strong>+ Create Credentials</strong> &rarr; <strong>OAuth client ID</strong></li>
+        <li>For <strong>Application type</strong>, choose <strong>Web application</strong></li>
+        <li>Give it a name (e.g. <code>DAVE</code>)</li>
+        <li>Under <strong>Authorized JavaScript origins</strong>, click <strong>+ Add URI</strong> and add:
+          <ul>
+            <li><code>https://drorlazar-sett.github.io</code> &mdash; for the live site</li>
+            <li><code>http://localhost:7777</code> &mdash; for local development</li>
+          </ul>
+        </li>
+        <li>Click <strong>Create</strong></li>
+        <li>A popup shows your Client ID &mdash; <strong>copy it</strong> (it looks like <code>123456789-xxxxx.apps.googleusercontent.com</code>)</li>
+      </ol>
+
+      <div class="callout warn">
+        <i class="fa fa-triangle-exclamation"></i>
+        <p><strong>Important:</strong> Make sure you pick <strong>Web application</strong>, not "Desktop app." Desktop app will not work with DAVE.</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step gdrive-step">
+      <div class="step-title"><span class="step-number">5</span> Enter the Client ID in DAVE</div>
+      <ol>
+        <li>Open DAVE and click the <span class="ui-ref"><i class="fa fa-gear"></i> Settings</span> button in the top bar</li>
+        <li>In the <strong>Google Drive</strong> section, paste your Client ID</li>
+        <li>Click <strong>Save</strong></li>
+      </ol>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step gdrive-step">
+      <div class="step-title"><span class="step-number">6</span> Sign in and browse!</div>
+      <ol>
+        <li>Click <span class="ui-ref"><i class="fa fa-cloud"></i> Source</span> in the toolbar and choose <strong>Google Drive</strong></li>
+        <li>A Google sign-in popup will appear &mdash; pick your account and click <strong>Allow</strong></li>
+        <li>The folder browser opens with your Drive files. Navigate to a folder and click <strong>Load Files</strong>!</li>
+      </ol>
+
+      <div class="callout tip">
+        <i class="fa fa-lightbulb"></i>
+        <p>Your Google session lasts about 1 hour. When it expires, just click Source &rarr; Google Drive again to sign back in.</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--              Using Cloud Sources               -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="guide-section" id="usage-section">
+    <div class="section-header" style="border-bottom-color: var(--accent-purple);">
+      <i class="fa fa-folder-open" style="color: var(--accent-purple);"></i>
+      <h2>Once You're Connected</h2>
+    </div>
+
+    <div class="step">
+      <div class="step-title" style="margin-bottom: 10px;"><i class="fa fa-compass" style="color: var(--accent-purple); margin-right: 8px;"></i> Browsing folders</div>
+      <ul>
+        <li>Click any <strong>folder</strong> to go inside it</li>
+        <li>Use the <strong>breadcrumb trail</strong> at the top to go back</li>
+        <li>The footer shows how many viewable files are in the current folder</li>
+        <li>Check <strong>Subfolders</strong> to also grab files from nested folders</li>
+        <li>Use the <strong>depth dropdown</strong> to limit how deep (1, 2, 3 levels, or All)</li>
+        <li>Click <strong>Load Files</strong> to display everything in the DAVE grid</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-title" style="margin-bottom: 10px;"><i class="fa fa-link" style="color: var(--accent-purple); margin-right: 8px;"></i> Quick loading with URLs</div>
+      <p>You can also paste or drag cloud URLs directly:</p>
+      <ul>
+        <li><strong>Search bar:</strong> Paste any S3 console URL, <code>s3://</code> link, or Google Drive folder URL</li>
+        <li><strong>Drag &amp; drop:</strong> Drag a URL from your browser's address bar into DAVE</li>
+      </ul>
+      <p style="margin-top: 8px;">DAVE will respect your <strong>subfolder toggle</strong> setting &mdash; if it's set to "2", it loads files from 2 levels deep.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-title" style="margin-bottom: 10px;"><i class="fa fa-file-circle-check" style="color: var(--accent-purple); margin-right: 8px;"></i> Supported file types</div>
+      <p>Cloud sources support everything local folders do:</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin-top: 10px; font-size: 0.9rem; color: var(--text-dim);">
+        <span><i class="fa fa-cube" style="width: 18px; color: var(--accent-blue);"></i> 3D Models &mdash; FBX, GLB</span>
+        <span><i class="fa fa-image" style="width: 18px; color: var(--accent-green);"></i> Images &mdash; PNG, JPG, GIF, SVG, WebP...</span>
+        <span><i class="fa fa-video" style="width: 18px; color: var(--accent-orange);"></i> Video &mdash; MP4, WebM, MOV...</span>
+        <span><i class="fa fa-music" style="width: 18px; color: var(--accent-purple);"></i> Audio &mdash; MP3, WAV, OGG, FLAC...</span>
+        <span><i class="fa fa-font" style="width: 18px; color: var(--accent-red);"></i> Fonts &mdash; TTF, OTF, WOFF, WOFF2</span>
+        <span><i class="fa fa-file-lines" style="width: 18px; color: var(--text-dim);"></i> Text &mdash; TXT, JSON, XML, MD...</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--              Security                          -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="guide-section" id="security-section">
+    <div class="section-header" style="border-bottom-color: var(--accent-green);">
+      <i class="fa fa-shield-halved" style="color: var(--accent-green);"></i>
+      <h2>Your Data is Safe</h2>
+    </div>
+
+    <p style="color: var(--text-dim); margin-bottom: 16px;">DAVE runs 100% in your browser. Your credentials never leave your machine.</p>
+
+    <div class="security-grid">
+      <div class="security-item">
+        <i class="fa fa-lock"></i>
+        <span><strong>No server involved</strong> &mdash; DAVE talks directly to AWS / Google from your browser</span>
+      </div>
+      <div class="security-item">
+        <i class="fa fa-database"></i>
+        <span><strong>Local storage only</strong> &mdash; credentials are saved in your browser, never uploaded</span>
+      </div>
+      <div class="security-item">
+        <i class="fa fa-eye-slash"></i>
+        <span><strong>Read-only access</strong> &mdash; DAVE can only view files, never modify or delete them</span>
+      </div>
+      <div class="security-item">
+        <i class="fa fa-clock"></i>
+        <span><strong>Google tokens expire</strong> &mdash; Drive sessions auto-expire after 1 hour</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--              Troubleshooting                   -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="guide-section" id="troubleshooting-section">
+    <div class="section-header" style="border-bottom-color: var(--accent-orange);">
+      <i class="fa fa-wrench" style="color: var(--accent-orange);"></i>
+      <h2>Troubleshooting</h2>
+    </div>
+
+    <h3 style="color: var(--s3-color); font-size: 1rem; margin-bottom: 12px;"><i class="fab fa-aws"></i> AWS S3 Issues</h3>
+
+    <details>
+      <summary><span class="arrow"><i class="fa fa-chevron-right"></i></span> "Cannot reach S3 bucket" or CORS error</summary>
+      <div class="details-body">
+        <p>This is the most common issue. It means your bucket's CORS settings aren't allowing DAVE to connect.</p>
+        <ul>
+          <li>Go back to <a href="#s3-section">Step 1</a> and double-check the CORS configuration</li>
+          <li>Make sure you pasted the JSON exactly as shown (no missing brackets)</li>
+          <li>Try setting <code>AllowedOrigins</code> to <code>["*"]</code> to rule out origin issues</li>
+          <li>After saving CORS changes, wait a minute and try again (AWS caches the old settings briefly)</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="arrow"><i class="fa fa-chevron-right"></i></span> "Invalid AWS Access Key ID"</summary>
+      <div class="details-body">
+        <p>Your Access Key ID doesn't match any key in AWS.</p>
+        <ul>
+          <li>Open Settings and check for extra spaces before or after the key</li>
+          <li>Make sure you copied the <strong>Access Key ID</strong> (starts with <code>AKIA</code>), not something else</li>
+          <li>If you're unsure, create a new access key in the IAM console</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="arrow"><i class="fa fa-chevron-right"></i></span> "Access Denied"</summary>
+      <div class="details-body">
+        <p>Your IAM user doesn't have permission to read this bucket.</p>
+        <ul>
+          <li>The user needs at least <code>s3:ListBucket</code> and <code>s3:GetObject</code> permissions</li>
+          <li>The easiest fix: attach the <strong>AmazonS3ReadOnlyAccess</strong> policy to your IAM user</li>
+          <li>Also verify the <strong>bucket name</strong> and <strong>region</strong> are correct in Settings</li>
+        </ul>
+      </div>
+    </details>
+
+    <h3 style="color: var(--gdrive-color); font-size: 1rem; margin: 24px 0 12px;"><i class="fab fa-google-drive"></i> Google Drive Issues</h3>
+
+    <details>
+      <summary><span class="arrow"><i class="fa fa-chevron-right"></i></span> Sign-in popup doesn't appear</summary>
+      <div class="details-body">
+        <ul>
+          <li>Check that popups are not blocked for this site (look for a popup-blocked icon in your address bar)</li>
+          <li>Some ad blockers block the Google Sign-In library. Try disabling your ad blocker for DAVE</li>
+          <li>If you see "Google Sign-In library not loaded", the GIS script is being blocked</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="arrow"><i class="fa fa-chevron-right"></i></span> "redirect_uri_mismatch" error</summary>
+      <div class="details-body">
+        <p>This means the URL you're using DAVE from isn't listed in your OAuth client's authorized origins.</p>
+        <ul>
+          <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console &rarr; Credentials</a></li>
+          <li>Click on your OAuth Client ID</li>
+          <li>Under <strong>Authorized JavaScript origins</strong>, make sure you have:
+            <ul>
+              <li><code>https://drorlazar-sett.github.io</code> (no trailing slash, no path)</li>
+              <li><code>http://localhost:7777</code> (for local use)</li>
+            </ul>
+          </li>
+          <li>Also double-check you chose <strong>Web application</strong> (not "Desktop app") as the type</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="arrow"><i class="fa fa-chevron-right"></i></span> "Not configured" error</summary>
+      <div class="details-body">
+        <ul>
+          <li>Open Settings (gear icon) and verify your Client ID is saved</li>
+          <li>It should end with <code>.apps.googleusercontent.com</code></li>
+          <li>Make sure you clicked <strong>Save</strong> after pasting it</li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="arrow"><i class="fa fa-chevron-right"></i></span> "Session expired"</summary>
+      <div class="details-body">
+        <p>Google Drive tokens last about 1 hour. This is normal.</p>
+        <ul>
+          <li>Just click <strong>Source &rarr; Google Drive</strong> again to sign back in</li>
+          <li>Your settings and Client ID stay saved &mdash; you only need to re-authorize</li>
+        </ul>
+      </div>
+    </details>
+
+    <h3 style="color: var(--text-dim); font-size: 1rem; margin: 24px 0 12px;"><i class="fa fa-file"></i> General</h3>
+
+    <details>
+      <summary><span class="arrow"><i class="fa fa-chevron-right"></i></span> Files not showing up</summary>
+      <div class="details-body">
+        <ul>
+          <li>DAVE only displays files with recognized extensions (images, videos, 3D models, audio, fonts, text)</li>
+          <li>Check the <strong>filter settings</strong> (eye icon in the toolbar) &mdash; make sure the file type you need is enabled</li>
+          <li>If using subfolders, make sure the subfolder toggle isn't set to "off"</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+function copyCode(id, btn) {
+  const code = document.getElementById(id);
+  navigator.clipboard.writeText(code.textContent).then(() => {
+    btn.innerHTML = '<i class="fa fa-check"></i> Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '<i class="fa fa-copy"></i> Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
