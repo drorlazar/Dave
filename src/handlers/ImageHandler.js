@@ -116,14 +116,14 @@ export class ImageHandler extends BaseAssetHandler {
     
     container.innerHTML = '';
     container.appendChild(img);
-    
-    // Add zoom controls for images
-    this.addImageControls(container, img);
-    
+
+    // Add zoom/pan controls for images
+    const cleanupControls = this.addImageControls(container, img);
+
     return {
       element: img,
       cleanup: () => {
-        // Cleanup if needed
+        if (cleanupControls) cleanupControls();
       }
     };
   }
@@ -136,58 +136,111 @@ export class ImageHandler extends BaseAssetHandler {
       <button class="zoom-out" title="Zoom Out"><i class="fa fa-minus"></i></button>
       <button class="zoom-reset" title="Reset Zoom"><i class="fa fa-expand"></i></button>
     `;
-    
+
     let scale = 1;
     let translateX = 0;
     let translateY = 0;
-    
+
     const updateTransform = () => {
       img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      img.style.cursor = isDragging ? 'grabbing' : (scale !== 1 ? 'grab' : 'default');
     };
-    
+
     controls.querySelector('.zoom-in').addEventListener('click', () => {
-      scale = Math.min(scale * 1.2, 5);
+      scale = Math.min(scale * 1.2, 10);
       updateTransform();
     });
-    
+
     controls.querySelector('.zoom-out').addEventListener('click', () => {
       scale = Math.max(scale / 1.2, 0.5);
       updateTransform();
     });
-    
+
     controls.querySelector('.zoom-reset').addEventListener('click', () => {
       scale = 1;
       translateX = 0;
       translateY = 0;
       updateTransform();
     });
-    
-    // Add pan functionality
+
+    // Mouse wheel zoom (centered on cursor position)
+    // Attach to container so it catches wheel events in letterbox areas too
+    const onWheel = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = img.getBoundingClientRect();
+      const imgCenterX = rect.left + rect.width / 2;
+      const imgCenterY = rect.top + rect.height / 2;
+      const mouseX = e.clientX - imgCenterX;
+      const mouseY = e.clientY - imgCenterY;
+
+      const prevScale = scale;
+      const zoomFactor = 1.1;
+      if (e.deltaY < 0) {
+        scale = Math.min(scale * zoomFactor, 10);
+      } else {
+        scale = Math.max(scale / zoomFactor, 0.5);
+      }
+
+      // Adjust translation so zoom centers on cursor
+      const ratio = scale / prevScale;
+      translateX = mouseX - ratio * (mouseX - translateX);
+      translateY = mouseY - ratio * (mouseY - translateY);
+
+      updateTransform();
+    };
+
+    // Prevent page scroll on the entire fullscreen overlay while image is shown
+    const overlay = document.getElementById('fullscreenOverlay');
+    const onOverlayWheel = (e) => { e.preventDefault(); };
+    if (overlay) {
+      overlay.addEventListener('wheel', onOverlayWheel, { passive: false });
+    }
+
+    container.addEventListener('wheel', onWheel, { passive: false });
+
+    // Pan with left mouse drag
     let isDragging = false;
+    let hasDragged = false;
     let startX, startY;
-    
-    img.addEventListener('mousedown', (e) => {
-      if (scale > 1) {
-        isDragging = true;
-        startX = e.clientX - translateX;
-        startY = e.clientY - translateY;
-        img.style.cursor = 'grabbing';
-      }
-    });
-    
-    window.addEventListener('mousemove', (e) => {
-      if (isDragging) {
-        translateX = e.clientX - startX;
-        translateY = e.clientY - startY;
-        updateTransform();
-      }
-    });
-    
-    window.addEventListener('mouseup', () => {
+
+    const onMouseDown = (e) => {
+      if (e.button !== 0) return;
+      isDragging = true;
+      hasDragged = false;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      img.style.cursor = 'grabbing';
+      e.preventDefault();
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      hasDragged = true;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      updateTransform();
+    };
+
+    const onMouseUp = () => {
+      if (!isDragging) return;
       isDragging = false;
-      img.style.cursor = scale > 1 ? 'grab' : 'default';
-    });
-    
+      updateTransform();
+    };
+
+    img.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+
     container.appendChild(controls);
+
+    // Return cleanup to remove window/overlay listeners
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      if (overlay) {
+        overlay.removeEventListener('wheel', onOverlayWheel);
+      }
+    };
   }
 }

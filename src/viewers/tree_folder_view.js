@@ -712,11 +712,6 @@ async function selectFolder(li, folder) {
     li.focus(); // Set focus to the selected item
     selectedTreeFolder = folder;
     
-    // If the folder isn't expanded, expand it
-    if (li.getAttribute('aria-expanded') !== 'true' && li.querySelector('ul')) {
-        await expandSubfolders(li, folder); // Ensure this is awaited if it's async
-    }
-    
     // Load the files from this folder into the viewer (debounced)
     debouncedLoadFiles(folder);
 }
