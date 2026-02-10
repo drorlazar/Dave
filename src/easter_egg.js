@@ -57,26 +57,10 @@ const MATRIX_MODES = [
 ];
 
 const GAMES = [
-  {
-    index: 0,
-    title: 'Dangerous Dave (1990)',
-    controls: '<b>Arrows</b> Move &nbsp; <b>Ctrl</b> Jump &nbsp; <b>Alt</b> Fire'
-  },
-  {
-    index: 1,
-    title: 'Dave in the Haunted Mansion (1991)',
-    controls: '<b>Arrows</b> Move/Aim &nbsp; <b>Ctrl</b> Jump &nbsp; <b>Alt</b> Fire Shotgun'
-  },
-  {
-    index: 2,
-    title: "Dave's Risky Rescue (1993)",
-    controls: '<b>Arrows</b> Move &nbsp; <b>Ctrl</b> Jump &nbsp; <b>Alt</b> Shoot &nbsp; <b>Up</b> Open Door'
-  },
-  {
-    index: 3,
-    title: 'Dave Goes Nutz! (1993)',
-    controls: '<b>Arrows</b> Move &nbsp; <b>Ctrl</b> Jump &nbsp; <b>Alt</b> Shoot &nbsp; <b>Up</b> Open Door'
-  }
+  { index: 0, title: 'Dangerous Dave (1990)' },
+  { index: 1, title: 'Dave in the Haunted Mansion (1991)' },
+  { index: 2, title: "Dave's Risky Rescue (1993)" },
+  { index: 3, title: 'Dave Goes Nutz! (1993)' }
 ];
 
 const FALLBACK_URLS = [
@@ -256,7 +240,6 @@ function buildPCHtml(game) {
               <div class="blink">_</div>
             </div>
             <div class="crt-screen-glare"></div>
-            <div class="crt-controls-bar">${game.controls}</div>
           </div>
         </div>
         <div class="crt-panel">
