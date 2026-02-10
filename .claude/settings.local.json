@@ -57,7 +57,18 @@
       "WebFetch(domain:edit.video)",
       "Bash(gh pr view:*)",
       "WebFetch(domain:patch-diff.githubusercontent.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git merge:*)",
+      "WebFetch(domain:www.retrogames.cz)",
+      "WebFetch(domain:js-dos.com)",
+      "WebFetch(domain:v8.js-dos.com)",
+      "WebFetch(domain:dos.zone)",
+      "WebFetch(domain:www.abandonwaredos.com)",
+      "WebFetch(domain:classicreload.com)",
+      "WebFetch(domain:www.pcgamingwiki.com)",
+      "WebFetch(domain:sfprod.shikadi.net)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:rezmason.github.io)"
     ],
     "deny": []
   },
