@@ -205,6 +205,7 @@ body:not(.dark-mode) .logo-subtitle {
 
 .search-input:not(:placeholder-shown) + .search-clear {
   display: flex;
+  pointer-events: auto;
 }
 
 body:not(.dark-mode) .search-clear {
@@ -307,6 +308,85 @@ body:not(.dark-mode) .cloud-settings-cog {
 
 body:not(.dark-mode) .cloud-settings-btn:hover .cloud-settings-cog {
   color: #e0e0e0;
+}
+
+/* Settings dropdown menu */
+.settings-dropdown-content {
+  min-width: 200px !important;
+  padding: 4px 0 !important;
+}
+
+.dropdown-setting-row {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px !important;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  color: #ddd;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.dropdown-setting-row:hover {
+  background-color: #444;
+}
+
+.dropdown-setting-row i:first-child {
+  width: 16px;
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.dropdown-setting-row span {
+  flex: 1;
+}
+
+.dropdown-row-arrow {
+  font-size: 0.65rem !important;
+  color: #666 !important;
+  width: auto !important;
+}
+
+.settings-toggle-indicator {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(155, 119, 255, 0.2);
+  color: #9b77ff;
+  flex: 0 !important;
+}
+
+.settings-toggle-indicator.off {
+  background: rgba(255, 255, 255, 0.08);
+  color: #666;
+}
+
+body:not(.dark-mode) .dropdown-setting-row {
+  color: #333;
+}
+
+body:not(.dark-mode) .dropdown-setting-row:hover {
+  background-color: #f0f0f0;
+}
+
+body:not(.dark-mode) .dropdown-setting-row i:first-child {
+  color: #888;
+}
+
+body:not(.dark-mode) .dropdown-row-arrow {
+  color: #bbb !important;
+}
+
+body:not(.dark-mode) .settings-toggle-indicator {
+  background: rgba(155, 119, 255, 0.12);
+}
+
+body:not(.dark-mode) .settings-toggle-indicator.off {
+  background: rgba(0, 0, 0, 0.05);
+  color: #bbb;
 }
 
 /* Pagination controls - Styling for page navigation buttons */
@@ -1825,13 +1905,14 @@ body.tree-panel-visible .panel-right ~ #viewerContainer {
 
 .tree-folder-actions {
   display: flex;
-  gap: 5px;
+  gap: 4px;
+  align-items: center;
 }
 
 .tree-btn {
   padding: 4px;
-  min-width: 28px;
-  min-height: 28px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1841,12 +1922,13 @@ body.tree-panel-visible .panel-right ~ #viewerContainer {
   color: #ccc;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
+  flex-shrink: 0;
 }
 
 /* SVG Icon Styles */
-.tree-btn .custom-fa-icon { /* Updated to only target new icons */
-  width: 30px; /* Increased size */
-  height: 30px; /* Increased size */
+.tree-btn .custom-fa-icon {
+  width: 20px;
+  height: 20px;
 }
 
 /* Dark mode SVG styling for new FA-style icons */
@@ -1874,6 +1956,199 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
 .tree-btn:hover {
   background-color: #444;
   color: #fff;
+}
+
+/* Tree History Dropdown */
+.tree-history-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tree-history-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 260px;
+  max-width: 340px;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.tree-history-dropdown.active .tree-history-menu {
+  display: block;
+}
+
+.tree-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #444;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tree-history-clear-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tree-history-clear-btn:hover {
+  color: #f56565;
+  background: rgba(245, 101, 101, 0.1);
+}
+
+.tree-history-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.tree-history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  color: #ddd;
+  font-size: 0.82rem;
+}
+
+.tree-history-item:hover {
+  background-color: #383838;
+}
+
+.tree-history-item i {
+  color: #9b77ff;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.tree-history-item-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tree-history-item-name {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.tree-history-item-path {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.68rem;
+  color: #888;
+  margin-top: 1px;
+}
+
+.tree-history-item-time {
+  display: block;
+  font-size: 0.68rem;
+  color: #777;
+  margin-top: 1px;
+}
+
+.tree-history-item-remove {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.tree-history-item:hover .tree-history-item-remove {
+  opacity: 1;
+}
+
+.tree-history-item-remove:hover {
+  color: #f56565;
+}
+
+.tree-history-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Light mode */
+body:not(.dark-mode) .tree-history-menu {
+  background: #fff;
+  border-color: #ddd;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+body:not(.dark-mode) .tree-history-header {
+  border-bottom-color: #eee;
+  color: #999;
+}
+
+body:not(.dark-mode) .tree-history-clear-btn {
+  color: #bbb;
+}
+
+body:not(.dark-mode) .tree-history-item {
+  color: #333;
+}
+
+body:not(.dark-mode) .tree-history-item:hover {
+  background-color: #f5f5f5;
+}
+
+body:not(.dark-mode) .tree-history-item-path {
+  color: #aaa;
+}
+
+body:not(.dark-mode) .tree-history-item-time {
+  color: #aaa;
+}
+
+body:not(.dark-mode) .tree-history-item-remove {
+  color: #ccc;
+}
+
+body:not(.dark-mode) .tree-history-empty {
+  color: #bbb;
+}
+
+/* When panel is on right side, align dropdown to the right */
+.panel-right .tree-history-menu {
+  left: auto;
+  right: 0;
 }
 
 .tree-folder-content {

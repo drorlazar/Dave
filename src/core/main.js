@@ -97,7 +97,7 @@ UI.initializeUI().then(() => {
       }
     },
     toggleTheme: () => {
-      document.getElementById('themeToggle')?.click();
+      document.getElementById('darkModeRow')?.click();
     },
     toggleTreeView: () => {
       document.getElementById('treeFolderToggle')?.click();

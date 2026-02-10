@@ -21,6 +21,236 @@ let scanDepth = 1; // Default scan depth (1 = immediate children only)
 // Caching and performance settings
 const hasSubdirCache = new Map(); // Cache subdirectory checks by path
 
+// ── Folder History (IndexedDB for handles, localStorage for metadata) ──
+const HISTORY_DB_NAME = 'dave_folder_history';
+const HISTORY_DB_VERSION = 1;
+const HISTORY_STORE = 'handles';
+const HISTORY_META_KEY = 'dave_folder_history_meta';
+const MAX_HISTORY = 15;
+
+let historyDB = null;
+
+async function openHistoryDB() {
+  if (historyDB) return historyDB;
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(HISTORY_DB_NAME, HISTORY_DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(HISTORY_STORE)) {
+        db.createObjectStore(HISTORY_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => { historyDB = req.result; resolve(historyDB); };
+    req.onerror = () => { console.warn('[FolderHistory] IndexedDB open failed'); resolve(null); };
+  });
+}
+
+function getHistoryMeta() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_META_KEY)) || [];
+  } catch { return []; }
+}
+
+function saveHistoryMeta(entries) {
+  localStorage.setItem(HISTORY_META_KEY, JSON.stringify(entries));
+}
+
+async function addToHistory(dirHandle, path) {
+  const name = dirHandle.name;
+  const fullPath = path || name;
+  const id = fullPath; // Use full path as key to differentiate same-named subfolders
+  const timestamp = Date.now();
+
+  // Save handle to IndexedDB
+  try {
+    const db = await openHistoryDB();
+    if (db) {
+      const tx = db.transaction(HISTORY_STORE, 'readwrite');
+      tx.objectStore(HISTORY_STORE).put({ id, handle: dirHandle, path: fullPath });
+    }
+  } catch (e) {
+    console.warn('[FolderHistory] Failed to store handle:', e);
+  }
+
+  // Update metadata
+  let meta = getHistoryMeta();
+  meta = meta.filter(m => m.id !== id);
+  meta.unshift({ id, name, path: fullPath, timestamp });
+  if (meta.length > MAX_HISTORY) meta = meta.slice(0, MAX_HISTORY);
+  saveHistoryMeta(meta);
+
+  renderHistoryList();
+}
+
+async function removeFromHistory(id) {
+  try {
+    const db = await openHistoryDB();
+    if (db) {
+      const tx = db.transaction(HISTORY_STORE, 'readwrite');
+      tx.objectStore(HISTORY_STORE).delete(id);
+    }
+  } catch (e) {
+    console.warn('[FolderHistory] Failed to remove handle:', e);
+  }
+  let meta = getHistoryMeta();
+  meta = meta.filter(m => m.id !== id);
+  saveHistoryMeta(meta);
+  renderHistoryList();
+}
+
+async function clearHistory() {
+  try {
+    const db = await openHistoryDB();
+    if (db) {
+      const tx = db.transaction(HISTORY_STORE, 'readwrite');
+      tx.objectStore(HISTORY_STORE).clear();
+    }
+  } catch (e) {
+    console.warn('[FolderHistory] Failed to clear handles:', e);
+  }
+  saveHistoryMeta([]);
+  renderHistoryList();
+}
+
+function formatRelativeTime(timestamp) {
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+}
+
+function renderHistoryList() {
+  const listEl = document.getElementById('treeHistoryList');
+  if (!listEl) return;
+
+  const meta = getHistoryMeta();
+  if (meta.length === 0) {
+    listEl.innerHTML = '<div class="tree-history-empty">No folder history yet</div>';
+    return;
+  }
+
+  listEl.innerHTML = meta.map(entry => {
+    const path = entry.path || entry.name;
+    const showPath = path && path !== entry.name;
+    return `
+    <button class="tree-history-item" data-id="${entry.id}" title="${path}">
+      <i class="fa fa-folder"></i>
+      <div class="tree-history-item-info">
+        <span class="tree-history-item-name">${entry.name}</span>
+        ${showPath ? `<span class="tree-history-item-path">${path}</span>` : ''}
+        <span class="tree-history-item-time">${formatRelativeTime(entry.timestamp)}</span>
+      </div>
+      <span class="tree-history-item-remove" data-remove-id="${entry.id}" title="Remove from history">
+        <i class="fa fa-times"></i>
+      </span>
+    </button>
+  `}).join('');
+
+  // Wire click handlers
+  listEl.querySelectorAll('.tree-history-item').forEach(item => {
+    item.addEventListener('click', async (e) => {
+      // Check if the remove button was clicked
+      const removeBtn = e.target.closest('.tree-history-item-remove');
+      if (removeBtn) {
+        e.stopPropagation();
+        await removeFromHistory(removeBtn.dataset.removeId);
+        return;
+      }
+      await openHistoryFolder(item.dataset.id);
+    });
+  });
+}
+
+async function openHistoryFolder(id) {
+  // Retrieve handle and stored path from IndexedDB
+  let handle = null;
+  let storedPath = null;
+  try {
+    const db = await openHistoryDB();
+    if (db) {
+      const record = await new Promise((resolve) => {
+        const tx = db.transaction(HISTORY_STORE, 'readonly');
+        const req = tx.objectStore(HISTORY_STORE).get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+      handle = record?.handle || null;
+      storedPath = record?.path || null;
+    }
+  } catch { handle = null; }
+
+  if (!handle) {
+    alert('This folder handle is no longer available. Please re-open the folder manually.');
+    removeFromHistory(id);
+    return;
+  }
+
+  // Request permission (browser may prompt the user)
+  try {
+    const perm = await handle.requestPermission({ mode: 'read' });
+    if (perm !== 'granted') {
+      alert('Permission to access this folder was denied.');
+      return;
+    }
+  } catch (e) {
+    alert('Could not access this folder. Please re-open it manually.');
+    return;
+  }
+
+  // Close the dropdown
+  const dropdown = document.getElementById('treeHistoryDropdown');
+  if (dropdown) dropdown.classList.remove('active');
+
+  // Load the folder
+  currentDirectoryHandle = handle;
+  await processFolderDrop(handle);
+  const basePath = storedPath ? (storedPath + '/') : undefined;
+  await handleFolderPick(handle, basePath);
+
+  // Ensure tree panel is visible
+  if (!isTreeVisible) showTreePanel();
+}
+
+function initHistoryDropdown() {
+  const btn = document.getElementById('treeHistoryBtn');
+  const dropdown = document.getElementById('treeHistoryDropdown');
+  const clearBtn = document.getElementById('treeHistoryClear');
+
+  if (!btn || !dropdown) return;
+
+  // Hover to open/close (matches project dropdown pattern)
+  let closeTimeout;
+  dropdown.addEventListener('mouseenter', () => {
+    clearTimeout(closeTimeout);
+    renderHistoryList();
+    dropdown.classList.add('active');
+  });
+  dropdown.addEventListener('mouseleave', () => {
+    closeTimeout = setTimeout(() => {
+      dropdown.classList.remove('active');
+    }, 150);
+  });
+
+  // Clear all
+  if (clearBtn) {
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearHistory();
+    });
+  }
+
+  // Initial render
+  renderHistoryList();
+
+  // Open IndexedDB early
+  openHistoryDB();
+}
+
 // Simple logger for performance-sensitive sections
 function logDebug(message, ...args) {
   // Use the global APP_DEBUG utility if available, fallback to local implementation
@@ -131,9 +361,9 @@ function updatePanelPosition() {
         // Update icon to indicate current position
         const icon = treeSideToggleButton.querySelector('i');
         if (icon) {
-            icon.className = isPanelOnRightSide ? 
-                'fa-solid fa-arrow-left-to-bracket' : 
-                'fa-solid fa-arrow-right-to-bracket';
+            icon.className = isPanelOnRightSide ?
+                'fa fa-arrow-left' :
+                'fa fa-arrow-right';
         }
     }
 }
@@ -284,6 +514,7 @@ export function initTreeFolderView() {
     const treeCollapseAll = document.getElementById('treeCollapseAll');
     const treeExpandAll = document.getElementById('treeExpandAll');
     const treeDownloadFolder = document.getElementById('treeDownloadFolder');
+    const treeRefreshFolder = document.getElementById('treeRefreshFolder');
     const folderTreeContainer = document.getElementById('folderTreeContainer');
     const treeEmptyState = document.querySelector('.tree-empty-state');
     
@@ -327,6 +558,10 @@ export function initTreeFolderView() {
     if (treeDownloadFolder) {
         treeDownloadFolder.addEventListener('click', downloadSelectedFolder);
     }
+
+    if (treeRefreshFolder) {
+        treeRefreshFolder.addEventListener('click', refreshCurrentFolder);
+    }
     
     // Setup drag and drop for the tree panel
     if (treeFolderPanel) {
@@ -337,6 +572,9 @@ export function initTreeFolderView() {
     
     // Setup keyboard navigation
     setupKeyboardNavigation();
+
+    // Setup folder history dropdown
+    initHistoryDropdown();
 
     // Apply initial state (show panel if it was visible in previous session)
     if (isTreeVisible) {
@@ -368,6 +606,8 @@ async function processFolderDrop(dirHandle) {
         // Do a full scan for the top level folder
         folderStructure = await buildLocalFolderStructure(dirHandle, '', true); // fullScan = true for initial load
         renderFolderTree(folderStructure);
+        // Add to folder history
+        addToHistory(dirHandle);
     } catch (error) {
         console.error("Error processing local folder structure:", error);
         alert(`Error: ${error.message}\n\nFailed to process folder structure.`);
@@ -727,7 +967,10 @@ async function loadFilesFromSelectedFolder(folder) {
         if (folder.handle) { // Local folder
             console.log(`Loading local files from folder: ${folder.name}`);
             // First, load the files with the original handleFolderPick
-            await handleFolderPick(folder.handle);
+            // Pass full path so file paths are always rooted from the top-level folder
+            await handleFolderPick(folder.handle, folder.path + '/');
+            // Record in folder history with full tree path
+            addToHistory(folder.handle, folder.path);
             
             // Then ensure a proper render with an animation frame delay
             // This helps ensure all DOM updates are processed before re-rendering
@@ -1172,6 +1415,17 @@ async function reloadFolderStructure() {
             loadingIndicator.style.display = 'none';
         }
     }
+}
+
+// Refresh the currently loaded folder (tree + grid files)
+async function refreshCurrentFolder() {
+    if (!currentDirectoryHandle) {
+        console.warn('Tree View: No folder loaded to refresh');
+        return;
+    }
+    console.log('Tree View: Refreshing current folder...');
+    await reloadFolderStructure();
+    await handleFolderPick(currentDirectoryHandle);
 }
 
 // Toggle tree panel visibility

@@ -11,6 +11,9 @@ import { GDriveAuth } from '../cloud/GDriveAuth.js';
 import { SettingsModal } from '../cloud/SettingsModal.js';
 import * as CloudStorage from '../cloud/CloudStorageProvider.js';
 import { getEditorForType, openInEditor } from '../utils/externalEditors.js';
+import { ModelInspectorPanel } from '../viewers/model_inspector.js';
+import { FBXInspectorAdapter } from '../viewers/model_inspector_fbx.js';
+import { GLBInspectorAdapter } from '../viewers/model_inspector_glb.js';
 import {
   getCurrentPage,
   getItemsPerPage,
@@ -335,7 +338,7 @@ filterOptions.forEach(option => {
   });
 });
 
-async function handleFolderPick(dirHandle) {
+async function handleFolderPick(dirHandle, basePath) {
   console.log("Starting folder processing with Web Worker");
 
   // Dispose of all active FBX viewers before loading new set
@@ -371,7 +374,7 @@ async function handleFolderPick(dirHandle) {
     worker.postMessage({
       dirHandle: dirHandle,
       maxDepth: workerMaxDepth, // Pass the UI setting directly
-      currentPath: dirHandle.name + '/' // Initial path prefix
+      currentPath: basePath || (dirHandle.name + '/') // Initial path prefix
     });
 
     worker.onmessage = (event) => {
@@ -501,7 +504,6 @@ async function loadTileContent(tile) {
       const mv = document.createElement("model-viewer");
       mv.src = fileUrl;
       mv.setAttribute("camera-controls", "");
-      mv.setAttribute("auto-rotate", "");
       mv.setAttribute("environment-image", "neutral");
       mv.setAttribute("animation-name", "*");
       mv.setAttribute("disable-zoom", ""); // Disable mouse wheel zoom to allow page scrolling
@@ -820,6 +822,7 @@ async function showFullscreen(model) {
 
   fullscreenOverlay.style.display = 'flex';
   fullscreenOverlay.style.opacity = '1';
+  document.body.style.overflow = 'hidden';
   fullscreenViewer.innerHTML = '';
   fullscreenVideo.style.display = 'none';
 
@@ -887,7 +890,6 @@ async function showFullscreen(model) {
       const mv = document.createElement("model-viewer");
       mv.src = fileUrl;
       mv.setAttribute("camera-controls", "");
-      mv.setAttribute("auto-rotate", "");
       mv.setAttribute("environment-image", "neutral");
       mv.setAttribute("animation-name", "*");
       mv.style.width = "100%";
@@ -895,12 +897,18 @@ async function showFullscreen(model) {
       fullscreenViewer.innerHTML = '';
       fullscreenViewer.appendChild(mv);
       fullscreenViewer.style.display = 'block';
-      currentFullscreenViewer = { 
-        ...mv, 
+      // Create inspector adapter and panel for GLB
+      const glbAdapter = new GLBInspectorAdapter(mv);
+      const glbInspector = new ModelInspectorPanel(glbAdapter);
+
+      currentFullscreenViewer = {
         fileName: model.name,
-        cleanup: needsCleanup ? () => {
-          if (fileUrl) URL.revokeObjectURL(fileUrl);
-        } : undefined
+        inspector: glbInspector,
+        cleanup: () => {
+          glbInspector.dispose();
+          glbAdapter.dispose();
+          if (needsCleanup && fileUrl) URL.revokeObjectURL(fileUrl);
+        }
       };
       
     } else if (model.subtype === "fbx") {
@@ -934,11 +942,18 @@ async function showFullscreen(model) {
       };
       
       viewer.loadModel(fileUrl);
-      
+
+      // Create inspector adapter and panel for FBX
+      const fbxAdapter = new FBXInspectorAdapter(viewer);
+      const inspector = new ModelInspectorPanel(fbxAdapter);
+
       currentFullscreenViewer = {
-        viewerInstance: viewer, // Store the actual viewer instance
+        viewerInstance: viewer,
+        inspector,
         cleanup: () => {
           console.log(`Cleaning up fullscreen FBX viewer for: ${model.name}`);
+          inspector.dispose();
+          fbxAdapter.dispose();
           memoryManager.disposeFbxViewer(viewer);
           if (needsCleanup && fileUrl) {
             URL.revokeObjectURL(fileUrl);
@@ -1340,11 +1355,11 @@ document.querySelectorAll('.source-option').forEach(option => {
   });
 });
 
-// Settings button
+// Cloud storage settings (opened from settings dropdown)
 const settingsModal = new SettingsModal();
-const settingsBtn = document.getElementById('settingsBtn');
-if (settingsBtn) {
-  settingsBtn.addEventListener('click', () => settingsModal.open());
+const cloudSettingsRow = document.getElementById('cloudSettingsRow');
+if (cloudSettingsRow) {
+  cloudSettingsRow.addEventListener('click', () => settingsModal.open());
 }
 
 // Also keep backward compatibility if folderPickerButton is clicked directly (shouldn't happen with dropdown, but just in case)

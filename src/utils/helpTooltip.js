@@ -152,30 +152,14 @@ export class HelpTooltip {
   }
 
   attachEventListeners() {
-    const logo = document.querySelector('.logo-container');
-    if (!logo) {
-      console.warn('[HelpTooltip] Logo container not found, skipping tooltip initialization');
+    const helpRow = document.getElementById('helpAboutRow');
+    if (!helpRow) {
+      console.warn('[HelpTooltip] Help row not found, skipping tooltip initialization');
       return;
     }
 
-    // Make logo interactive
-    logo.style.cursor = 'help';
-    logo.setAttribute('title', 'Click for help & info');
-
-    // Show on hover
-    logo.addEventListener('mouseenter', () => {
-      this.show();
-    });
-
-    // Hide on mouse leave (with delay)
-    logo.addEventListener('mouseleave', () => {
-      this.hideTimeout = setTimeout(() => {
-        this.hide();
-      }, 300);
-    });
-
-    // Toggle on click
-    logo.addEventListener('click', (e) => {
+    // Open on click from settings dropdown
+    helpRow.addEventListener('click', (e) => {
       e.stopPropagation();
       if (this.isVisible) {
         this.hide();
@@ -197,7 +181,7 @@ export class HelpTooltip {
 
     // Hide on outside click
     document.addEventListener('click', (e) => {
-      if (this.isVisible && !logo.contains(e.target) && !this.tooltip.contains(e.target)) {
+      if (this.isVisible && !this.tooltip.contains(e.target) && e.target.id !== 'helpAboutRow' && !e.target.closest('#helpAboutRow')) {
         this.hide();
       }
     });
@@ -220,31 +204,26 @@ export class HelpTooltip {
 
   show() {
     clearTimeout(this.hideTimeout);
-    
-    const logo = document.querySelector('.logo-container');
-    const rect = logo.getBoundingClientRect();
-    
-    // Position tooltip below logo
+
+    // Position relative to the settings dropdown
+    const settingsDropdown = document.getElementById('settingsDropdown');
+    const anchor = settingsDropdown || document.querySelector('.logo-container');
+    const rect = anchor.getBoundingClientRect();
+
+    // Position tooltip below the settings dropdown, aligned to its right edge
     this.tooltip.style.top = `${rect.bottom + 10}px`;
-    this.tooltip.style.left = `${rect.left}px`;
-    
+    this.tooltip.style.left = '';
+    this.tooltip.style.right = '20px';
+
     // Show with animation
     this.tooltip.classList.add('visible');
     this.isVisible = true;
 
-    // Adjust position if tooltip goes off-screen
+    // Adjust position if tooltip goes off-screen vertically
     setTimeout(() => {
       const tooltipRect = this.tooltip.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
 
-      // Adjust horizontal position
-      if (tooltipRect.right > viewportWidth - 20) {
-        const newLeft = Math.max(20, viewportWidth - tooltipRect.width - 20);
-        this.tooltip.style.left = `${newLeft}px`;
-      }
-
-      // Adjust vertical position if needed
       if (tooltipRect.bottom > viewportHeight - 20) {
         this.tooltip.style.top = `${rect.top - tooltipRect.height - 10}px`;
         this.tooltip.classList.add('top');

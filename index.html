@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dave - Dror's Assets Viewing Experience</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="stylesheet" href="src/styles/model_inspector.css">
 
   <script>
     // Check if user has explicitly chosen light mode
@@ -178,15 +179,28 @@
           </label>
         </div>
       </div>
-      <button id="darkModeToggle" class="btn" title="Toggle dark mode">
-        <i class="fa fa-moon"></i>
-      </button>
-      <button id="settingsBtn" class="btn cloud-settings-btn" title="Cloud Storage Settings">
-        <span class="cloud-settings-icon">
-          <i class="fa fa-cloud"></i>
-          <i class="fa fa-gear cloud-settings-cog"></i>
-        </span>
-      </button>
+      <div class="dropdown" id="settingsDropdown">
+        <button class="dropdown-btn" title="Settings">
+          <i class="fa fa-gear"></i>
+        </button>
+        <div class="dropdown-content settings-dropdown-content">
+          <label class="dropdown-setting-row" id="darkModeRow">
+            <i class="fa fa-moon"></i>
+            <span>Dark Mode</span>
+            <span class="settings-toggle-indicator" id="darkModeIndicator">ON</span>
+          </label>
+          <label class="dropdown-setting-row" id="cloudSettingsRow">
+            <i class="fa fa-cloud"></i>
+            <span>Cloud Storage</span>
+            <i class="fa fa-chevron-right dropdown-row-arrow"></i>
+          </label>
+          <label class="dropdown-setting-row" id="helpAboutRow">
+            <i class="fa fa-circle-info"></i>
+            <span>Help & About</span>
+            <i class="fa fa-chevron-right dropdown-row-arrow"></i>
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -216,8 +230,27 @@
                 <text class="text-overlay-fa" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="8" font-family="sans-serif" font-weight="bold">ZIP</text>
             </svg>
         </button>
-        <button id="treeSideToggle" class="btn tree-btn" title="Toggle Panel Position (Left/Right)">
-            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        <button id="treeRefreshFolder" class="btn tree-btn" title="Refresh Current Folder">
+            <i class="fa fa-rotate-right"></i>
+        </button>
+        <div class="tree-history-dropdown" id="treeHistoryDropdown">
+          <button id="treeHistoryBtn" class="btn tree-btn" title="Folder History">
+            <i class="fa fa-bookmark"></i>
+          </button>
+          <div class="tree-history-menu" id="treeHistoryMenu">
+            <div class="tree-history-header">
+              <span>Recent Folders</span>
+              <button id="treeHistoryClear" class="tree-history-clear-btn" title="Clear History">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+            <div class="tree-history-list" id="treeHistoryList">
+              <div class="tree-history-empty">No folder history yet</div>
+            </div>
+          </div>
+        </div>
+        <button id="treeSideToggle" class="btn tree-btn" title="Move Panel to Right Side">
+            <i class="fa fa-arrow-right"></i>
         </button>
         <button id="treeClosePanel" class="btn tree-btn" title="Close Panel (Esc when panel focused)">
             <i class="fa fa-times"></i>
@@ -262,6 +295,82 @@
         <i class="fa fa-chevron-right"></i>
       </div>
     </div>
+    <!-- 3D Model Inspector Toolbar (hidden by default, shown for 3D models) -->
+    <div id="model3dToolbar" class="model-toolbar" style="display:none;">
+      <button class="model-toolbar-btn" data-action="wireframe" data-tooltip="Wireframe (W)">
+        <i class="fa fa-border-all"></i>
+      </button>
+      <button class="model-toolbar-btn" data-action="grid" data-tooltip="Grid (G)">
+        <i class="fa fa-th"></i>
+      </button>
+      <button class="model-toolbar-btn" data-action="autorotate" data-tooltip="Auto-Rotate (R)">
+        <i class="fa fa-sync-alt"></i>
+      </button>
+      <button class="model-toolbar-btn" data-action="resetcamera" data-tooltip="Reset Camera (C)">
+        <i class="fa fa-crosshairs"></i>
+      </button>
+      <button class="model-toolbar-btn" data-action="screenshot" data-tooltip="Screenshot (P)">
+        <i class="fa fa-camera"></i>
+      </button>
+      <div class="model-toolbar-divider"></div>
+      <button class="model-toolbar-btn" data-action="togglepanel" data-tooltip="Inspector (I)">
+        <i class="fa fa-sliders"></i>
+      </button>
+    </div>
+
+    <!-- 3D Model Inspector Panel (hidden by default) -->
+    <div id="modelInspectorPanel" class="model-inspector-panel">
+      <div class="inspector-resize-handle"></div>
+      <div class="inspector-header">
+        <span class="inspector-title"><i class="fa fa-cube"></i> Inspector</span>
+        <button class="inspector-close"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="inspector-body">
+        <div class="inspector-section collapsed">
+          <div class="inspector-section-header">
+            <span>Model Stats</span>
+            <span class="inspector-collapse-icon">&#9656;</span>
+          </div>
+          <div class="inspector-section-body" id="inspectorStats"></div>
+        </div>
+        <div class="inspector-section collapsed">
+          <div class="inspector-section-header">
+            <span>Materials</span>
+            <span class="inspector-collapse-icon">&#9656;</span>
+          </div>
+          <div class="inspector-section-body" id="inspectorMaterials"></div>
+        </div>
+        <div class="inspector-section collapsed">
+          <div class="inspector-section-header">
+            <span>Animations</span>
+            <span class="inspector-collapse-icon">&#9656;</span>
+          </div>
+          <div class="inspector-section-body" id="inspectorAnimations"></div>
+        </div>
+        <div class="inspector-section collapsed">
+          <div class="inspector-section-header">
+            <span>Helpers</span>
+            <span class="inspector-collapse-icon">&#9656;</span>
+          </div>
+          <div class="inspector-section-body" id="inspectorHelpers"></div>
+        </div>
+        <div class="inspector-section collapsed">
+          <div class="inspector-section-header">
+            <span>Scene</span>
+            <span class="inspector-collapse-icon">&#9656;</span>
+          </div>
+          <div class="inspector-section-body" id="inspectorScene"></div>
+        </div>
+        <div class="inspector-section collapsed">
+          <div class="inspector-section-header">
+            <span>Export</span>
+            <span class="inspector-collapse-icon">&#9656;</span>
+          </div>
+          <div class="inspector-section-body" id="inspectorExport"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- File information panel for fullscreen mode -->
     <div id="fullscreenInfo" class="fullscreen-info">
       <div class="fullscreen-filename"></div>

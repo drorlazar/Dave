@@ -9,8 +9,14 @@ class FBXViewer {
     this.isDarkMode = document.body.classList.contains('dark-mode');
     this.enableZoom = options.enableZoom !== false; // Default to true unless explicitly disabled
     this.onError = options.onError || null;
+    this.onModelLoaded = options.onModelLoaded || null;
     this.isLoading = false;
     this.isDisposed = false;
+    this.loadedObject = null;
+    this.animations = [];
+    this.currentAction = null;
+    this.currentAnimationIndex = -1;
+    this.isAnimationPlaying = false;
     this.init();
   }
   async init() {
@@ -19,7 +25,7 @@ class FBXViewer {
     const height = this.container.offsetHeight || this.container.getBoundingClientRect().height;
     this.camera = new THREE.PerspectiveCamera(45, width/height, 0.1, 1000);
     this.camera.position.set(0, 1.6, 3);
-    this.renderer = new THREE.WebGLRenderer({antialias: true});
+    this.renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
     this.updateBackground();
     this.container.appendChild(this.renderer.domElement);
     this.renderer.setSize(width, height, true);
@@ -122,7 +128,10 @@ class FBXViewer {
           object.scale.set(scale, scale, scale);
           object.position.sub(center.multiplyScalar(scale));
           this.scene.add(object);
-          
+
+          // Store loaded object for inspector access
+          this.loadedObject = object;
+
           // Handle animations with error handling
           if (object.animations && object.animations.length > 0) {
             try {
@@ -131,20 +140,31 @@ class FBXViewer {
               const validAnimations = object.animations.filter(clip => {
                 return clip && clip.tracks && clip.tracks.length > 0;
               });
-              
+
+              // Store valid animations for inspector
+              this.animations = validAnimations;
+
               if (validAnimations.length > 0) {
-                const action = this.mixer.clipAction(validAnimations[0]);
-                action.play();
+                this.currentAction = this.mixer.clipAction(validAnimations[0]);
+                this.currentAction.play();
+                this.currentAnimationIndex = 0;
+                this.isAnimationPlaying = true;
               }
             } catch (animError) {
               console.warn('Error setting up animations:', animError);
               // Continue without animations - don't fail the entire model
               this.mixer = null;
+              this.animations = [];
             }
           }
-          
+
           this.controls.reset();
           this.camera.lookAt(0, 0, 0);
+
+          // Notify inspector adapter that model is ready
+          if (this.onModelLoaded) {
+            this.onModelLoaded(this);
+          }
         } catch (error) {
           console.error('Error processing FBX model:', error);
           if (this.onError) {
@@ -170,6 +190,59 @@ class FBXViewer {
         }
       }
     );
+  }
+
+  // --- Animation control methods for inspector ---
+
+  getAnimationList() {
+    return this.animations.map((clip, i) => ({
+      name: clip.name || `Animation ${i + 1}`,
+      duration: clip.duration
+    }));
+  }
+
+  playAnimationByIndex(index) {
+    if (!this.mixer || !this.animations[index]) return;
+    if (this.currentAction) {
+      this.currentAction.stop();
+    }
+    this.currentAction = this.mixer.clipAction(this.animations[index]);
+    this.currentAction.play();
+    this.currentAnimationIndex = index;
+    this.isAnimationPlaying = true;
+  }
+
+  togglePlayback() {
+    if (!this.currentAction) return;
+    if (this.isAnimationPlaying) {
+      this.currentAction.paused = true;
+      this.isAnimationPlaying = false;
+    } else {
+      this.currentAction.paused = false;
+      this.isAnimationPlaying = true;
+    }
+  }
+
+  seekAnimation(time) {
+    if (!this.mixer || !this.currentAction) return;
+    this.currentAction.time = time;
+    this.mixer.update(0);
+  }
+
+  getAnimationTime() {
+    return this.currentAction ? this.currentAction.time : 0;
+  }
+
+  getAnimationDuration() {
+    if (!this.currentAction || this.currentAnimationIndex < 0) return 0;
+    const clip = this.animations[this.currentAnimationIndex];
+    return clip ? clip.duration : 0;
+  }
+
+  setAnimationSpeed(speed) {
+    if (this.currentAction) {
+      this.currentAction.timeScale = speed;
+    }
   }
 
   dispose() {
@@ -256,6 +329,9 @@ class FBXViewer {
     this.scene = null;
     this.camera = null;
     this.clock = null;
+    this.loadedObject = null;
+    this.animations = [];
+    this.currentAction = null;
 
     // Disconnect the ResizeObserver
     if (this.resizeObserver) {

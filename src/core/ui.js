@@ -78,7 +78,7 @@ function initializeElements() {
       // This global cache is maintained for backward compatibility with other parts of the code.
       
       // Get all UI elements
-      const darkModeToggle = document.getElementById("darkModeToggle");
+      const darkModeRow = document.getElementById("darkModeRow");
       const subfolderToggle = document.getElementById("subfolderToggle");
       const prevPageBtn = document.getElementById("prevPage");
       const nextPageBtn = document.getElementById("nextPage");
@@ -97,7 +97,7 @@ function initializeElements() {
 
       // Store UI elements globally
       window.uiElements = {
-        darkModeToggle,
+        darkModeRow,
         subfolderToggle,
         prevPageBtn,
         nextPageBtn,
@@ -176,35 +176,37 @@ function initializeElements() {
       // Initialize subfolder toggle with default state
       setLoadSubfolders(_loadSubfolders, _subfolderDepth);
 
-      // Initialize dark mode toggle
-      if (darkModeToggle) {
-        const moonIcon = darkModeToggle.querySelector('.fa-moon');
+      // Initialize dark mode toggle (in settings dropdown)
+      if (darkModeRow) {
+        const indicator = document.getElementById('darkModeIndicator');
         const updateTheme = (isDark) => {
           if (isDark) {
             document.documentElement.classList.add('dark-mode');
             document.body.classList.add('dark-mode');
-            if (moonIcon) moonIcon.style.color = '#fff';
           } else {
             document.documentElement.classList.remove('dark-mode');
             document.body.classList.remove('dark-mode');
-            if (moonIcon) moonIcon.style.color = '#666';
           }
           localStorage.setItem('theme', isDark ? 'dark' : 'light');
-          // activeFbxViewers.forEach(viewer => {
-          //   viewer.setDarkMode(isDark);
-          // });
+          if (indicator) {
+            indicator.textContent = isDark ? 'ON' : 'OFF';
+            indicator.classList.toggle('off', !isDark);
+          }
         };
 
-        // Set initial moon icon color
-        if (moonIcon) {
-          moonIcon.style.color = document.body.classList.contains('dark-mode') ? '#fff' : '#666';
+        // Set initial indicator state
+        const initialDark = document.body.classList.contains('dark-mode');
+        if (indicator) {
+          indicator.textContent = initialDark ? 'ON' : 'OFF';
+          indicator.classList.toggle('off', !initialDark);
         }
 
         // Add click handler
-        darkModeToggle.onclick = () => {
+        darkModeRow.addEventListener('click', (e) => {
+          e.stopPropagation();
           const isDarkMode = document.body.classList.contains('dark-mode');
           updateTheme(!isDarkMode);
-        };
+        });
       }
 
       if (sizeSlider && sizeValue) {
@@ -422,6 +424,30 @@ function initializeElements() {
           }
           // Fullscreen view shortcuts
           else if (isFullscreen) {
+            // 3D Inspector shortcuts
+            if (currentFullscreenViewer?.inspector) {
+              const inspector = currentFullscreenViewer.inspector;
+              const key = event.key.toLowerCase();
+              if (event.key === 'Escape') {
+                if (inspector.handleEscape()) return; // panel consumed Escape
+                exitFullscreen(currentFullscreenViewer);
+                return;
+              } else if (key === 'w') { inspector.toggleWireframe(); return; }
+              else if (key === 'g') { inspector.toggleGrid(); return; }
+              else if (key === 'i') { inspector.togglePanel(); return; }
+              else if (key === 'r') { inspector.toggleAutoRotate(); return; }
+              else if (key === 'c') { inspector.resetCamera(); return; }
+              else if (key === 'n') { inspector.toggleNormals(); return; }
+              else if (key === 'b') { inspector.toggleBounds(); return; }
+              else if (key === 's') { inspector.toggleSkeleton(); return; }
+              else if (key === 'p') { inspector.screenshot(); return; }
+              else if (event.key === ' ') {
+                event.preventDefault();
+                inspector.togglePlayback();
+                return;
+              }
+            }
+
             if (event.key === 'Escape') {
               exitFullscreen(currentFullscreenViewer);
             } else if (event.key === 'ArrowLeft') {
@@ -687,6 +713,13 @@ export function exitFullscreen(currentFullscreenViewer) {
   // Hide the fullscreen overlay and info panel
   fullscreenOverlay.style.display = 'none';
   fullscreenOverlay.style.opacity = '0';
+  document.body.style.overflow = '';
+
+  // Hide 3D inspector toolbar and panel (safety net)
+  const toolbar3d = document.getElementById('model3dToolbar');
+  const inspectorPanel = document.getElementById('modelInspectorPanel');
+  if (toolbar3d) toolbar3d.style.display = 'none';
+  if (inspectorPanel) inspectorPanel.classList.remove('open');
 
   // Remove edit button
   const editBtn = document.getElementById('fullscreenEditBtn');
