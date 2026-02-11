@@ -47,6 +47,7 @@
 
   <link rel="stylesheet" href="src/styles/styles.css">
   <link rel="stylesheet" href="src/styles/easter_egg.css">
+  <link rel="stylesheet" href="src/styles/matrix_theme.css">
 
   <!-- Google Identity Services - for Google Drive OAuth (client-side) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -54,6 +55,7 @@
 <script src="https://cdn.counter.dev/script.js" data-id="b3d284cd-1f4f-48d9-900c-c63b1d8fa0ca" data-utcoffset="2"></script>
 </head>
 <body class="dark-mode">
+  <script>if(localStorage.getItem('dave_theme')==='matrix')document.body.classList.add('matrix-theme');</script>
   <!-- Top bar with header and all UI controls -->
   <div id="topBar">
     <div class="logo-container">
