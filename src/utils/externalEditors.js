@@ -3,11 +3,11 @@
 import * as CloudStorage from '../cloud/CloudStorageProvider.js';
 
 const EDITORS = {
-  image:   { name: 'Photopea',         url: 'https://www.photopea.com/' },
-  model3d: { name: 'Three.js Editor',  url: 'https://threejs.org/editor/' },
-  video:   { name: 'Video Editor',     url: 'https://online-video-cutter.com/' },
-  audio:   { name: 'AudioMass',        url: 'https://audiomass.co/' },
-  text:    { name: 'EditPad',          url: 'https://www.editpad.org/' },
+  image:   { name: 'Photopea',         url: 'https://www.photopea.com/',        tip: 'Opens Photopea \u2014 copy image, paste there' },
+  model3d: { name: 'Three.js Editor',  url: 'https://threejs.org/editor/',      tip: 'Opens Three.js Editor \u2014 drag your file in' },
+  video:   { name: 'Video Editor',     url: 'https://online-video-cutter.com/', tip: 'Opens video cutter \u2014 upload your clip' },
+  audio:   { name: 'AudioMass',        url: 'https://audiomass.co/',            tip: 'Opens AudioMass \u2014 drop your file in' },
+  text:    { name: 'EditPad',          url: 'https://www.editpad.org/',         tip: 'Opens EditPad \u2014 paste your text' },
 };
 
 /**

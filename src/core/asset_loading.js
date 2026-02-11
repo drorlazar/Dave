@@ -775,7 +775,7 @@ function renderPage(pageIndex) {
       const editBtn = document.createElement('button');
       editBtn.className = 'edit-btn';
       editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
-      editBtn.title = `Open in ${editorInfo.name}`;
+      editBtn.title = editorInfo.tip;
       editBtn.onclick = (e) => { e.stopPropagation(); openInEditor(model); };
       tile.appendChild(editBtn);
     }
@@ -841,7 +841,7 @@ async function showFullscreen(model) {
     editBtn.id = 'fullscreenEditBtn';
     editBtn.className = 'fullscreen-edit-btn';
     editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
-    editBtn.title = `Open in ${fsEditorInfo.name}`;
+    editBtn.title = fsEditorInfo.tip;
     editBtn.onclick = () => openInEditor(model);
     fullscreenOverlay.appendChild(editBtn);
   }
