@@ -43,8 +43,8 @@ export class SettingsModal {
       <div class="cloud-modal-content settings-modal-content">
         <div class="cloud-modal-header">
           <span class="cloud-modal-title">
-            <i class="fa fa-gear"></i>
-            Settings
+            <i class="fa fa-cloud"></i>
+            Cloud Storage Settings
           </span>
           <button class="cloud-modal-close" id="settingsClose" title="Close">&times;</button>
         </div>
@@ -73,9 +73,6 @@ export class SettingsModal {
               ${this._releaseLogHTML()}
             </div>
           </div>
-
-          <!-- Cloud Storage -->
-          <div class="settings-section-label"><i class="fa fa-cloud"></i> Cloud Storage</div>
 
           <div class="settings-warning">
             <i class="fa fa-shield-halved"></i>

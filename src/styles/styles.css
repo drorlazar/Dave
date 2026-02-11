@@ -2042,7 +2042,7 @@ body:not(.dark-mode) .preset-text-btn:hover {
   top: 60px; /* Below the top bar */
   bottom: 0;
   width: var(--tree-panel-width, 280px); /* Use CSS variable with fallback */
-  background-color: #1e1e1e;
+  background-color: var(--theme-bg);
   z-index: 90;
   display: flex;
   flex-direction: column;
@@ -2053,14 +2053,14 @@ body:not(.dark-mode) .preset-text-btn:hover {
 /* Left-side positioning (default) */
 .tree-folder-panel.panel-left {
   left: 0;
-  border-right: 1px solid #444;
+  border-right: 1px solid var(--theme-border);
   transform: translateX(-100%); /* Hidden by default */
 }
 
 /* Right-side positioning */
 .tree-folder-panel.panel-right {
   right: 0;
-  border-left: 1px solid #444;
+  border-left: 1px solid var(--theme-border);
   transform: translateX(100%); /* Hidden by default */
 }
 
@@ -2093,15 +2093,15 @@ body.tree-panel-visible .panel-right ~ #viewerContainer {
   justify-content: flex-start;
   align-items: center;
   padding: 10px 15px;
-  border-bottom: 1px solid #444;
-  background-color: #262626;
+  border-bottom: 1px solid var(--theme-border);
+  background-color: var(--theme-surface);
 }
 
 .tree-folder-header h3 {
   margin: 0;
   font-size: 1.1rem;
   font-weight: normal;
-  color: #fff;
+  color: var(--theme-text);
 }
 
 .tree-folder-actions {
@@ -2117,10 +2117,10 @@ body.tree-panel-visible .panel-right ~ #viewerContainer {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #333;
-  border: 1px solid #555;
+  background-color: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
-  color: #ccc;
+  color: var(--theme-text);
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
   flex-shrink: 0;
@@ -2174,8 +2174,8 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
   margin-top: 4px;
   min-width: 260px;
   max-width: 340px;
-  background: #2a2a2a;
-  border: 1px solid #555;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   z-index: 1000;
@@ -2191,7 +2191,7 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid var(--theme-border);
   font-size: 0.75rem;
   font-weight: 600;
   color: #999;
@@ -2546,28 +2546,28 @@ body.tile-slider-active #viewerContainer {
 
 /* Light mode styles */
 body:not(.dark-mode) .tree-folder-panel {
-  background-color: #f7f7f7; /* Slightly lighter background */
-  border-right-color: #e0e0e0; /* Lighter border */
+  background-color: var(--theme-bg);
+  border-right-color: var(--theme-border);
 }
 
 body:not(.dark-mode) .tree-folder-header {
-  background-color: #e8e8e8;
-  border-bottom-color: #ddd;
+  background-color: var(--theme-surface);
+  border-bottom-color: var(--theme-border);
 }
 
 body:not(.dark-mode) .tree-folder-header h3 {
-  color: #222; /* Darker text for better contrast */
+  color: var(--theme-text);
 }
 
 body:not(.dark-mode) .tree-btn {
-  background-color: #f0f0f0; /* Lighter button background */
-  border-color: #d0d0d0; /* Lighter border */
-  color: #555; /* Darker icon color */
+  background-color: var(--theme-surface);
+  border-color: var(--theme-border);
+  color: var(--theme-text);
 }
 
 body:not(.dark-mode) .tree-btn:hover {
-  background-color: #e0e0e0; /* Slightly darker hover */
-  color: #222;
+  background-color: var(--theme-border);
+  color: var(--theme-text);
 }
 
 body:not(.dark-mode) .tree-empty-state {
