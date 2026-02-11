@@ -14,7 +14,7 @@ export class KeyboardShortcutManager {
 
   handleKeydown(event) {
     if (!this.enabled) return;
-    
+
     // Don't handle shortcuts when typing in input fields
     if (event.target.matches('input, textarea, [contenteditable]')) {
       return;
@@ -26,13 +26,13 @@ export class KeyboardShortcutManager {
     if (event.altKey) keys.push('Alt');
     if (event.shiftKey) keys.push('Shift');
     if (event.metaKey) keys.push('Meta');
-    
+
     // Add the actual key
     const key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
     keys.push(key);
-    
+
     const shortcut = keys.join('+');
-    
+
     // Check if we have a handler for this shortcut
     const handler = this.shortcuts.get(shortcut);
     if (handler) {
@@ -90,14 +90,14 @@ export function setupNavigationShortcuts(shortcutManager, navigationCallbacks) {
   shortcutManager.register('End', lastPage, 'Last page');
   shortcutManager.register('PageDown', nextPage, 'Next page');
   shortcutManager.register('PageUp', prevPage, 'Previous page');
-  
+
   // UI shortcuts
   shortcutManager.register('/', focusSearch, 'Focus search');
   shortcutManager.register('Ctrl+/', focusSearch, 'Focus search');
   shortcutManager.register('T', toggleTheme, 'Toggle theme');
   shortcutManager.register('B', toggleTreeView, 'Toggle tree view');
   shortcutManager.register('Ctrl+B', toggleTreeView, 'Toggle tree view');
-  
+
   // Selection shortcuts
   shortcutManager.register('Ctrl+A', selectAll, 'Select all');
   shortcutManager.register('Ctrl+D', deselectAll, 'Deselect all');
@@ -108,21 +108,21 @@ export function setupNavigationShortcuts(shortcutManager, navigationCallbacks) {
       deselectAll();
     }
   }, 'Close fullscreen or deselect all');
-  
+
   // Fullscreen
   shortcutManager.register('Enter', openFullscreen, 'Open selected in fullscreen');
   shortcutManager.register(' ', openFullscreen, 'Open selected in fullscreen');
-  
+
   // Grid navigation (arrow keys when not on page boundaries)
   shortcutManager.register('ArrowUp', () => navigateGrid('up'), 'Navigate up in grid');
   shortcutManager.register('ArrowDown', () => navigateGrid('down'), 'Navigate down in grid');
-  
+
   // Zoom controls
   shortcutManager.register('Ctrl+=', zoomIn, 'Zoom in');
   shortcutManager.register('Ctrl++', zoomIn, 'Zoom in');
   shortcutManager.register('Ctrl+-', zoomOut, 'Zoom out');
   shortcutManager.register('Ctrl+0', resetZoom, 'Reset zoom');
-  
+
   // Help
   shortcutManager.register('?', showKeyboardHelp, 'Show keyboard shortcuts');
   shortcutManager.register('Shift+/', showKeyboardHelp, 'Show keyboard shortcuts');
@@ -250,10 +250,10 @@ export class GridNavigator {
 
   setFocus(index) {
     const items = this.getItems();
-    
+
     // Remove previous focus
     items.forEach(item => item.classList.remove('keyboard-focus'));
-    
+
     // Set new focus
     if (index >= 0 && index < items.length) {
       this.currentIndex = index;
@@ -262,7 +262,7 @@ export class GridNavigator {
       item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       return item;
     }
-    
+
     return null;
   }
 

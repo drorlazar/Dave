@@ -61,15 +61,15 @@ body:not(.dark-mode) .logo-subtitle {
     padding: 6px;
     gap: 10px;
   }
-  
+
   #topBar h1 {
     font-size: 1.3rem;
   }
-  
+
   .logo-main {
     font-size: 2rem;
   }
-  
+
   .logo-subtitle {
     font-size: 0.65rem;
   }
@@ -81,23 +81,23 @@ body:not(.dark-mode) .logo-subtitle {
     gap: 6px;
     justify-content: center;
   }
-  
+
   #topBar h1 {
     font-size: 1.2rem;
     width: 100%;
     text-align: center;
   }
-  
+
   .logo-container {
     width: 100%;
     align-items: center;
     text-align: center;
   }
-  
+
   .logo-main {
     font-size: 1.5rem;
   }
-  
+
   .logo-subtitle {
     font-size: 0.6rem;
   }
@@ -253,7 +253,7 @@ body:not(.dark-mode) .search-icon {
 
 .pageControls {
   display: flex;
-  align-items: center; 
+  align-items: center;
   gap: 8px;
   justify-content: center;
   flex-wrap: nowrap;
@@ -944,7 +944,7 @@ select {
   .size-control {
     padding: 0 5px;
   }
-  
+
   .size-slider {
     width: 80px;
   }
@@ -1000,8 +1000,8 @@ select {
   text-align: center;
   padding: 12px;
   /* Explicitly specify which properties to transition, excluding size/layout properties */
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -2555,7 +2555,7 @@ body:not(.dark-mode) .tree-history-empty {
   padding: 4px 8px; /* Reduced padding for compactness */
   cursor: pointer;
   display: flex;
-  align-items: center; 
+  align-items: center;
   gap: 4px; /* Reduced gap */
   border-radius: 3px; /* Slightly smaller radius */
   transition: background-color 0.2s;
@@ -2719,12 +2719,12 @@ body:not(.dark-mode) .tree-container li.selected .chevron-icon {
   .tree-folder-panel {
     width: 220px; /* Slightly narrower on mobile */
   }
-  
+
   body.tree-panel-visible #viewerContainer {
     margin-left: 0;
     width: 100%;
   }
-  
+
   /* On mobile, overlay the panel instead of pushing content */
   body.tree-panel-visible .tree-folder-panel {
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
@@ -3883,16 +3883,16 @@ body:not(.dark-mode) .tooltip-content::-webkit-scrollbar-thumb:hover {
     left: 20px !important;
     right: 20px;
   }
-  
+
   .tooltip-content {
     padding: 16px;
     max-height: 80vh;
   }
-  
+
   .shortcuts-grid {
     gap: 12px;
   }
-  
+
   .shortcut-category {
     padding: 10px;
   }

@@ -80,7 +80,7 @@ const tileObserver = new IntersectionObserver((entries, observer) => {
   entries.forEach(entry => {
     const tile = entry.target;
     const model = tile.model;
-    
+
     if (entry.isIntersecting) {
       // Cancel any pending cleanup
       const cleanupTimeout = tileCleanupTimeouts.get(tile);
@@ -88,7 +88,7 @@ const tileObserver = new IntersectionObserver((entries, observer) => {
         clearTimeout(cleanupTimeout);
         tileCleanupTimeouts.delete(tile);
       }
-      
+
       // Check if tile is already loading or loaded
       const loadingState = tileLoadingStates.get(tile);
       if (!loadingState || loadingState === 'unloaded') {
@@ -161,11 +161,11 @@ const tileObserver = new IntersectionObserver((entries, observer) => {
              placeholder.innerHTML = `<i class="fa fa-spinner fa-spin"></i><br>Loading ${model.type}...`;
              placeholder.style.display = 'block'; // Ensure it's visible
         }
-        
+
         // Mark tile as unloaded so it can be reloaded when it comes back into view
         tileLoadingStates.set(tile, 'unloaded');
         }, 500); // 500ms delay before cleanup
-        
+
         // Store the timeout so it can be cancelled if tile comes back into view
         tileCleanupTimeouts.set(tile, cleanupTimeout);
       }
@@ -303,7 +303,7 @@ function sortFiles() {
     }
     return currentSort.direction === 'asc' ? comparison : -comparison;
   });
-  
+
   // Re-render the current page with sorted files
   renderPage(getCurrentPage());
 }
@@ -312,7 +312,7 @@ function sortFiles() {
 // Filter management - Updates displayed assets based on active file type filters and search
 function updateFilteredModelFiles() {
   const previousLength = filteredModelFiles.length;
-  filteredModelFiles = modelFiles.filter(item => 
+  filteredModelFiles = modelFiles.filter(item =>
     (activeFilters.has(item.type) || activeFilters.has(item.subtype)) && fileMatchesSearch(item)
   );
 
@@ -327,7 +327,7 @@ function updateFilteredModelFiles() {
 filterOptions.forEach(option => {
   const type = option.dataset.type;
   option.classList.add('active');
-  
+
   option.addEventListener('click', () => {
     const isActive = option.classList.toggle('active');
     if (isActive) {
@@ -363,10 +363,10 @@ async function handleFolderPick(dirHandle, basePath) {
 
     // Calculate the correct base path for the worker
     // Handle both local development and GitHub Pages deployment
-    const baseUrl = window.location.pathname.includes('/Dave/') 
+    const baseUrl = window.location.pathname.includes('/Dave/')
       ? '/Dave/src/workers/folder_scanner_worker.js'
       : '/src/workers/folder_scanner_worker.js';
-    
+
     // Remove { type: 'module' } as the worker doesn't use ES modules
     const worker = new Worker(baseUrl);
     let newModelFiles = [];
@@ -477,7 +477,7 @@ async function loadTileContent(tile) {
 
     // Check if we should use the new asset handler system
     const useNewHandler = false; // Temporarily disabled to fix issues
-    
+
     if (useNewHandler && model.subtype && assetHandlerFactory && assetHandlerFactory.isSupported) {
       try {
         if (assetHandlerFactory.isSupported(model.subtype)) {
@@ -491,7 +491,7 @@ async function loadTileContent(tile) {
         // Fall through to legacy handler
       }
     }
-    
+
     // Legacy content loading based on type
     if (model.subtype === "glb") {
       if (!customElements.get('model-viewer')) {
@@ -501,7 +501,7 @@ async function loadTileContent(tile) {
         document.head.appendChild(script);
         await new Promise(resolve => script.onload = resolve);
       }
-      
+
       const mv = document.createElement("model-viewer");
       mv.src = fileUrl;
       mv.setAttribute("camera-controls", "");
@@ -514,21 +514,21 @@ async function loadTileContent(tile) {
       const viewerDiv = document.createElement("div");
       viewerDiv.className = "three-viewer";
       placeholder.replaceWith(viewerDiv);
-      const viewer = new FBXViewer(viewerDiv, { 
+      const viewer = new FBXViewer(viewerDiv, {
         enableZoom: false, // Disable zoom in grid view
         onError: (error) => {
           console.error(`Failed to load FBX file ${model.name}:`, error);
           errorHandler.reportAssetError('fbx', model.name, error);
-          
+
           // Replace viewer with error message
           viewerDiv.innerHTML = `<div class="load-error"><i class="fa fa-exclamation-triangle"></i><br>Error loading FBX</div>`;
-          
+
           // Clean up the failed viewer
           if (tile.fbxViewerInstance) {
             memoryManager.disposeFbxViewer(tile.fbxViewerInstance);
             tile.fbxViewerInstance = null;
           }
-          
+
           // Mark as error state
           tileLoadingStates.set(tile, 'error');
         }
@@ -599,7 +599,7 @@ async function loadTileContent(tile) {
       const audioElem = document.createElement("audio");
       audioElem.src = fileUrl;
       audioElem.controls = true;
-      
+
       // Add event listener to stop other audio when this one starts playing
       audioElem.addEventListener('play', () => {
         // Stop all other audio elements
@@ -610,7 +610,7 @@ async function loadTileContent(tile) {
           }
         });
       });
-      
+
       audioControls.appendChild(audioElem);
       audioTile.appendChild(audioHeader);
       audioTile.appendChild(audioControls);
@@ -655,28 +655,28 @@ async function loadTileContent(tile) {
       // Create font preview container
       const fontPreview = document.createElement("div");
       fontPreview.className = "font-preview";
-      
+
       // Get preview text (default or custom)
-      const previewText = localStorage.getItem('fontPreviewText') || 
+      const previewText = localStorage.getItem('fontPreviewText') ||
         "The quick brown fox jumps over the lazy dog";
-      
+
       // Generate a unique font family name to avoid conflicts
       const fontId = `font-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      
+
       try {
         // Load the font using FontFace API
         await loadFont(fileUrl, fontId);
-        
+
         // Get the saved font size or use default
         const savedFontSize = localStorage.getItem(`fontSize_${model.name}`) || localStorage.getItem('defaultFontSize') || '16';
-        
+
         // Create text container with the loaded font
         const textContainer = document.createElement("div");
         textContainer.style.fontFamily = fontId;
         textContainer.style.fontSize = `${savedFontSize}px`;
         textContainer.textContent = previewText;
         fontPreview.appendChild(textContainer);
-        
+
         // Add custom text button (functionality to be added later)
         const customBtn = document.createElement("button");
         customBtn.className = "custom-text-btn";
@@ -692,7 +692,7 @@ async function loadTileContent(tile) {
           }
         };
         fontPreview.appendChild(customBtn);
-        
+
         placeholder.replaceWith(fontPreview);
       } catch (fontLoadError) {
         console.error(`Error loading font ${model.name}:`, fontLoadError);
@@ -743,7 +743,7 @@ function renderPage(pageIndex) {
   const startIndex = pageIndex * getItemsPerPage();
   const pageItems = filteredModelFiles.slice(startIndex, startIndex + getItemsPerPage());
   const selectedFiles = getSelectedFiles();
-  
+
   pageItems.forEach(model => {
     const tile = document.createElement("div");
     tile.className = "model-tile" + (selectedFiles.has(model.name) ? " selected" : "");
@@ -801,7 +801,7 @@ function renderPage(pageIndex) {
     viewerContainer.appendChild(tile);
     tileObserver.observe(tile);
   });
-  
+
   updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
 
   // Show welcome message if no files loaded
@@ -848,15 +848,15 @@ async function showFullscreen(model) {
 
   // Check if we should use the new asset handler system
   const useNewHandler = false; // Temporarily disabled to fix issues
-  
+
   if (useNewHandler && model.subtype && assetHandlerFactory && assetHandlerFactory.isSupported) {
     try {
       if (assetHandlerFactory.isSupported(model.subtype)) {
-        const cleanupInfo = await assetHandlerFactory.loadFullscreen(model, fullscreenViewer, { 
+        const cleanupInfo = await assetHandlerFactory.loadFullscreen(model, fullscreenViewer, {
           fullscreenVideo,
-          fullscreenInfo 
+          fullscreenInfo
         });
-        
+
         currentFullscreenViewer = {
           ...cleanupInfo,
           fileName: model.name
@@ -868,7 +868,7 @@ async function showFullscreen(model) {
       // Fall back to legacy handler
     }
   }
-  
+
   // Legacy fullscreen handling
   let fileUrl;
   let needsCleanup = false;
@@ -882,7 +882,7 @@ async function showFullscreen(model) {
       fileUrl = await CloudStorage.getFileUrl(model);
       needsCleanup = false;
     }
-    
+
     // Now process based on file type
     if (model.subtype === "glb") {
       if (!customElements.get('model-viewer')) {
@@ -892,7 +892,7 @@ async function showFullscreen(model) {
         document.head.appendChild(script);
         await new Promise(resolve => script.onload = resolve);
       }
-      
+
       const mv = document.createElement("model-viewer");
       mv.src = fileUrl;
       mv.setAttribute("camera-controls", "");
@@ -918,7 +918,7 @@ async function showFullscreen(model) {
           if (needsCleanup && fileUrl) URL.revokeObjectURL(fileUrl);
         }
       };
-      
+
     } else if (model.subtype === "fbx") {
       const container = document.createElement('div');
       container.style.width = '100%';
@@ -927,15 +927,15 @@ async function showFullscreen(model) {
       fullscreenViewer.innerHTML = '';
       fullscreenViewer.appendChild(container);
       fullscreenViewer.style.display = 'block';
-      
+
       const viewer = new FBXViewer(container, { enableZoom: true }); // Enable zoom in fullscreen
       memoryManager.registerFbxViewer(viewer);
-      
+
       // Set error handler for fullscreen viewer
       viewer.onLoadError = (error) => {
         console.error(`Failed to load FBX file ${model.name} in fullscreen:`, error);
         errorHandler.reportAssetError('fbx', model.name, error);
-        
+
         // Show error in fullscreen
         fullscreenViewer.innerHTML = `
           <div class="fullscreen-error">
@@ -944,11 +944,11 @@ async function showFullscreen(model) {
             <small>${error.message || 'Unknown error'}</small>
           </div>
         `;
-        
+
         // Clean up the failed viewer
         memoryManager.disposeFbxViewer(viewer);
       };
-      
+
       viewer.loadModel(fileUrl);
 
       // Create inspector adapter and panel for FBX
@@ -969,13 +969,13 @@ async function showFullscreen(model) {
         },
         fileName: model.name
       };
-      
+
     } else if (model.type === "video") {
       fullscreenViewer.style.display = 'none';
       fullscreenVideo.style.display = 'block';
       fullscreenVideo.src = fileUrl;
       fullscreenVideo.play();
-      
+
       // Store reference to preview video for cleanup
       const previewVideo = viewerContainer.querySelector(`[data-model-name="${model.name}"] video`);
       currentFullscreenViewer = {
@@ -986,7 +986,7 @@ async function showFullscreen(model) {
           if (fileUrl) URL.revokeObjectURL(fileUrl);
         } : undefined
       };
-      
+
     } else if (model.type === "image") {
       fullscreenViewer.style.display = 'block';
       fullscreenVideo.style.display = 'none';
@@ -1081,33 +1081,33 @@ async function showFullscreen(model) {
           if (needsCleanup && fileUrl) URL.revokeObjectURL(fileUrl);
         }
       };
-      
+
     } else if (model.type === "audio") {
       fullscreenViewer.style.display = 'block';
       fullscreenVideo.style.display = 'none';
-      
+
       const audioContainer = document.createElement("div");
       audioContainer.className = "fullscreen-audio";
-      
+
       const audioHeader = document.createElement("div");
       audioHeader.className = "fullscreen-audio-header";
       const ext = model.name.split('.').pop().toUpperCase();
       audioHeader.innerHTML = '<i class="fa fa-music"></i> ' + ext;
-      
+
       const audioControls = document.createElement("div");
       audioControls.className = "fullscreen-audio-controls";
       const audioElem = document.createElement("audio");
       audioElem.src = fileUrl;
       audioElem.controls = true;
       audioElem.style.width = "100%";
-      
+
       audioControls.appendChild(audioElem);
       audioContainer.appendChild(audioHeader);
       audioContainer.appendChild(audioControls);
-      
+
       fullscreenViewer.innerHTML = "";
       fullscreenViewer.appendChild(audioContainer);
-      
+
       currentFullscreenViewer = {
         type: 'audio',
         element: audioElem,
@@ -1126,18 +1126,18 @@ async function showFullscreen(model) {
       fontDisplayContainer.className = "fullscreen-font-display"; // For styling
 
       // Get preview text (default or custom)
-      const previewText = localStorage.getItem('fontPreviewText') || 
+      const previewText = localStorage.getItem('fontPreviewText') ||
         "The quick brown fox jumps over the lazy dog. 0123456789";
-      
+
       // Generate a unique font family name
       const fontId = `font-fullscreen-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
       try {
         await loadFont(fileUrl, fontId);
-        
+
         // Get the saved font size or use a larger default for fullscreen
         const savedFontSize = localStorage.getItem(`fontSize_${model.name}`) || localStorage.getItem('defaultFontSize') || '40';
-        
+
         const textElement = document.createElement("p");
         textElement.style.fontFamily = fontId;
         textElement.textContent = previewText;
@@ -1149,12 +1149,12 @@ async function showFullscreen(model) {
         fontDisplayContainer.appendChild(textElement);
         fullscreenViewer.innerHTML = ""; // Clear any loading messages
         fullscreenViewer.appendChild(fontDisplayContainer);
-        
+
         // Show and update the font size control
         const fontSizeControl = document.getElementById('fullscreenFontSizeControl');
         const fontSizeSlider = document.getElementById('fullscreenFontSizeSlider');
         const fontSizeValue = document.getElementById('fullscreenFontSizeValue');
-        
+
         if (fontSizeControl && fontSizeSlider && fontSizeValue) {
           fontSizeControl.style.display = 'flex';
           fontSizeSlider.value = savedFontSize;
@@ -1171,9 +1171,9 @@ async function showFullscreen(model) {
             if (fontSizeControl) {
               fontSizeControl.style.display = 'none';
             }
-            
+
             // Optional: remove font from document.fonts if it causes issues
-            // document.fonts.delete(fontId); 
+            // document.fonts.delete(fontId);
             if (needsCleanup && fileUrl) URL.revokeObjectURL(fileUrl);
           }
         };
@@ -1230,7 +1230,7 @@ async function handleFolderSelection() {
     console.log("Directory picker is already active");
     return;
   }
-  
+
   try {
     isDirectoryPickerActive = true;
     const dirHandle = await window.showDirectoryPicker({
@@ -1269,7 +1269,7 @@ async function loadFolderFromPath(path) {
     console.log("Directory picker is already active");
     return;
   }
-  
+
   try {
     isDirectoryPickerActive = true;
     if (lastDirectoryHandle && path) {
@@ -1451,13 +1451,13 @@ itemsOptions.forEach(option => {
     // Update active state in dropdown
     itemsOptions.forEach(opt => opt.classList.remove('active'));
     option.classList.add('active');
-    
+
     // Update items per page value via the proper UI function
     setItemsPerPage(parseInt(option.dataset.value));
-    
+
     // Don't manually update the button text here - let the setItemsPerPage function handle it
     // This was causing a duplicate update that could lead to the wrong button being updated
-    
+
     // Update page and render
     setCurrentPage(0);
     updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
@@ -1580,15 +1580,15 @@ async function handleDrop(e) {
 
         // Determine file type using centralized detector
         const typeInfo = detectFileType(file.name);
-        
+
         if (typeInfo) {
           console.log("Adding file:", file.name, "as type:", typeInfo.type, "subtype:", typeInfo.subtype);
-          modelFiles.push({ 
-            name: file.name, 
-            file, 
+          modelFiles.push({
+            name: file.name,
+            file,
             type: typeInfo.type,
             subtype: typeInfo.subtype,
-            fullPath: file.name 
+            fullPath: file.name
           });
         }
       }

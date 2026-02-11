@@ -79,7 +79,7 @@ class TestRunner {
     console.log(colors.cyan + '  ' + '─'.repeat(60) + colors.reset);
 
     const testPath = path.join(__dirname, suite.file);
-    
+
     try {
       // Run the test with Playwright
       const startTime = Date.now();
@@ -87,10 +87,10 @@ class TestRunner {
         encoding: 'utf8',
         stdio: 'pipe'
       });
-      
+
       const duration = Date.now() - startTime;
       const results = JSON.parse(output);
-      
+
       // Parse results
       const suiteResult = {
         name: suite.name,
@@ -113,7 +113,7 @@ class TestRunner {
             error: test.error
           };
           suiteResult.tests.push(testResult);
-          
+
           // Print test result
           if (test.status === 'passed') {
             console.log(colors.green + `  ✓ ${test.title}` + colors.reset);
@@ -133,31 +133,31 @@ class TestRunner {
       this.passedTests += suiteResult.passed;
       this.failedTests += suiteResult.failed;
       this.skippedTests += suiteResult.skipped;
-      
+
       this.results.push(suiteResult);
-      
+
       console.log(colors.cyan + `\n  Summary: ${colors.green}${suiteResult.passed} passed${colors.reset}, ${colors.red}${suiteResult.failed} failed${colors.reset}, ${colors.yellow}${suiteResult.skipped} skipped${colors.reset} (${duration}ms)` + colors.reset);
-      
+
     } catch (error) {
       // Handle test execution errors
       const errorMessage = error.stdout || error.message;
       console.log(colors.red + `  ✗ Test suite failed to execute` + colors.reset);
       console.log(colors.red + `    ${errorMessage}` + colors.reset);
-      
+
       this.results.push({
         name: suite.name,
         file: suite.file,
         error: errorMessage,
         failed: true
       });
-      
+
       this.failedTests++;
     }
   }
 
   async runAllTests() {
     this.printHeader();
-    
+
     // Check if server is running
     console.log(colors.yellow + 'Checking if server is running...' + colors.reset);
     try {
@@ -181,21 +181,21 @@ class TestRunner {
   generateReport() {
     const duration = Date.now() - this.startTime;
     const durationSeconds = (duration / 1000).toFixed(2);
-    
+
     console.log(colors.cyan + colors.bright + '\n\n╔══════════════════════════════════════════════════════════════╗' + colors.reset);
     console.log(colors.cyan + colors.bright + '║                      TEST SUMMARY                            ║' + colors.reset);
     console.log(colors.cyan + colors.bright + '╚══════════════════════════════════════════════════════════════╝' + colors.reset);
-    
+
     console.log('\n' + colors.bright + 'Overall Results:' + colors.reset);
     console.log(`  Total Tests: ${colors.yellow}${this.totalTests}${colors.reset}`);
     console.log(`  Passed: ${colors.green}${this.passedTests}${colors.reset}`);
     console.log(`  Failed: ${colors.red}${this.failedTests}${colors.reset}`);
     console.log(`  Skipped: ${colors.yellow}${this.skippedTests}${colors.reset}`);
     console.log(`  Duration: ${colors.blue}${durationSeconds}s${colors.reset}`);
-    
+
     const passRate = this.totalTests > 0 ? ((this.passedTests / this.totalTests) * 100).toFixed(1) : 0;
     console.log(`  Pass Rate: ${passRate >= 90 ? colors.green : passRate >= 70 ? colors.yellow : colors.red}${passRate}%${colors.reset}`);
-    
+
     console.log('\n' + colors.bright + 'Suite Results:' + colors.reset);
     for (const result of this.results) {
       if (result.failed) {
@@ -206,10 +206,10 @@ class TestRunner {
         console.log(`  ${statusColor}${result.name}: ${suitePassRate}% (${result.passed}/${result.totalTests})${colors.reset}`);
       }
     }
-    
+
     // Write detailed report to file
     this.writeDetailedReport();
-    
+
     // Final status
     console.log('\n' + colors.bright + 'Test Status:' + colors.reset);
     if (this.failedTests === 0 && !this.results.some(r => r.failed)) {
@@ -240,7 +240,7 @@ class TestRunner {
         testFolder: '/mnt/c/Users/drorl/Documents/Sett/Tools/HTMLPreviewer/TestFolder'
       }
     };
-    
+
     const reportPath = path.join(__dirname, 'test_report.json');
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   }
@@ -249,7 +249,7 @@ class TestRunner {
 // Main execution
 async function main() {
   const runner = new TestRunner();
-  
+
   try {
     await runner.runAllTests();
   } catch (error) {

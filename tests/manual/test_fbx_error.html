@@ -54,7 +54,7 @@
 <body>
     <h1>FBX Viewer Error Handling Test</h1>
     <p>This tests the error handling improvements for FBX loading.</p>
-    
+
     <div class="test-container">
         <!-- Test 1: Valid FBX URL -->
         <div class="test-case">
@@ -62,21 +62,21 @@
             <div id="viewer1" class="test-viewer"></div>
             <div id="status1" class="status loading">Loading...</div>
         </div>
-        
+
         <!-- Test 2: Invalid URL -->
         <div class="test-case">
             <h3>Test 2: Invalid URL (404)</h3>
             <div id="viewer2" class="test-viewer"></div>
             <div id="status2" class="status loading">Loading...</div>
         </div>
-        
+
         <!-- Test 3: Wrong file type -->
         <div class="test-case">
             <h3>Test 3: Wrong File Type</h3>
             <div id="viewer3" class="test-viewer"></div>
             <div id="status3" class="status loading">Loading...</div>
         </div>
-        
+
         <!-- Test 4: Corrupt/Invalid FBX -->
         <div class="test-case">
             <h3>Test 4: Malformed FBX</h3>
@@ -84,10 +84,10 @@
             <div id="status4" class="status loading">Loading...</div>
         </div>
     </div>
-    
+
     <script type="module">
         import FBXViewer from './viewer_fbx.js';
-        
+
         // Test cases
         const tests = [
             {
@@ -115,19 +115,19 @@
                 expectedResult: 'error'
             }
         ];
-        
+
         // Run tests
         tests.forEach(test => {
             const viewerDiv = document.getElementById(`viewer${test.id}`);
             const statusDiv = document.getElementById(`status${test.id}`);
-            
+
             const viewer = new FBXViewer(viewerDiv, { enableZoom: false });
-            
+
             viewer.onLoadError = (error) => {
                 console.error(`Test ${test.id} error:`, error);
                 statusDiv.textContent = `Error: ${error.message || 'Unknown error'}`;
                 statusDiv.className = 'status error';
-                
+
                 // Show error in viewer
                 viewerDiv.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ff5252;">
                     <div style="text-align:center;">
@@ -137,13 +137,13 @@
                     </div>
                 </div>`;
             };
-            
+
             // Add success handler
             const originalLoadModel = viewer.loadModel.bind(viewer);
             viewer.loadModel = function(url) {
                 const startTime = Date.now();
                 originalLoadModel(url);
-                
+
                 // Check for success after a timeout
                 setTimeout(() => {
                     if (!viewer.isLoading && statusDiv.className.includes('loading')) {
@@ -152,7 +152,7 @@
                     }
                 }, 2000);
             };
-            
+
             viewer.loadModel(test.url);
         });
     </script>

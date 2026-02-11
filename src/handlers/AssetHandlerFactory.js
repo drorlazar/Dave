@@ -57,7 +57,7 @@ export class AssetHandlerFactory {
     if (!handler) {
       throw new Error(`No handler found for type: ${model.subtype || model.type}`);
     }
-    
+
     return await handler.loadThumbnail(model, container, options);
   }
 
@@ -73,7 +73,7 @@ export class AssetHandlerFactory {
     if (!handler) {
       throw new Error(`No handler found for type: ${model.subtype || model.type}`);
     }
-    
+
     return await handler.loadFullscreen(model, container, options);
   }
 

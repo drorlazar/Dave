@@ -3,15 +3,15 @@
 export const TEST_CONFIG = {
   // Test folder path
   testFolderPath: '/mnt/c/Users/drorl/Documents/Sett/Tools/HTMLPreviewer/TestFolder',
-  
+
   // Server configuration
   serverUrl: 'http://localhost:7777',
   viewerUrl: 'http://localhost:7777/Digital_Asset_Viewer.html',
-  
+
   // Test timeouts
   defaultTimeout: 30000,
   fileLoadTimeout: 10000,
-  
+
   // Expected file counts by type
   expectedFiles: {
     total: 75,
@@ -23,7 +23,7 @@ export const TEST_CONFIG = {
     'document': 5,
     'other': 16  // PSD, TXT, etc.
   },
-  
+
   // Sample files for specific tests
   sampleFiles: {
     fbx: 'ButlerModel.fbx',
@@ -39,7 +39,7 @@ export const TEST_CONFIG = {
     pdf: 'Mikołaj_Dąbrowski_CV.pdf',
     webp: 'out-1.webp'
   },
-  
+
   // Performance benchmarks
   performance: {
     pageLoadTime: 2000,      // 2 seconds
@@ -47,7 +47,7 @@ export const TEST_CONFIG = {
     searchResponseTime: 300, // 300ms
     memoryLeakThreshold: 50  // 50MB increase is concerning
   },
-  
+
   // UI elements to test
   uiElements: {
     viewerContainer: '#viewerContainer',

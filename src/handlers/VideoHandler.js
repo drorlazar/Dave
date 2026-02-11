@@ -18,31 +18,31 @@ export class VideoHandler extends BaseAssetHandler {
 
   async loadThumbnail(model, container, options = {}) {
     const fileUrl = await this.getFileUrl(model);
-    
+
     const videoPreview = document.createElement('div');
     videoPreview.className = 'video-preview';
-    
+
     const video = document.createElement('video');
     video.src = fileUrl;
     video.muted = true;
     video.className = 'preview-video';
     videoPreview.appendChild(video);
-    
+
     // Add scrub bar
     const scrubBarContainer = document.createElement('div');
     scrubBarContainer.className = 'scrub-bar-container';
     const scrubBar = document.createElement('div');
     scrubBar.className = 'scrub-bar';
     scrubBarContainer.appendChild(scrubBar);
-    
+
     const timeMarker = document.createElement('div');
     timeMarker.className = 'time-marker';
     scrubBar.appendChild(timeMarker);
     videoPreview.appendChild(scrubBarContainer);
-    
+
     // Add scrubbing functionality
     let isDragging = false;
-    
+
     const updateVideoTime = (e) => {
       if (!video.duration) return;
       const rect = scrubBarContainer.getBoundingClientRect();
@@ -54,30 +54,30 @@ export class VideoHandler extends BaseAssetHandler {
       timeMarker.textContent = this.formatTime(newTime);
       timeMarker.style.left = `${percentage * 100}%`;
     };
-    
+
     scrubBarContainer.addEventListener('mousedown', (e) => {
       isDragging = true;
       updateVideoTime(e);
     });
-    
+
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       updateVideoTime(e);
     });
-    
+
     document.addEventListener('mouseup', () => {
       isDragging = false;
     });
-    
+
     scrubBarContainer.addEventListener('mousemove', updateVideoTime);
-    
+
     container.innerHTML = '';
     container.appendChild(videoPreview);
   }
 
   async loadFullscreen(model, container, options = {}) {
     const fileUrl = await this.getFileUrl(model);
-    
+
     // Use the fullscreen video element
     const fullscreenVideo = document.getElementById('fullscreenVideo');
     if (fullscreenVideo) {
@@ -85,10 +85,10 @@ export class VideoHandler extends BaseAssetHandler {
       fullscreenVideo.style.display = 'block';
       fullscreenVideo.src = fileUrl;
       fullscreenVideo.play();
-      
+
       // Get reference to preview video
       const previewVideo = document.querySelector(`[data-model-name="${model.name}"] video`);
-      
+
       return {
         type: 'video',
         previewVideo: previewVideo,
@@ -97,7 +97,7 @@ export class VideoHandler extends BaseAssetHandler {
         }
       };
     }
-    
+
     // Fallback if fullscreenVideo element doesn't exist
     const video = document.createElement('video');
     video.src = fileUrl;
@@ -105,11 +105,11 @@ export class VideoHandler extends BaseAssetHandler {
     video.autoplay = true;
     video.style.width = '100%';
     video.style.height = '100%';
-    
+
     container.innerHTML = '';
     container.appendChild(video);
     container.style.display = 'block';
-    
+
     return {
       element: video,
       cleanup: () => {

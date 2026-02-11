@@ -34,18 +34,18 @@ export class ErrorHandler {
   handleError(errorInfo) {
     // Add timestamp
     errorInfo.timestamp = new Date().toISOString();
-    
+
     // Log to console in development
     if (window.APP_DEBUG?.enabled) {
       console.error('[ErrorHandler]', errorInfo);
     }
-    
+
     // Add to error log
     this.errorLog.unshift(errorInfo);
     if (this.errorLog.length > this.maxLogSize) {
       this.errorLog.pop();
     }
-    
+
     // Notify callbacks
     this.errorCallbacks.forEach(callback => {
       try {
@@ -54,18 +54,18 @@ export class ErrorHandler {
         console.error('Error in error callback:', e);
       }
     });
-    
+
     // Show user-friendly error based on type
     this.showUserError(errorInfo);
   }
 
   showUserError(errorInfo) {
     const { type, message, source } = errorInfo;
-    
+
     // Determine error category and user message
     let userMessage = '';
     let severity = 'error';
-    
+
     if (message?.includes('Failed to fetch') || message?.includes('NetworkError')) {
       userMessage = 'Network connection error. Please check your internet connection.';
       severity = 'warning';
@@ -86,7 +86,7 @@ export class ErrorHandler {
       userMessage = 'An unexpected error occurred. Please try again.';
       severity = 'error';
     }
-    
+
     // Show notification
     this.showNotification(userMessage, severity);
   }
@@ -97,7 +97,7 @@ export class ErrorHandler {
     if (existingNotification) {
       existingNotification.remove();
     }
-    
+
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `error-notification ${severity}`;
@@ -106,16 +106,16 @@ export class ErrorHandler {
       <span class="error-message">${message}</span>
       <button class="error-close">&times;</button>
     `;
-    
+
     // Add to document
     document.body.appendChild(notification);
-    
+
     // Auto-hide after 5 seconds
     const autoHideTimeout = setTimeout(() => {
       notification.classList.add('fade-out');
       setTimeout(() => notification.remove(), 300);
     }, 5000);
-    
+
     // Close button handler
     notification.querySelector('.error-close').addEventListener('click', () => {
       clearTimeout(autoHideTimeout);
@@ -132,7 +132,7 @@ export class ErrorHandler {
       context,
       error
     };
-    
+
     this.handleError(errorInfo);
   }
 
@@ -166,7 +166,7 @@ export class ErrorHandler {
 
   async retryOperation(operation, maxRetries = 3, delay = 1000) {
     let lastError;
-    
+
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await operation();
@@ -177,7 +177,7 @@ export class ErrorHandler {
         }
       }
     }
-    
+
     this.reportError(lastError, { retries: maxRetries });
     throw lastError;
   }
@@ -198,7 +198,7 @@ export class ErrorHandler {
       url: window.location.href,
       errors: this.errorLog
     };
-    
+
     const blob = new Blob([JSON.stringify(logData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

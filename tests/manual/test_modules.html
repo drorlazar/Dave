@@ -37,20 +37,20 @@
 
         async function runTests() {
             log('Testing module imports...');
-            
+
             // Test shared filters first
             await testModule('./shared/filters.js', 'shared/filters.js');
-            
+
             // Test utility modules
             await testModule('./utils/memoryManager.js', 'memoryManager');
             await testModule('./utils/fileTypeDetector.js', 'fileTypeDetector');
             await testModule('./utils/errorHandler.js', 'errorHandler');
             await testModule('./utils/debounce.js', 'debounce');
-            
+
             // Test handlers
             await testModule('./handlers/BaseAssetHandler.js', 'BaseAssetHandler');
             await testModule('./handlers/AssetHandlerFactory.js', 'AssetHandlerFactory');
-            
+
             // Test main modules
             await testModule('./ui.js', 'ui.js');
             await testModule('./asset_loading.js', 'asset_loading.js');

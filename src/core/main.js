@@ -40,11 +40,11 @@ window.APP_DEBUG = {
 // Initialize UI and set up event listeners
 UI.initializeUI().then(() => {
   console.log('[Main] UI initialized successfully');
-  
+
   // Initialize tree folder view
   TreeFolderView.initTreeFolderView();
   console.log('[Main] Tree folder view initialized');
-  
+
   // Initialize help tooltip with error handling
   try {
     initHelpTooltip();
@@ -59,7 +59,7 @@ UI.initializeUI().then(() => {
   // Initialize saved theme + dropdown sections (themes, release log)
   SettingsModal.initTheme();
   SettingsModal.initDropdownSections();
-  
+
   // Initial render
   AssetLoading.renderPage(UI.getCurrentPage());
   UI.updatePagination(Math.ceil(AssetLoading.filteredModelFiles.length / UI.getItemsPerPage()));
@@ -67,11 +67,11 @@ UI.initializeUI().then(() => {
 
   // Show welcome message in empty state
   UI.showWelcomeMessage();
-  
+
   // Initialize keyboard shortcuts
   const shortcutManager = new KeyboardShortcutManager();
   const gridNavigator = new GridNavigator('#viewerContainer', '.model-tile');
-  
+
   // Set up navigation callbacks
   const navigationCallbacks = {
     nextPage: () => {
@@ -130,7 +130,7 @@ UI.initializeUI().then(() => {
       if (item && direction === 'left' && gridNavigator.currentIndex === 0) {
         // At beginning of grid, go to previous page
         navigationCallbacks.prevPage();
-      } else if (item && direction === 'right' && 
+      } else if (item && direction === 'right' &&
                  gridNavigator.currentIndex === gridNavigator.getItems().length - 1) {
         // At end of grid, go to next page
         navigationCallbacks.nextPage();
@@ -158,10 +158,10 @@ UI.initializeUI().then(() => {
       }
     }
   };
-  
+
   // Set up shortcuts
   setupNavigationShortcuts(shortcutManager, navigationCallbacks);
-  
+
   // Make shortcut manager available globally for debugging
   window.shortcutManager = shortcutManager;
   window.gridNavigator = gridNavigator;
