@@ -1,6 +1,25 @@
-// SettingsModal.js - In-app settings for cloud storage credentials (localStorage-based)
+// SettingsModal.js - In-app settings for cloud storage credentials and appearance
 
 import { CredentialStore } from './CredentialStore.js';
+
+const THEMES = [
+  { id: 'default',    name: 'Default',      accent: '#9b77ff', bg: '#1e1e1e', surface: '#2a2a2a', text: '#e0e0e0', border: '#444', mode: 'dark' },
+  { id: 'midnight',   name: 'Midnight',     accent: '#64b5f6', bg: '#0d1117', surface: '#161b22', text: '#c9d1d9', border: '#30363d', mode: 'dark' },
+  { id: 'monokai',    name: 'Monokai',      accent: '#a6e22e', bg: '#272822', surface: '#2e2f28', text: '#f8f8f2', border: '#49483e', mode: 'dark' },
+  { id: 'dracula',    name: 'Dracula',      accent: '#bd93f9', bg: '#282a36', surface: '#343746', text: '#f8f8f2', border: '#44475a', mode: 'dark' },
+  { id: 'nord',       name: 'Nord',         accent: '#88c0d0', bg: '#2e3440', surface: '#3b4252', text: '#eceff4', border: '#4c566a', mode: 'dark' },
+  { id: 'solarized',  name: 'Solarized',    accent: '#268bd2', bg: '#002b36', surface: '#073642', text: '#93a1a1', border: '#586e75', mode: 'dark' },
+  { id: 'cyberpunk',  name: 'Cyberpunk',    accent: '#ff2d95', bg: '#0a0a1a', surface: '#12122a', text: '#e0d0ff', border: '#2a1a4a', mode: 'dark' },
+  { id: 'forest',     name: 'Forest',       accent: '#66bb6a', bg: '#1a2416', surface: '#22301c', text: '#c8dcc0', border: '#3a5030', mode: 'dark' },
+  { id: 'ocean',      name: 'Ocean',        accent: '#4dd0e1', bg: '#0a1929', surface: '#132f4c', text: '#b2bac2', border: '#1e4976', mode: 'dark' },
+  { id: 'sunset',     name: 'Sunset',       accent: '#ff7043', bg: '#1c1410', surface: '#2a1e18', text: '#e0cfc0', border: '#4a3528', mode: 'dark' },
+  { id: 'rose-pine',  name: 'Rose Pine',    accent: '#ebbcba', bg: '#191724', surface: '#1f1d2e', text: '#e0def4', border: '#393552', mode: 'dark' },
+  { id: 'light',      name: 'Light',        accent: '#7c5ccc', bg: '#ffffff', surface: '#f5f5f5', text: '#333333', border: '#e0e0e0', mode: 'light' },
+  { id: 'paper',      name: 'Paper',        accent: '#d4882a', bg: '#faf8f0', surface: '#f0ece0', text: '#3a3530', border: '#ddd5c8', mode: 'light' },
+  { id: 'arctic',     name: 'Arctic',       accent: '#5e81ac', bg: '#eceff4', surface: '#e5e9f0', text: '#2e3440', border: '#d8dee9', mode: 'light' },
+];
+
+const THEME_STORAGE_KEY = 'dave_theme';
 
 export class SettingsModal {
   constructor() {
@@ -24,26 +43,12 @@ export class SettingsModal {
       <div class="cloud-modal-content settings-modal-content">
         <div class="cloud-modal-header">
           <span class="cloud-modal-title">
-            <i class="fa fa-gear"></i>
-            Settings
+            <i class="fa fa-cloud"></i>
+            Cloud Storage Settings
           </span>
           <button class="cloud-modal-close" id="settingsClose" title="Close">&times;</button>
         </div>
         <div class="settings-body">
-
-          <!-- Release Log Section -->
-          <div class="settings-section collapsed">
-            <div class="settings-section-header settings-collapsible-header">
-              <i class="fa fa-clock-rotate-left"></i> Release Log
-              <span class="settings-collapse-icon">&#9656;</span>
-            </div>
-            <div class="settings-collapsible-body release-log-body">
-              ${SettingsModal._releaseLogHTML()}
-            </div>
-          </div>
-
-          <!-- Cloud Storage -->
-          <div class="settings-section-label"><i class="fa fa-cloud"></i> Cloud Storage</div>
 
           <div class="settings-warning">
             <i class="fa fa-shield-halved"></i>
@@ -168,8 +173,36 @@ export class SettingsModal {
     this.modal.querySelector('#gdriveSave').addEventListener('click', () => this.saveGDrive());
     this.modal.querySelector('#gdriveClear').addEventListener('click', () => this.clearGDrive());
 
+    // Theme swatch clicks
+    this.modal.querySelectorAll('.theme-swatch').forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        const themeId = swatch.dataset.theme;
+        SettingsModal.applyTheme(themeId);
+        // Update active state in grid
+        this.modal.querySelectorAll('.theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.theme === themeId));
+      });
+    });
+
     this._escHandler = (e) => { if (e.key === 'Escape') this.close(); };
     document.addEventListener('keydown', this._escHandler);
+  }
+
+  _themeSwatchesHTML() {
+    const current = localStorage.getItem(THEME_STORAGE_KEY) || 'default';
+    return THEMES.map(t => `
+      <button class="theme-swatch${t.id === current ? ' active' : ''}" data-theme="${t.id}" title="${t.name}">
+        <div class="theme-swatch-preview" style="background:${t.bg};border-color:${t.border}">
+          <div class="theme-swatch-bar" style="background:${t.surface}"></div>
+          <div class="theme-swatch-accent" style="background:${t.accent}"></div>
+          <div class="theme-swatch-text" style="background:${t.text}"></div>
+        </div>
+        <span class="theme-swatch-name">${t.name}</span>
+      </button>
+    `).join('');
+  }
+
+  _releaseLogHTML() {
+    return SettingsModal._releaseLogEntriesHTML();
   }
 
   loadStatus() {
@@ -193,7 +226,6 @@ export class SettingsModal {
     if (data.gdrive.credentialsConfigured) {
       gdriveStatus.textContent = 'Configured';
       gdriveStatus.className = 'settings-status configured';
-      // Pre-fill the client ID (not sensitive)
       const config = CredentialStore.getGDriveConfig();
       if (config) {
         this.modal.querySelector('#gdriveClientId').value = config.clientId;
@@ -263,7 +295,6 @@ export class SettingsModal {
       hint.className = 'settings-hint success';
       this.modal.querySelector('#gdriveConfigStatus').textContent = 'Configured';
       this.modal.querySelector('#gdriveConfigStatus').className = 'settings-status configured';
-      // Reinitialize the GDrive client with new client ID
       const { getGDriveClient } = await import('./CloudStorageProvider.js');
       const client = getGDriveClient();
       client.init(clientId);
@@ -292,89 +323,157 @@ export class SettingsModal {
     }
   }
 
-  static _releaseLogHTML() {
+  // --- Theme system ---
+
+  static applyTheme(themeId) {
+    const theme = THEMES.find(t => t.id === themeId);
+    if (!theme) return;
+
+    localStorage.setItem(THEME_STORAGE_KEY, themeId);
+    // Save theme CSS values for pre-render inline script
+    localStorage.setItem('dave_theme_css', JSON.stringify({
+      bg: theme.bg, surface: theme.surface, text: theme.text,
+      border: theme.border, accent: theme.accent, mode: theme.mode
+    }));
+
+    // Set dark/light mode class
+    const isLight = theme.mode === 'light';
+    if (isLight) {
+      document.documentElement.classList.remove('dark-mode');
+      document.body.classList.remove('dark-mode');
+    } else {
+      document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
+    }
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+
+    // Update dark mode toggle indicator if visible
+    const indicator = document.getElementById('darkModeIndicator');
+    if (indicator) {
+      indicator.textContent = isLight ? 'OFF' : 'ON';
+      indicator.classList.toggle('off', isLight);
+    }
+
+    // Apply CSS custom properties
+    const root = document.documentElement;
+    root.style.setProperty('--theme-bg', theme.bg);
+    root.style.setProperty('--theme-surface', theme.surface);
+    root.style.setProperty('--theme-text', theme.text);
+    root.style.setProperty('--theme-border', theme.border);
+    root.style.setProperty('--theme-accent', theme.accent);
+  }
+
+  static initTheme() {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved) {
+      SettingsModal.applyTheme(saved);
+    }
+  }
+
+  /** Populate theme swatches + release log in the settings dropdown */
+  static initDropdownSections() {
+    const themeGrid = document.getElementById('themeGridDD');
+    const releaseLogBody = document.getElementById('releaseLogBody');
+    if (!themeGrid && !releaseLogBody) return;
+
+    // Theme swatches
+    if (themeGrid) {
+      const current = localStorage.getItem(THEME_STORAGE_KEY) || 'default';
+      themeGrid.innerHTML = THEMES.map(t => `
+        <button class="theme-swatch${t.id === current ? ' active' : ''}" data-theme="${t.id}" title="${t.name}">
+          <div class="theme-swatch-preview" style="background:${t.bg};border-color:${t.border}">
+            <div class="theme-swatch-bar" style="background:${t.surface}"></div>
+            <div class="theme-swatch-accent" style="background:${t.accent}"></div>
+            <div class="theme-swatch-text" style="background:${t.text}"></div>
+          </div>
+          <span class="theme-swatch-name">${t.name}</span>
+        </button>
+      `).join('');
+
+      themeGrid.addEventListener('click', (e) => {
+        const swatch = e.target.closest('.theme-swatch');
+        if (!swatch) return;
+        const themeId = swatch.dataset.theme;
+        SettingsModal.applyTheme(themeId);
+        themeGrid.querySelectorAll('.theme-swatch').forEach(s =>
+          s.classList.toggle('active', s.dataset.theme === themeId)
+        );
+        // Also update modal swatches if open
+        const modalGrid = document.getElementById('themeGrid');
+        if (modalGrid) {
+          modalGrid.querySelectorAll('.theme-swatch').forEach(s =>
+            s.classList.toggle('active', s.dataset.theme === themeId)
+          );
+        }
+      });
+    }
+
+    // Release log
+    if (releaseLogBody) {
+      releaseLogBody.innerHTML = SettingsModal._releaseLogEntriesHTML();
+    }
+
+    // Collapsible section toggles
+    document.querySelectorAll('.settings-dd-section-header').forEach(header => {
+      header.addEventListener('click', () => {
+        header.closest('.settings-dd-section').classList.toggle('collapsed');
+      });
+    });
+  }
+
+  static _releaseLogEntriesHTML() {
     const releases = [
       {
-        version: '1.4.0',
-        date: 'Feb 11, 2026',
-        title: '3D Inspector - Material Editor & Export Tools',
+        version: '1.5.0', date: 'Feb 11, 2026', title: 'Themes & Release Log',
         features: [
-          'Material editor panel with per-material property editing (color, roughness, metalness, emissive, opacity, side, transparency)',
-          'Texture drag & drop: load custom textures onto material slots with live preview',
-          'Per-texture on/off toggle and strength slider (normal, roughness, metalness, AO, emissive, diffuse, alpha)',
-          'Export animation-only GLB (rig + animation clip, no mesh geometry)',
-          'Bind-pose export fix: models exported without animations now retain correct T/A-pose',
-          'Floating/dockable inspector panel with drag-to-reposition support',
-          'Material editor dockable to left or floating, resizable via drag handle',
-          'Toolbar moved inside 3D preview window (floating top-right)',
-          'Larger toolbar icons for better visibility',
-          'New grid icon: 3D cube wireframe with colored axis arrows (RGB = XYZ)',
+          '14 color themes with live preview swatches',
+          'Theme picker and release log in settings dropdown',
+          'CSS custom properties for full UI theming',
         ]
       },
       {
-        version: '1.3.0',
-        date: 'Feb 11, 2026',
-        title: '3D Model Inspector',
+        version: '1.4.0', date: 'Feb 11, 2026', title: '3D Inspector - Material Editor & Export',
         features: [
-          '3D inspector toolbar: wireframe, grid, auto-rotate, reset camera, screenshot',
-          'Slide-in inspector panel with Stats, Materials, Animations, Helpers, Scene, and Export sections',
-          'GLB/GLTF and FBX model support via adapter pattern',
-          'Animation transport bar: play/pause, scrub, speed control, animation selection',
-          'Export tools: GLB with/without textures, texture-only export, texture resize, mesh simplification',
-          'Draco compression detection with badge indicator',
-          'Resizable inspector panel via left-edge drag handle',
-          'File size estimation for exports',
-          'Keyboard shortcuts: W (wireframe), G (grid), R (auto-rotate), C (reset camera), P (screenshot), I (inspector)',
+          'Material editor with per-material property editing and texture drag & drop',
+          'Export animation-only GLB (rig + clip, no mesh)',
+          'Floating/dockable inspector panel',
+          'Toolbar inside 3D preview, larger icons, new grid icon',
         ]
       },
       {
-        version: '1.2.0',
-        date: 'Feb 10, 2026',
-        title: 'Easter Eggs & Visual Effects',
+        version: '1.3.0', date: 'Feb 11, 2026', title: '3D Model Inspector',
         features: [
-          'Dangerous Dave easter egg on D.A.V.E title click',
-          'Matrix rain effect with Rezmason digital rain modes',
-          'CRT power-on entrance animation',
-          'Favicon added',
+          'Inspector toolbar: wireframe, grid, auto-rotate, screenshot',
+          'Slide-in panel with Stats, Materials, Animations, Export',
+          'Animation transport bar with scrub, speed, selection',
+          'Export tools: GLB with/without textures, mesh simplification',
         ]
       },
       {
-        version: '1.1.0',
-        date: 'Feb 9, 2026',
-        title: 'Cloud Storage & Image Viewer',
+        version: '1.2.0', date: 'Feb 10, 2026', title: 'Easter Eggs & Effects',
         features: [
-          'Client-side AWS S3 integration with SigV4 signing (no server required)',
-          'Google Drive integration via OAuth2 and Drive REST API',
-          'Cloud folder browser modal for navigating remote storage',
-          'Settings panel for configuring cloud credentials (stored in localStorage)',
-          'Fullscreen image viewer with zoom and pan controls',
-          'Support for unrecognized file types as "other" category',
-          'Drag & drop overlay flicker fix',
+          'Dangerous Dave easter egg, Matrix rain, CRT power-on animation',
         ]
       },
       {
-        version: '1.0.0',
-        date: 'Feb 6, 2026',
-        title: 'Text Files & Testing',
+        version: '1.1.0', date: 'Feb 9, 2026', title: 'Cloud Storage & Image Viewer',
         features: [
-          'Text file support: TXT, MD, JSON, XML, CSV, YAML, LOG, INI, TOML',
-          'Markdown rendered mode by default',
-          'Playwright E2E test suite (file loading, UI, keyboard, memory, errors)',
+          'Client-side AWS S3 and Google Drive integration',
+          'Cloud folder browser, fullscreen image viewer with zoom/pan',
         ]
       },
       {
-        version: '0.9.0',
-        date: 'Jul 2025',
-        title: 'Initial Release',
+        version: '1.0.0', date: 'Feb 6, 2026', title: 'Text Files & Testing',
         features: [
-          'Grid-based asset viewer for 3D models, images, videos, audio, and fonts',
-          'Folder pick and drag & drop with Web Worker file scanning',
-          'Fullscreen preview with keyboard navigation',
-          'Filter bar by asset type and search',
-          'Pagination and lazy-loaded thumbnails',
-          'Dark and light mode',
-          'Interactive help tooltip with keyboard shortcuts',
-          'Three.js 0.161 for 3D model rendering (GLB/GLTF, FBX)',
+          'Text file support with markdown rendering',
+          'Playwright E2E test suite',
+        ]
+      },
+      {
+        version: '0.9.0', date: 'Jul 2025', title: 'Initial Release',
+        features: [
+          'Grid asset viewer for 3D models, images, videos, audio, fonts',
+          'Drag & drop, search, pagination, dark/light mode',
         ]
       },
     ];

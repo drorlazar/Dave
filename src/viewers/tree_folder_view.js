@@ -251,6 +251,29 @@ function initHistoryDropdown() {
   openHistoryDB();
 }
 
+function initExpandDropdown() {
+  const dropdown = document.getElementById('treeExpandDropdown');
+  if (!dropdown) return;
+
+  let closeTimeout;
+  dropdown.addEventListener('mouseenter', () => {
+    clearTimeout(closeTimeout);
+    dropdown.classList.add('active');
+  });
+  dropdown.addEventListener('mouseleave', () => {
+    closeTimeout = setTimeout(() => {
+      dropdown.classList.remove('active');
+    }, 150);
+  });
+
+  // Close menu after clicking an item
+  dropdown.querySelectorAll('.tree-expand-item').forEach(item => {
+    item.addEventListener('click', () => {
+      dropdown.classList.remove('active');
+    });
+  });
+}
+
 // Simple logger for performance-sensitive sections
 function logDebug(message, ...args) {
   // Use the global APP_DEBUG utility if available, fallback to local implementation
@@ -340,24 +363,31 @@ function saveTreeViewState() {
 function updatePanelPosition() {
     const treePanel = document.getElementById('treeFolderPanel');
     if (!treePanel) return;
-    
+
     // Remove both classes first
     treePanel.classList.remove('panel-left', 'panel-right');
-    
+
     // Add the appropriate class based on current position state
     if (isPanelOnRightSide) {
         treePanel.classList.add('panel-right');
     } else {
         treePanel.classList.add('panel-left');
     }
-    
+
+    // Update side tab position
+    const sideTab = document.getElementById('treeFolderToggle');
+    if (sideTab) {
+        sideTab.classList.remove('tree-side-tab-left', 'tree-side-tab-right');
+        sideTab.classList.add(isPanelOnRightSide ? 'tree-side-tab-right' : 'tree-side-tab-left');
+    }
+
     // Update tooltip and icon class on toggle button
     const treeSideToggleButton = document.getElementById('treeSideToggle');
     if (treeSideToggleButton) {
-        treeSideToggleButton.title = isPanelOnRightSide ? 
-            "Move Panel to Left Side" : 
+        treeSideToggleButton.title = isPanelOnRightSide ?
+            "Move Panel to Left Side" :
             "Move Panel to Right Side";
-        
+
         // Update icon to indicate current position
         const icon = treeSideToggleButton.querySelector('i');
         if (icon) {
@@ -550,10 +580,18 @@ export function initTreeFolderView() {
     if (treeCollapseAll) {
         treeCollapseAll.addEventListener('click', collapseAllFolders);
     }
-    
+
     if (treeExpandAll) {
         treeExpandAll.addEventListener('click', expandAllFolders);
     }
+
+    // Expand to level buttons
+    const treeExpandLevel1 = document.getElementById('treeExpandLevel1');
+    const treeExpandLevel2 = document.getElementById('treeExpandLevel2');
+    const treeExpandLevel3 = document.getElementById('treeExpandLevel3');
+    if (treeExpandLevel1) treeExpandLevel1.addEventListener('click', () => expandToLevel(1));
+    if (treeExpandLevel2) treeExpandLevel2.addEventListener('click', () => expandToLevel(2));
+    if (treeExpandLevel3) treeExpandLevel3.addEventListener('click', () => expandToLevel(3));
     
     if (treeDownloadFolder) {
         treeDownloadFolder.addEventListener('click', downloadSelectedFolder);
@@ -575,6 +613,9 @@ export function initTreeFolderView() {
 
     // Setup folder history dropdown
     initHistoryDropdown();
+
+    // Setup expand/collapse dropdown (same hover pattern as history)
+    initExpandDropdown();
 
     // Apply initial state (show panel if it was visible in previous session)
     if (isTreeVisible) {
@@ -1088,10 +1129,60 @@ async function expandAllFolders() {
 // Collapse all folders in the tree
 function collapseAllFolders() {
     const folderItems = document.querySelectorAll('.tree-container li[aria-expanded="true"]');
-    
+
     folderItems.forEach(li => {
         collapseSubfolders(li);
     });
+}
+
+// Expand folders to a specific depth level
+async function expandToLevel(maxLevel) {
+    console.log(`Expanding folders to level ${maxLevel}...`);
+    const folderTreeContainer = document.getElementById('folderTreeContainer');
+    const rootUl = folderTreeContainer.querySelector('ul');
+    if (!rootUl) return;
+
+    // First collapse everything, then expand to the target level
+    collapseAllFolders();
+    await new Promise(r => requestAnimationFrame(r));
+
+    const batchCounter = { count: 0 };
+    const batchSize = 20;
+
+    async function expandToLevelRecursive(parentElement, currentLevel) {
+        if (currentLevel >= maxLevel) return;
+        const listItems = parentElement.children;
+        for (const li of listItems) {
+            if (batchCounter.count >= batchSize) {
+                await new Promise(requestAnimationFrame);
+                batchCounter.count = 0;
+            }
+
+            if (li.tagName === 'LI') {
+                const folder = li.folderData;
+                if (!folder) continue;
+
+                const isExpanded = li.getAttribute('aria-expanded') === 'true';
+                if (!isExpanded) {
+                    const chevron = li.querySelector('.chevron-icon');
+                    if (chevron && !chevron.querySelector('.fa-fw')) {
+                        await expandSubfolders(li, folder, true);
+                        batchCounter.count++;
+                    }
+                }
+
+                if (currentLevel + 1 < maxLevel) {
+                    const subUl = li.querySelector('ul');
+                    if (subUl) {
+                        await expandToLevelRecursive(subUl, currentLevel + 1);
+                    }
+                }
+            }
+        }
+    }
+
+    await expandToLevelRecursive(rootUl, 0);
+    console.log(`Expand to level ${maxLevel} completed.`);
 }
 
 // Download the selected folder

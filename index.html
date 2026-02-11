@@ -8,10 +8,28 @@
   <link rel="stylesheet" href="src/styles/model_inspector.css">
 
   <script>
-    // Check if user has explicitly chosen light mode
-    if (localStorage.getItem('theme') === 'light') {
-      document.documentElement.classList.remove('dark-mode');
-    }
+    // Apply saved theme before render to prevent flash of wrong colors
+    (function() {
+      const themeId = localStorage.getItem('dave_theme');
+      if (themeId) {
+        // Theme data is stored as CSS custom properties - apply from saved values
+        const themeCss = localStorage.getItem('dave_theme_css');
+        if (themeCss) {
+          try {
+            const t = JSON.parse(themeCss);
+            const r = document.documentElement;
+            r.style.setProperty('--theme-bg', t.bg);
+            r.style.setProperty('--theme-surface', t.surface);
+            r.style.setProperty('--theme-text', t.text);
+            r.style.setProperty('--theme-border', t.border);
+            r.style.setProperty('--theme-accent', t.accent);
+            if (t.mode === 'light') r.classList.remove('dark-mode');
+          } catch(e) {}
+        }
+      } else if (localStorage.getItem('theme') === 'light') {
+        document.documentElement.classList.remove('dark-mode');
+      }
+    })();
   </script>
 
   <!-- Import map for Three.js modules -->
@@ -45,14 +63,11 @@
     <div class="searchControls">
       <div class="search-wrapper">
         <i class="fa fa-search search-icon"></i>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search by name, type, or path" data-tooltip="Press Ctrl+F to focus">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search or paste links here..." data-tooltip="Press Ctrl+F to focus">
         <button class="search-clear" title="Clear search"><i class="fa fa-times"></i></button>
       </div>
     </div>
     <div class="fileControls">
-      <button id="treeFolderToggle" class="btn" title="Toggle Folder Tree View">
-        <i class="fa fa-folder-tree"></i>
-      </button>
       <div class="dropdown" id="sourceDropdown">
         <button id="folderPicker" class="btn dropdown-btn" title="Choose file source">
           <i class="fa fa-folder-open"></i> Source <i class="fa fa-chevron-down"></i>
@@ -189,6 +204,26 @@
             <span>Dark Mode</span>
             <span class="settings-toggle-indicator" id="darkModeIndicator">ON</span>
           </label>
+          <div class="dropdown-divider"></div>
+          <div class="settings-dd-section collapsed">
+            <div class="settings-dd-section-header" id="themesSectionToggle">
+              <i class="fa fa-palette"></i>
+              <span>Theme</span>
+              <span class="settings-collapse-icon">&#9656;</span>
+            </div>
+            <div class="settings-dd-section-body" id="themesBody">
+              <div class="theme-grid-dd" id="themeGridDD"></div>
+            </div>
+          </div>
+          <div class="settings-dd-section collapsed">
+            <div class="settings-dd-section-header" id="releaseLogToggle">
+              <i class="fa fa-clock-rotate-left"></i>
+              <span>Release Log</span>
+              <span class="settings-collapse-icon">&#9656;</span>
+            </div>
+            <div class="settings-dd-section-body" id="releaseLogBody"></div>
+          </div>
+          <div class="dropdown-divider"></div>
           <label class="dropdown-setting-row" id="cloudSettingsRow">
             <i class="fa fa-cloud"></i>
             <span>Cloud Storage</span>
@@ -205,36 +240,50 @@
   </div>
 
   <!-- Tree Folder View Panel -->
+  <!-- Side tab to toggle tree panel -->
+  <button id="treeFolderToggle" class="tree-side-tab tree-side-tab-left" title="Toggle Folder Tree View">
+    <i class="fa fa-folder-tree"></i>
+  </button>
+
   <div id="treeFolderPanel" class="tree-folder-panel panel-left">
     <div class="tree-folder-header">
       <div class="tree-folder-actions">
-        <button id="treeCollapseAll" class="btn tree-btn" title="Collapse All Folders (Ctrl+Shift+LeftArrow)">
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="custom-fa-icon">
-                <title>Collapse All - FA Style</title>
-                <path class="folder-shape-fa" d="M4,4 C2.895,4 2,4.895 2,6 L2,26 C2,27.105 2.895,28 4,28 L28,28 C29.105,28 30,27.105 30,26 L30,9 C30,7.895 29.105,7 28,7 L15,7 L12,4 L4,4 Z"/>
-                <polyline class="chevron-overlay-fa" points="13 13 17 17 13 21" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+        <button id="treeRefreshFolder" class="tree-btn" title="Refresh Current Folder">
+            <i class="fa fa-rotate-right"></i>
         </button>
-        <button id="treeExpandAll" class="btn tree-btn" title="Expand All Folders (Ctrl+Shift+RightArrow)">
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="custom-fa-icon">
-                <title>Expand All - FA Style</title>
-                <path class="folder-shape-fa" d="M2,10 L2,26 C2,27.105 2.895,28 4,28 L28,28 C29.105,28 30,27.105 30,26 L30,10 Z"/>
-                <path class="folder-shape-fa" d="M28,7 L15,7 L12,4 L4,4 C2.895,4 2,4.895 2,6 L2,12 L30,12 L30,9 C30,7.895 29.105,7 28,7 Z"/>
-                <polyline class="chevron-overlay-fa" points="12 18 16 22 20 18" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </button>
-        <button id="treeDownloadFolder" class="btn tree-btn" title="Download Selected Folder (Ctrl+Shift+S)">
+        <div class="tree-expand-dropdown" id="treeExpandDropdown">
+          <button class="tree-btn" title="Expand / Collapse Options">
+            <i class="fa fa-sitemap"></i>
+          </button>
+          <div class="tree-expand-menu" id="treeExpandMenu">
+            <button class="tree-expand-item" id="treeCollapseAll" title="Ctrl+Shift+LeftArrow">
+              <i class="fa fa-compress"></i> Collapse All
+            </button>
+            <div class="tree-expand-divider"></div>
+            <button class="tree-expand-item" id="treeExpandLevel1">
+              <i class="fa fa-angle-right"></i> Expand 1 Level
+            </button>
+            <button class="tree-expand-item" id="treeExpandLevel2">
+              <i class="fa fa-angle-double-right"></i> Expand 2 Levels
+            </button>
+            <button class="tree-expand-item" id="treeExpandLevel3">
+              <i class="fa fa-angles-right"></i> Expand 3 Levels
+            </button>
+            <div class="tree-expand-divider"></div>
+            <button class="tree-expand-item" id="treeExpandAll" title="Ctrl+Shift+RightArrow">
+              <i class="fa fa-expand"></i> Expand All
+            </button>
+          </div>
+        </div>
+        <button id="treeDownloadFolder" class="tree-btn" title="Download Selected Folder (Ctrl+Shift+S)">
             <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="custom-fa-icon">
                 <title>Download Folder - ZIP FA Style</title>
                 <path class="folder-shape-fa" d="M4,4 C2.895,4 2,4.895 2,6 L2,26 C2,27.105 2.895,28 4,28 L28,28 C29.105,28 30,27.105 30,26 L30,9 C30,7.895 29.105,7 28,7 L15,7 L12,4 L4,4 Z"/>
                 <text class="text-overlay-fa" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="8" font-family="sans-serif" font-weight="bold">ZIP</text>
             </svg>
         </button>
-        <button id="treeRefreshFolder" class="btn tree-btn" title="Refresh Current Folder">
-            <i class="fa fa-rotate-right"></i>
-        </button>
         <div class="tree-history-dropdown" id="treeHistoryDropdown">
-          <button id="treeHistoryBtn" class="btn tree-btn" title="Folder History">
+          <button id="treeHistoryBtn" class="tree-btn" title="Folder History">
             <i class="fa fa-bookmark"></i>
           </button>
           <div class="tree-history-menu" id="treeHistoryMenu">
@@ -249,10 +298,10 @@
             </div>
           </div>
         </div>
-        <button id="treeSideToggle" class="btn tree-btn" title="Move Panel to Right Side">
+        <button id="treeSideToggle" class="tree-btn" title="Move Panel to Right Side">
             <i class="fa fa-arrow-right"></i>
         </button>
-        <button id="treeClosePanel" class="btn tree-btn" title="Close Panel (Esc when panel focused)">
+        <button id="treeClosePanel" class="tree-btn" title="Close Panel (Esc when panel focused)">
             <i class="fa fa-times"></i>
         </button>
       </div>

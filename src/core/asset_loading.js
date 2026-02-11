@@ -30,7 +30,8 @@ import {
   fileMatchesSearch,
   getUIElements,
   initializeUI,
-  openCustomTextModal
+  openCustomTextModal,
+  showWelcomeMessage
 } from './ui.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -774,7 +775,7 @@ function renderPage(pageIndex) {
       const editBtn = document.createElement('button');
       editBtn.className = 'edit-btn';
       editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
-      editBtn.title = `Open in ${editorInfo.name}`;
+      editBtn.title = editorInfo.tip;
       editBtn.onclick = (e) => { e.stopPropagation(); openInEditor(model); };
       tile.appendChild(editBtn);
     }
@@ -802,6 +803,11 @@ function renderPage(pageIndex) {
   });
   
   updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
+
+  // Show welcome message if no files loaded
+  if (modelFiles.length === 0) {
+    showWelcomeMessage();
+  }
 }
 
 async function showFullscreen(model) {
@@ -835,7 +841,7 @@ async function showFullscreen(model) {
     editBtn.id = 'fullscreenEditBtn';
     editBtn.className = 'fullscreen-edit-btn';
     editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
-    editBtn.title = `Open in ${fsEditorInfo.name}`;
+    editBtn.title = fsEditorInfo.tip;
     editBtn.onclick = () => openInEditor(model);
     fullscreenOverlay.appendChild(editBtn);
   }
