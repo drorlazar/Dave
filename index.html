@@ -289,7 +289,20 @@
       <div id="prevNav" class="fullscreen-nav" data-tooltip="Previous (Left Arrow)">
         <i class="fa fa-chevron-left"></i>
       </div>
-      <div id="fullscreenViewer"></div>
+      <div id="fullscreenViewerWrap">
+        <div id="fullscreenViewer"></div>
+        <!-- 3D Animation Transport Bar (directly under 3D preview) -->
+        <div id="modelAnimBar" class="model-anim-bar" style="display:none;">
+          <select class="model-anim-bar-select"></select>
+          <button class="model-anim-bar-btn playing" data-anim-bar-action="playpause"><i class="fa fa-pause"></i></button>
+          <input type="range" class="model-anim-bar-scrubber" min="0" max="100" value="0" step="0.1">
+          <span class="model-anim-bar-time">0:00 / 0:00</span>
+          <select class="model-anim-bar-speed">
+            <option value="0.25">0.25x</option><option value="0.5">0.5x</option>
+            <option value="1" selected>1x</option><option value="2">2x</option>
+          </select>
+        </div>
+      </div>
       <video id="fullscreenVideo" controls style="display:none;" data-tooltip="Space to Play/Pause"></video>
       <div id="nextNav" class="fullscreen-nav" data-tooltip="Next (Right Arrow)">
         <i class="fa fa-chevron-right"></i>
@@ -298,10 +311,27 @@
     <!-- 3D Model Inspector Toolbar (hidden by default, shown for 3D models) -->
     <div id="model3dToolbar" class="model-toolbar" style="display:none;">
       <button class="model-toolbar-btn" data-action="wireframe" data-tooltip="Wireframe (W)">
-        <i class="fa fa-border-all"></i>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.2">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3c-3 2.5-4.5 5.5-4.5 9s1.5 6.5 4.5 9"/>
+          <path d="M12 3c3 2.5 4.5 5.5 4.5 9s-1.5 6.5-4.5 9"/>
+          <path d="M3.5 9h17M3.5 15h17"/>
+          <path d="M12 3v18" stroke-dasharray="2 2"/>
+          <path d="M3 12h9" stroke-width="0"/>
+          <path d="M3 12a9 9 0 0 0 9 9a9 9 0 0 0 9-9" fill="currentColor" opacity="0.15"/>
+        </svg>
       </button>
       <button class="model-toolbar-btn" data-action="grid" data-tooltip="Grid (G)">
-        <i class="fa fa-th"></i>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M2 18l8-5 10 5"/>
+          <path d="M2 14l8-5 10 5" opacity="0.5"/>
+          <path d="M10 13v5"/>
+          <path d="M6 15.5v5"/>
+          <path d="M14 15.5v5"/>
+          <path d="M18 17v3.5"/>
+          <path d="M4 11l8-5 8 5" opacity="0.3"/>
+          <path d="M10 6v7" opacity="0.4"/>
+        </svg>
       </button>
       <button class="model-toolbar-btn" data-action="autorotate" data-tooltip="Auto-Rotate (R)">
         <i class="fa fa-sync-alt"></i>
@@ -317,6 +347,7 @@
         <i class="fa fa-sliders"></i>
       </button>
     </div>
+
 
     <!-- 3D Model Inspector Panel (hidden by default) -->
     <div id="modelInspectorPanel" class="model-inspector-panel">

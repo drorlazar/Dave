@@ -55,6 +55,11 @@
   margin: 4px 2px;
 }
 
+/* Override global [data-tooltip]:before on toolbar buttons (prevent double tooltip) */
+.model-toolbar-btn[data-tooltip]:before {
+  display: none !important;
+}
+
 .model-toolbar-btn[data-tooltip]:hover::after {
   content: attr(data-tooltip);
   position: absolute;
@@ -68,6 +73,142 @@
   font-size: 11px;
   white-space: nowrap;
   pointer-events: none;
+}
+
+/* --- Fullscreen Viewer Wrapper (for anim bar placement) --- */
+#fullscreenViewerWrap {
+  width: 50%;
+  height: 75%;
+  max-width: 50%;
+  max-height: 75vh;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+}
+
+#fullscreenViewerWrap #fullscreenViewer {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 768px) {
+  #fullscreenViewerWrap {
+    width: 90%;
+    max-width: 90%;
+  }
+}
+
+/* --- Animation Transport Bar (under 3D preview) --- */
+.model-anim-bar {
+  width: 100%;
+  height: 36px;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #333;
+  border-radius: 0 0 6px 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.model-anim-bar-select {
+  background: #2a2a2a;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  max-width: 200px;
+}
+
+.model-anim-bar-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.model-anim-bar-btn:hover {
+  background: #333;
+  border-color: #555;
+}
+
+.model-anim-bar-btn.playing {
+  color: #9b77ff;
+  border-color: #9b77ff;
+}
+
+.model-anim-bar-scrubber {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  background: #444;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.model-anim-bar-scrubber::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #9b77ff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.model-anim-bar-scrubber::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #9b77ff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.model-anim-bar-time {
+  font-size: 11px;
+  color: #888;
+  font-variant-numeric: tabular-nums;
+  min-width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.model-anim-bar-speed {
+  background: #2a2a2a;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
 }
 
 /* --- Inspector Panel (slides from right) --- */
@@ -579,7 +720,32 @@
   font-size: 11px;
 }
 
-/* --- Animation Controls --- */
+/* --- Animation Info (panel summary) --- */
+.inspector-anim-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.inspector-anim-list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 6px;
+  font-size: 11px;
+  color: #aaa;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.inspector-anim-list-dur {
+  font-size: 10px;
+  color: #666;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Animation Controls (kept for reference, used by bottom bar) --- */
 .inspector-anim-controls {
   display: flex;
   flex-direction: column;
@@ -1175,6 +1341,15 @@ body:not(.dark-mode) .inspector-no-data {
   color: #bbb;
 }
 
+body:not(.dark-mode) .inspector-anim-list-row {
+  color: #666;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body:not(.dark-mode) .inspector-anim-list-dur {
+  color: #999;
+}
+
 body:not(.dark-mode) .inspector-anim-select,
 body:not(.dark-mode) .inspector-anim-speed select,
 body:not(.dark-mode) .inspector-lighting-select {
@@ -1362,4 +1537,34 @@ body:not(.dark-mode) .model-inspector-panel::-webkit-scrollbar-thumb {
 
 body:not(.dark-mode) .model-inspector-panel::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.2);
+}
+
+body:not(.dark-mode) .model-anim-bar {
+  background: rgba(245, 245, 245, 0.85);
+  border-top-color: #e0e0e0;
+}
+
+body:not(.dark-mode) .model-anim-bar-select,
+body:not(.dark-mode) .model-anim-bar-speed {
+  background: #fff;
+  color: #333;
+  border-color: #ddd;
+}
+
+body:not(.dark-mode) .model-anim-bar-btn {
+  background: #fff;
+  color: #555;
+  border-color: #ddd;
+}
+
+body:not(.dark-mode) .model-anim-bar-btn:hover {
+  background: #eee;
+}
+
+body:not(.dark-mode) .model-anim-bar-scrubber {
+  background: #ddd;
+}
+
+body:not(.dark-mode) .model-anim-bar-time {
+  color: #999;
 }

@@ -17,6 +17,7 @@ export class ModelInspectorPanel {
 
     this.toolbar = document.getElementById('model3dToolbar');
     this.panel = document.getElementById('modelInspectorPanel');
+    this.animBar = document.getElementById('modelAnimBar');
 
     this._activeToggles = {
       wireframe: false, grid: false, autoRotate: false,
@@ -43,6 +44,7 @@ export class ModelInspectorPanel {
   _hide() {
     if (this.toolbar) this.toolbar.style.display = 'none';
     if (this.panel) { this.panel.classList.remove('open'); this.isOpen = false; }
+    if (this.animBar) this.animBar.style.display = 'none';
   }
 
   _syncInitialState() {
@@ -408,56 +410,81 @@ export class ModelInspectorPanel {
     return names[type] || type;
   }
 
-  // =========== ANIMATIONS ===========
+  // =========== ANIMATIONS (bottom bar + panel info) ===========
 
   _populateAnimations() {
     const container = this.panel?.querySelector('#inspectorAnimations');
-    if (!container) return;
-    const section = container.closest('.inspector-section');
+    const section = container?.closest('.inspector-section');
+    const bar = this.animBar;
+
     try {
       const anims = this.adapter.getAnimations();
       if (!anims || anims.length === 0) {
-        container.innerHTML = '<div class="inspector-no-data">No animations</div>';
+        if (container) container.innerHTML = '<div class="inspector-no-data">No animations</div>';
         if (section) section.classList.add('collapsed');
+        if (bar) bar.style.display = 'none';
         return;
       }
-      const signal = this._abortController.signal;
-      container.innerHTML = `
-        <div class="inspector-anim-controls">
-          <select class="inspector-anim-select">
-            ${anims.map((a, i) => `<option value="${i}">${a.name || `Animation ${i + 1}`} (${a.duration.toFixed(1)}s)</option>`).join('')}
-          </select>
-          <div class="inspector-anim-transport">
-            <button class="inspector-anim-btn playing" data-anim-action="playpause" title="Play/Pause"><i class="fa fa-pause"></i></button>
-            <input type="range" class="inspector-anim-scrubber" min="0" max="100" value="0" step="0.1">
-            <span class="inspector-anim-time">0:00 / 0:00</span>
-          </div>
-          <div class="inspector-anim-speed">
-            <label>Speed:</label>
-            <select><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option></select>
-          </div>
-        </div>`;
 
-      const select = container.querySelector('.inspector-anim-select');
-      select.addEventListener('change', () => { this.adapter.playAnimation(parseInt(select.value)); this._updatePlayPauseBtn(true); }, { signal });
-      const playBtn = container.querySelector('[data-anim-action="playpause"]');
-      playBtn.addEventListener('click', () => { this.adapter.togglePlayback(); this._updatePlayPauseBtn(this.adapter.isPlaying()); }, { signal });
-      const scrubber = container.querySelector('.inspector-anim-scrubber');
-      scrubber.addEventListener('input', () => {
-        const d = this.adapter.getDuration();
-        if (d > 0) this.adapter.seek((parseFloat(scrubber.value) / 100) * d);
-      }, { signal });
-      const speedSelect = container.querySelector('.inspector-anim-speed select');
-      speedSelect.addEventListener('change', () => { this.adapter.setPlaybackSpeed(parseFloat(speedSelect.value)); }, { signal });
-      this._startAnimPolling();
+      // Show the bottom animation bar
+      if (bar) {
+        bar.style.display = 'flex';
+        const signal = this._abortController.signal;
+
+        const select = bar.querySelector('.model-anim-bar-select');
+        if (select) {
+          select.innerHTML = anims.map((a, i) =>
+            `<option value="${i}">${a.name || `Animation ${i + 1}`} (${a.duration.toFixed(1)}s)</option>`
+          ).join('');
+          select.addEventListener('change', () => {
+            this.adapter.playAnimation(parseInt(select.value));
+            this._updatePlayPauseBtn(true);
+          }, { signal });
+        }
+
+        const playBtn = bar.querySelector('[data-anim-bar-action="playpause"]');
+        if (playBtn) {
+          playBtn.addEventListener('click', () => {
+            this.adapter.togglePlayback();
+            this._updatePlayPauseBtn(this.adapter.isPlaying());
+          }, { signal });
+        }
+
+        const scrubber = bar.querySelector('.model-anim-bar-scrubber');
+        if (scrubber) {
+          scrubber.addEventListener('input', () => {
+            const d = this.adapter.getDuration();
+            if (d > 0) this.adapter.seek((parseFloat(scrubber.value) / 100) * d);
+          }, { signal });
+        }
+
+        const speedSelect = bar.querySelector('.model-anim-bar-speed');
+        if (speedSelect) {
+          speedSelect.addEventListener('change', () => {
+            this.adapter.setPlaybackSpeed(parseFloat(speedSelect.value));
+          }, { signal });
+        }
+
+        this._startAnimPolling();
+      }
+
+      // Panel section shows animation list summary
+      if (container) {
+        container.innerHTML = `
+          <div class="inspector-no-data">${anims.length} animation${anims.length > 1 ? 's' : ''} — use player bar at bottom</div>
+          <div class="inspector-anim-list-info">
+            ${anims.map((a, i) => `<div class="inspector-anim-list-row"><span>${a.name || `Animation ${i + 1}`}</span><span class="inspector-anim-list-dur">${a.duration.toFixed(1)}s</span></div>`).join('')}
+          </div>`;
+      }
     } catch (err) {
       console.warn('Inspector: Failed to populate animations', err);
-      container.innerHTML = '<div class="inspector-no-data">Animation info unavailable</div>';
+      if (container) container.innerHTML = '<div class="inspector-no-data">Animation info unavailable</div>';
+      if (bar) bar.style.display = 'none';
     }
   }
 
   _updatePlayPauseBtn(isPlaying) {
-    const btn = this.panel?.querySelector('[data-anim-action="playpause"]');
+    const btn = this.animBar?.querySelector('[data-anim-bar-action="playpause"]');
     if (!btn) return;
     btn.classList.toggle('playing', isPlaying);
     btn.innerHTML = isPlaying ? '<i class="fa fa-pause"></i>' : '<i class="fa fa-play"></i>';
@@ -468,8 +495,8 @@ export class ModelInspectorPanel {
     const poll = () => {
       if (this._disposed) return;
       this.animPollingId = requestAnimationFrame(poll);
-      const scrubber = this.panel?.querySelector('.inspector-anim-scrubber');
-      const timeDisplay = this.panel?.querySelector('.inspector-anim-time');
+      const scrubber = this.animBar?.querySelector('.model-anim-bar-scrubber');
+      const timeDisplay = this.animBar?.querySelector('.model-anim-bar-time');
       if (!scrubber || !timeDisplay) return;
       if (document.activeElement === scrubber) return;
       const current = this.adapter.getCurrentTime();
@@ -886,6 +913,8 @@ export class ModelInspectorPanel {
           });
         }
       }
+      // Propagate bone changes through the scene graph
+      root.updateMatrixWorld(true);
     }
 
     // 1. Texture resize
@@ -1086,6 +1115,13 @@ export class ModelInspectorPanel {
       const el = this.panel?.querySelector(sel);
       if (el) el.innerHTML = '';
     });
+
+    // Reset animation bar
+    if (this.animBar) {
+      this.animBar.style.display = 'none';
+      const select = this.animBar.querySelector('.model-anim-bar-select');
+      if (select) select.innerHTML = '';
+    }
 
     this.toolbar?.querySelectorAll('.model-toolbar-btn.active').forEach(btn => btn.classList.remove('active'));
     if (this.panel) this.panel.style.width = '';

@@ -892,6 +892,8 @@ async function showFullscreen(model) {
       mv.setAttribute("camera-controls", "");
       mv.setAttribute("environment-image", "neutral");
       mv.setAttribute("animation-name", "*");
+      mv.setAttribute("min-field-of-view", "10deg");
+      mv.setAttribute("max-field-of-view", "120deg");
       mv.style.width = "100%";
       mv.style.height = "100%";
       fullscreenViewer.innerHTML = '';
