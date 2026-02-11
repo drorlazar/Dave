@@ -18,13 +18,13 @@ export class ImageHandler extends BaseAssetHandler {
 
   async loadThumbnail(model, container, options = {}) {
     const fileUrl = await this.getFileUrl(model);
-    
+
     const imagePreview = document.createElement('div');
     imagePreview.className = 'image-preview';
-    
+
     const imgElem = document.createElement('img');
     imgElem.draggable = false;
-    
+
     // Check if we have a cached thumbnail
     if (model.thumbnailDataUrl) {
       imgElem.src = model.thumbnailDataUrl;
@@ -44,7 +44,7 @@ export class ImageHandler extends BaseAssetHandler {
         imgElem.src = fileUrl; // Fallback to full image
       }
     }
-    
+
     imagePreview.appendChild(imgElem);
     container.innerHTML = '';
     container.appendChild(imagePreview);
@@ -54,15 +54,15 @@ export class ImageHandler extends BaseAssetHandler {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      
+
       img.onload = () => {
         // Calculate dimensions maintaining aspect ratio
         let width = img.width;
         let height = img.height;
-        
+
         if (width > maxWidth || height > maxHeight) {
           const aspectRatio = width / height;
-          
+
           if (width > height) {
             width = maxWidth;
             height = width / aspectRatio;
@@ -71,41 +71,41 @@ export class ImageHandler extends BaseAssetHandler {
             width = height * aspectRatio;
           }
         }
-        
+
         // Create canvas and draw resized image
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
-        
+
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         // Convert to data URL
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         resolve(dataUrl);
       };
-      
+
       img.onerror = () => {
         reject(new Error('Failed to load image'));
       };
-      
+
       img.src = imageUrl;
     });
   }
 
   async loadFullscreen(model, container, options = {}) {
     const fileUrl = await this.getFileUrl(model);
-    
+
     container.style.display = 'block';
-    
+
     const img = document.createElement('img');
     img.src = fileUrl;
     img.style.width = '100%';
     img.style.height = '100%';
     img.style.objectFit = 'contain';
-    
+
     // Add special handling for SVG to ensure proper display
     if (model.subtype === 'svg' || model.type === 'svg') {
       img.style.maxWidth = '90%';
@@ -113,7 +113,7 @@ export class ImageHandler extends BaseAssetHandler {
       img.style.margin = 'auto';
       img.style.display = 'block';
     }
-    
+
     container.innerHTML = '';
     container.appendChild(img);
 

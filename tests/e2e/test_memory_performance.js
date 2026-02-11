@@ -15,7 +15,7 @@ test.describe('Memory and Performance Tests', () => {
 
   test('Memory cleanup on page navigation', async ({ page }) => {
     // Load files
-    const testFiles = Array(40).fill(null).map((_, i) => 
+    const testFiles = Array(40).fill(null).map((_, i) =>
       path.join(TEST_CONFIG.testFolderPath, Object.values(TEST_CONFIG.sampleFiles)[i % 12])
     );
 
@@ -34,16 +34,16 @@ test.describe('Memory and Performance Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-mem-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -55,7 +55,7 @@ test.describe('Memory and Performance Tests', () => {
 
     // Get initial memory usage
     const initialMemory = await utils.getMemoryUsage();
-    
+
     // Navigate through pages multiple times
     for (let i = 0; i < 5; i++) {
       // Go to next page
@@ -64,7 +64,7 @@ test.describe('Memory and Performance Tests', () => {
         await nextBtn.click();
         await page.waitForTimeout(1000);
       }
-      
+
       // Go back to previous page
       const prevBtn = await page.locator('#prevPageBtn');
       if (await prevBtn.isEnabled()) {
@@ -72,19 +72,19 @@ test.describe('Memory and Performance Tests', () => {
         await page.waitForTimeout(1000);
       }
     }
-    
+
     // Force garbage collection if available
     await page.evaluate(() => {
       if (window.gc) {
         window.gc();
       }
     });
-    
+
     await page.waitForTimeout(2000);
-    
+
     // Check memory after navigation
     const finalMemory = await utils.getMemoryUsage();
-    
+
     if (initialMemory && finalMemory) {
       const hasLeak = await utils.checkForMemoryLeaks(initialMemory, finalMemory);
       expect(hasLeak).toBe(false);
@@ -112,16 +112,16 @@ test.describe('Memory and Performance Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-fbx-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -166,16 +166,16 @@ test.describe('Memory and Performance Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-blob-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -207,14 +207,14 @@ test.describe('Memory and Performance Tests', () => {
 
   test('Page load performance', async ({ page }) => {
     const loadTime = await utils.measurePageLoadTime();
-    
+
     // Should load within benchmark time
     expect(loadTime).toBeLessThan(TEST_CONFIG.performance.pageLoadTime);
   });
 
   test('Search performance with many files', async ({ page }) => {
     // Load many files
-    const manyFiles = Array(50).fill(null).map((_, i) => 
+    const manyFiles = Array(50).fill(null).map((_, i) =>
       path.join(TEST_CONFIG.testFolderPath, Object.values(TEST_CONFIG.sampleFiles)[i % 12])
     );
 
@@ -233,16 +233,16 @@ test.describe('Memory and Performance Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-search-perf-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -250,7 +250,7 @@ test.describe('Memory and Performance Tests', () => {
 
     // Measure search response time
     const searchTime = await utils.measureSearchResponseTime('fbx');
-    
+
     // Should respond within benchmark time
     expect(searchTime).toBeLessThan(TEST_CONFIG.performance.searchResponseTime + 100); // +100ms buffer
   });
@@ -259,7 +259,7 @@ test.describe('Memory and Performance Tests', () => {
     // Load image files
     const imageFiles = [
       '93_Sea_Museum.jpg',
-      'Background.jpg', 
+      'Background.jpg',
       'Spin.png',
       'Area_005_Library_full.png'
     ].map(f => path.join(TEST_CONFIG.testFolderPath, f));
@@ -281,16 +281,16 @@ test.describe('Memory and Performance Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-thumb-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -305,7 +305,7 @@ test.describe('Memory and Performance Tests', () => {
     }, { timeout: 5000 });
 
     const loadTime = Date.now() - startTime;
-    
+
     // Thumbnails should load within benchmark
     expect(loadTime).toBeLessThan(TEST_CONFIG.performance.thumbnailLoadTime * 2); // Allow 2x time for multiple files
   });
@@ -334,16 +334,16 @@ test.describe('Memory and Performance Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-fullscreen-mem-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -409,16 +409,16 @@ test.describe('Memory and Performance Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-stress-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -434,10 +434,10 @@ test.describe('Memory and Performance Tests', () => {
     // Perform various operations
     await utils.searchFor('fbx');
     await page.waitForTimeout(500);
-    
+
     await utils.selectItemsPerPage(50);
     await page.waitForTimeout(500);
-    
+
     await utils.toggleTheme();
     await page.waitForTimeout(500);
 

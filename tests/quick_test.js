@@ -29,7 +29,7 @@ const testFolderPath = '/mnt/c/Users/drorl/Documents/Sett/Tools/HTMLPreviewer/Te
 if (fs.existsSync(testFolderPath)) {
   const files = fs.readdirSync(testFolderPath);
   console.log(`   ✅ TestFolder exists with ${files.length} files`);
-  
+
   // Check for expected file types
   const fileTypes = {
     fbx: files.filter(f => f.endsWith('.fbx')).length,
@@ -39,7 +39,7 @@ if (fs.existsSync(testFolderPath)) {
     mp3: files.filter(f => f.endsWith('.mp3')).length,
     mp4: files.filter(f => f.match(/\.(mp4|mov)$/i)).length
   };
-  
+
   console.log('   File types found:');
   Object.entries(fileTypes).forEach(([type, count]) => {
     if (count > 0) console.log(`     - ${type.toUpperCase()}: ${count}`);
@@ -84,7 +84,7 @@ try {
     await browser.close();
     console.log('Page title:', title);
   `;
-  
+
   fs.writeFileSync(path.join(__dirname, 'temp_test.mjs'), testCode);
   const output = execSync('node temp_test.mjs', { cwd: __dirname, encoding: 'utf8' });
   console.log('   ✅ Browser test successful');

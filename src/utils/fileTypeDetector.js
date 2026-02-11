@@ -10,7 +10,7 @@ const FILE_TYPE_MAPPINGS = {
   stl: { type: '3d', subtype: 'stl', extensions: ['.stl'] },
   ply: { type: '3d', subtype: 'ply', extensions: ['.ply'] },
   '3ds': { type: '3d', subtype: '3ds', extensions: ['.3ds'] },
-  
+
   // Video formats
   mp4: { type: 'video', subtype: 'mp4', extensions: ['.mp4'] },
   webm: { type: 'video', subtype: 'webm', extensions: ['.webm'] },
@@ -18,7 +18,7 @@ const FILE_TYPE_MAPPINGS = {
   mov: { type: 'video', subtype: 'mov', extensions: ['.mov'] },
   avi: { type: 'video', subtype: 'avi', extensions: ['.avi'] },
   mkv: { type: 'video', subtype: 'mkv', extensions: ['.mkv'] },
-  
+
   // Audio formats
   mp3: { type: 'audio', subtype: 'mp3', extensions: ['.mp3'] },
   wav: { type: 'audio', subtype: 'wav', extensions: ['.wav'] },
@@ -26,7 +26,7 @@ const FILE_TYPE_MAPPINGS = {
   oga: { type: 'audio', subtype: 'ogg', extensions: ['.oga'] },
   flac: { type: 'audio', subtype: 'flac', extensions: ['.flac'] },
   m4a: { type: 'audio', subtype: 'm4a', extensions: ['.m4a'] },
-  
+
   // Image formats
   jpg: { type: 'image', subtype: 'jpg', extensions: ['.jpg', '.jpeg'] },
   png: { type: 'image', subtype: 'png', extensions: ['.png'] },
@@ -36,13 +36,13 @@ const FILE_TYPE_MAPPINGS = {
   bmp: { type: 'image', subtype: 'bmp', extensions: ['.bmp'] },
   tiff: { type: 'image', subtype: 'tiff', extensions: ['.tiff', '.tif'] },
   ico: { type: 'image', subtype: 'ico', extensions: ['.ico'] },
-  
+
   // Font formats
   ttf: { type: 'font', subtype: 'ttf', extensions: ['.ttf'] },
   otf: { type: 'font', subtype: 'otf', extensions: ['.otf'] },
   woff: { type: 'font', subtype: 'woff', extensions: ['.woff'] },
   woff2: { type: 'font', subtype: 'woff2', extensions: ['.woff2'] },
-  
+
   // Document formats
   pdf: { type: 'document', subtype: 'pdf', extensions: ['.pdf'] },
 
@@ -75,15 +75,15 @@ Object.entries(FILE_TYPE_MAPPINGS).forEach(([key, config]) => {
  */
 export function detectFileType(filename) {
   if (!filename) return null;
-  
+
   const lowerFilename = filename.toLowerCase();
   const lastDotIndex = lowerFilename.lastIndexOf('.');
-  
+
   if (lastDotIndex === -1) return null;
-  
+
   const extension = lowerFilename.slice(lastDotIndex);
   const typeInfo = EXTENSION_TO_TYPE[extension];
-  
+
   if (typeInfo) {
     return {
       type: typeInfo.type,
@@ -91,7 +91,7 @@ export function detectFileType(filename) {
       extension: extension
     };
   }
-  
+
   return null;
 }
 
@@ -133,19 +133,19 @@ export function getAllSupportedExtensions() {
  */
 export function getSupportedFormatsByType() {
   const formats = {};
-  
+
   Object.entries(FILE_TYPE_MAPPINGS).forEach(([key, config]) => {
     if (!formats[config.type]) {
       formats[config.type] = [];
     }
     formats[config.type].push(config.subtype.toUpperCase());
   });
-  
+
   // Remove duplicates
   Object.keys(formats).forEach(type => {
     formats[type] = [...new Set(formats[type])];
   });
-  
+
   return formats;
 }
 
@@ -158,11 +158,11 @@ export function createFileFilterString(types = []) {
   if (types.length === 0) {
     return getAllSupportedExtensions().join(',');
   }
-  
+
   const extensions = [];
   types.forEach(type => {
     extensions.push(...getSupportedExtensionsByType(type));
   });
-  
+
   return extensions.join(',');
 }

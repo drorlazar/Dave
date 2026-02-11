@@ -11,7 +11,7 @@ const FILE_TYPE_MAPPINGS = {
   '.stl': { type: '3d', subtype: 'stl' },
   '.ply': { type: '3d', subtype: 'ply' },
   '.3ds': { type: '3d', subtype: '3ds' },
-  
+
   // Video formats
   '.mp4': { type: 'video', subtype: 'mp4' },
   '.webm': { type: 'video', subtype: 'webm' },
@@ -19,7 +19,7 @@ const FILE_TYPE_MAPPINGS = {
   '.mov': { type: 'video', subtype: 'mov' },
   '.avi': { type: 'video', subtype: 'avi' },
   '.mkv': { type: 'video', subtype: 'mkv' },
-  
+
   // Audio formats
   '.mp3': { type: 'audio', subtype: 'mp3' },
   '.wav': { type: 'audio', subtype: 'wav' },
@@ -27,7 +27,7 @@ const FILE_TYPE_MAPPINGS = {
   '.oga': { type: 'audio', subtype: 'ogg' },
   '.flac': { type: 'audio', subtype: 'flac' },
   '.m4a': { type: 'audio', subtype: 'm4a' },
-  
+
   // Image formats
   '.jpg': { type: 'image', subtype: 'jpg' },
   '.jpeg': { type: 'image', subtype: 'jpg' },
@@ -39,13 +39,13 @@ const FILE_TYPE_MAPPINGS = {
   '.tiff': { type: 'image', subtype: 'tiff' },
   '.tif': { type: 'image', subtype: 'tiff' },
   '.ico': { type: 'image', subtype: 'ico' },
-  
+
   // Font formats
   '.ttf': { type: 'font', subtype: 'ttf' },
   '.otf': { type: 'font', subtype: 'otf' },
   '.woff': { type: 'font', subtype: 'woff' },
   '.woff2': { type: 'font', subtype: 'woff2' },
-  
+
   // Document formats
   '.pdf': { type: 'document', subtype: 'pdf' },
 
@@ -68,12 +68,12 @@ const FILE_TYPE_MAPPINGS = {
 
 function detectFileType(filename) {
   if (!filename) return null;
-  
+
   const lowerFilename = filename.toLowerCase();
   const lastDotIndex = lowerFilename.lastIndexOf('.');
-  
+
   if (lastDotIndex === -1) return null;
-  
+
   const extension = lowerFilename.slice(lastDotIndex);
   return FILE_TYPE_MAPPINGS[extension] || null;
 }

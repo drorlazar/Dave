@@ -105,10 +105,10 @@ export class TestUtils {
 
   async checkForMemoryLeaks(initialMemory, currentMemory) {
     if (!initialMemory || !currentMemory) return false;
-    
+
     const increase = currentMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
     const increaseInMB = increase / (1024 * 1024);
-    
+
     return increaseInMB > TEST_CONFIG.performance.memoryLeakThreshold;
   }
 
@@ -126,10 +126,10 @@ export class TestUtils {
   async checkForErrors() {
     // Check for error notifications
     const errorNotifications = await this.page.locator('.error-notification').count();
-    
+
     // Check for error placeholders
     const errorPlaceholders = await this.page.locator('.asset-placeholder.error').count();
-    
+
     return {
       hasErrors: errorNotifications > 0 || errorPlaceholders > 0,
       errorCount: errorNotifications + errorPlaceholders
@@ -180,9 +180,9 @@ export class TestUtils {
 
   // Screenshot helpers
   async takeScreenshot(name) {
-    await this.page.screenshot({ 
+    await this.page.screenshot({
       path: `tests/screenshots/${name}.png`,
-      fullPage: true 
+      fullPage: true
     });
   }
 

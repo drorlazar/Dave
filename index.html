@@ -460,7 +460,7 @@
       <div class="fullscreen-details"></div>
       <div class="fullscreen-path"></div>
     </div>
-    
+
     <!-- Font size control panel for fullscreen mode (will be shown only for fonts) -->
     <div id="fullscreenFontSizeControl" class="fullscreen-font-size-control" style="display:none;">
       <label>Size: <span id="fullscreenFontSizeValue">40</span>px</label>
@@ -469,18 +469,18 @@
   </div>
 
   <script type="module" src="src/core/main.js"></script>
-  
+
 
   <!-- Custom Text Modal for Font Preview -->
   <div id="customTextModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span id="customTextModalCloseButton" class="close-button" title="Close">&times;</span>
       <h2>Font Preview Settings</h2>
-      
+
       <div class="input-container">
         <textarea id="customTextInput" placeholder="Enter custom text..."></textarea>
       </div>
-      
+
       <div class="controls-row">
         <div class="preset-buttons icon-button-group">
           <button data-text="The quick brown fox jumps over the lazy dog" title="Pangram - Sample sentence with all letters">
@@ -492,18 +492,18 @@
           <button data-text="0123456789 !@#$%^&*()_+-=[]{}|;:,./<>?" title="Numerals & Symbols">
             <i class="fas fa-hashtag"></i>
           </button>
-          
+
           <button class="btn preset-text-btn" data-text="Start!">Start!</button>
           <button class="btn preset-text-btn" data-text="Play Now!">Play Now!</button>
         </div>
       </div>
-      
+
       <div class="font-size-control">
         <label for="fontSizeSlider" title="Adjust Font Size"><i class="fas fa-text-height"></i></label>
         <input type="range" id="fontSizeSlider" min="8" max="72" value="16" class="font-size-slider">
         <span id="fontSizeValue" class="font-size-value-display">16px</span>
       </div>
-      
+
       <div class="modal-actions">
         <div class="default-options">
           <label class="icon-checkbox-label" title="Use this text as default for all fonts">

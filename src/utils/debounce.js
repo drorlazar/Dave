@@ -10,17 +10,17 @@
  */
 export function debounce(func, wait, immediate = false) {
   let timeout;
-  
+
   return function executedFunction(...args) {
     const later = () => {
       timeout = null;
       if (!immediate) func.apply(this, args);
     };
-    
+
     const callNow = immediate && !timeout;
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
-    
+
     if (callNow) func.apply(this, args);
   };
 }
@@ -34,15 +34,15 @@ export function debounce(func, wait, immediate = false) {
 export function throttle(func, wait) {
   let inThrottle;
   let lastTime = 0;
-  
+
   return function executedFunction(...args) {
     const now = Date.now();
-    
+
     if (!inThrottle || now - lastTime >= wait) {
       func.apply(this, args);
       lastTime = now;
       inThrottle = true;
-      
+
       setTimeout(() => {
         inThrottle = false;
       }, wait);
@@ -57,7 +57,7 @@ export function throttle(func, wait) {
  */
 export function throttleRAF(func) {
   let rafId = null;
-  
+
   return function executedFunction(...args) {
     if (rafId === null) {
       rafId = requestAnimationFrame(() => {

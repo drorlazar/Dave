@@ -50,11 +50,11 @@ class FBXViewer {
 
   onResize() {
     if (this.isDisposed || !this.container || !this.renderer || !this.camera) return;
-    
+
     const containerRect = this.container.getBoundingClientRect();
     const width = this.container.offsetWidth || containerRect.width;
     const height = this.container.offsetHeight || containerRect.height;
-    
+
     if (width > 0 && height > 0) {
       this.renderer.setSize(width, height, true);
       this.camera.aspect = width / height;
@@ -64,17 +64,17 @@ class FBXViewer {
 
   animate() {
     if (this.isDisposed) return;
-    
+
     this.animationFrameId = requestAnimationFrame(() => this.animate());
-    
-    if (this.mixer) { 
-      this.mixer.update(this.clock.getDelta()); 
+
+    if (this.mixer) {
+      this.mixer.update(this.clock.getDelta());
     }
-    
+
     if (this.controls) {
       this.controls.update();
     }
-    
+
     if (this.renderer && this.scene && this.camera) {
       this.renderer.render(this.scene, this.camera);
     }
@@ -97,17 +97,17 @@ class FBXViewer {
       console.warn('FBXViewer: Cannot load model, viewer is disposed');
       return;
     }
-    
+
     this.isLoading = true;
     const loader = new FBXLoader();
-    
+
     // Set custom texture loader to handle errors
     const textureLoader = new THREE.TextureLoader();
     loader.manager.onError = (url) => {
       console.warn(`Failed to load texture: ${url}`);
       // Don't fail the entire model load for missing textures
     };
-    
+
     loader.load(
       url,
       // Success callback
@@ -117,7 +117,7 @@ class FBXViewer {
           console.warn('FBXViewer: Model loaded but viewer was disposed');
           return;
         }
-        
+
         try {
           this.isLoading = false;
           const box = new THREE.Box3().setFromObject(object);
@@ -182,7 +182,7 @@ class FBXViewer {
       // Error callback
       (error) => {
         if (this.isDisposed) return;
-        
+
         this.isLoading = false;
         console.error('Error loading FBX file:', error);
         if (this.onError) {
@@ -251,16 +251,16 @@ class FBXViewer {
       console.warn('FBXViewer: Already disposed');
       return;
     }
-    
+
     // Mark as disposed first
     this.isDisposed = true;
-    
+
     // Cancel animation frame first
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    
+
     // Cancel ongoing animations
     if (this.mixer) {
       this.mixer.stopAllAction();
@@ -286,19 +286,19 @@ class FBXViewer {
               'sheenColorMap', 'sheenRoughnessMap', 'specularIntensityMap',
               'specularColorMap', 'transmissionMap', 'thicknessMap'
             ];
-            
+
             textureProperties.forEach(prop => {
               if (material[prop] && material[prop].dispose) {
                 material[prop].dispose();
               }
             });
-            
+
             material.dispose();
           });
         }
       }
       });
-      
+
       // Clear the scene
       while(this.scene.children.length > 0) {
         this.scene.remove(this.scene.children[0]);

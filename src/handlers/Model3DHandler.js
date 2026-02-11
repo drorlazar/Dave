@@ -20,7 +20,7 @@ export class Model3DHandler extends BaseAssetHandler {
 
   async loadThumbnail(model, container, options = {}) {
     const fileUrl = await this.getFileUrl(model);
-    
+
     switch (model.subtype || model.type) {
       case 'glb':
       case 'gltf':
@@ -50,7 +50,7 @@ export class Model3DHandler extends BaseAssetHandler {
       document.head.appendChild(script);
       await new Promise(resolve => script.onload = resolve);
     }
-    
+
     const mv = document.createElement('model-viewer');
     mv.src = fileUrl;
     mv.setAttribute('camera-controls', '');
@@ -58,7 +58,7 @@ export class Model3DHandler extends BaseAssetHandler {
     mv.setAttribute('environment-image', 'neutral');
     mv.setAttribute('animation-name', '*');
     mv.setAttribute('disable-zoom', ''); // Disable zoom in grid view
-    
+
     container.innerHTML = '';
     container.appendChild(mv);
   }
@@ -68,7 +68,7 @@ export class Model3DHandler extends BaseAssetHandler {
     viewerDiv.className = 'three-viewer';
     container.innerHTML = '';
     container.appendChild(viewerDiv);
-    
+
     const viewer = new FBXViewer(viewerDiv, { enableZoom: false });
     container.fbxViewerInstance = viewer;
     memoryManager.registerFbxViewer(viewer);
@@ -91,7 +91,7 @@ export class Model3DHandler extends BaseAssetHandler {
 
   async loadFullscreen(model, container, options = {}) {
     const fileUrl = await this.getFileUrl(model);
-    
+
     switch (model.subtype || model.type) {
       case 'glb':
       case 'gltf':
@@ -117,7 +117,7 @@ export class Model3DHandler extends BaseAssetHandler {
       document.head.appendChild(script);
       await new Promise(resolve => script.onload = resolve);
     }
-    
+
     const mv = document.createElement('model-viewer');
     mv.src = fileUrl;
     mv.setAttribute('camera-controls', '');
@@ -126,11 +126,11 @@ export class Model3DHandler extends BaseAssetHandler {
     mv.setAttribute('animation-name', '*');
     mv.style.width = '100%';
     mv.style.height = '100%';
-    
+
     container.innerHTML = '';
     container.appendChild(mv);
     container.style.display = 'block';
-    
+
     return {
       element: mv,
       cleanup: () => {
@@ -144,15 +144,15 @@ export class Model3DHandler extends BaseAssetHandler {
     viewerContainer.style.width = '100%';
     viewerContainer.style.height = '100%';
     viewerContainer.className = 'three-viewer';
-    
+
     container.innerHTML = '';
     container.appendChild(viewerContainer);
     container.style.display = 'block';
-    
+
     const viewer = new FBXViewer(viewerContainer, { enableZoom: true });
     memoryManager.registerFbxViewer(viewer);
     viewer.loadModel(fileUrl);
-    
+
     return {
       viewerInstance: viewer,
       cleanup: () => {
@@ -176,13 +176,13 @@ export class Model3DHandler extends BaseAssetHandler {
         <i class="fa fa-download"></i> Download File
       </button>
     `;
-    
+
     container.innerHTML = '';
     container.appendChild(message);
     container.style.display = 'flex';
     container.style.alignItems = 'center';
     container.style.justifyContent = 'center';
-    
+
     return {
       element: message,
       cleanup: () => {

@@ -16,7 +16,7 @@ test.describe('File Loading Tests', () => {
 
   test('Load single FBX file via drag and drop', async ({ page }) => {
     const testFile = path.join(TEST_CONFIG.testFolderPath, TEST_CONFIG.sampleFiles.fbx);
-    
+
     // Create file input and trigger file selection
     await page.evaluate(() => {
       const input = document.createElement('input');
@@ -33,26 +33,26 @@ test.describe('File Loading Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-file-input');
       const file = input.files[0];
-      
+
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
     // Wait for file to appear
     await page.waitForTimeout(1000);
-    
+
     // Verify file appears in grid
     const fileVisible = await utils.verifyFileInGrid(TEST_CONFIG.sampleFiles.fbx);
     expect(fileVisible).toBe(true);
-    
+
     // Verify thumbnail loads
     await page.waitForTimeout(2000);
     const thumbnailLoaded = await utils.verifyThumbnailLoaded(TEST_CONFIG.sampleFiles.fbx);
@@ -83,16 +83,16 @@ test.describe('File Loading Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-multi-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -111,7 +111,7 @@ test.describe('File Loading Tests', () => {
   test('Load folder using folder picker button', async ({ page }) => {
     // Click folder picker button
     await page.click('#folderPicker');
-    
+
     // Since we can't actually trigger the folder picker dialog in tests,
     // we'll simulate the folder selection
     await page.evaluate((folderPath) => {
@@ -158,16 +158,16 @@ test.describe('File Loading Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-type-input');
       const files = Array.from(input.files);
-      
+
       const dataTransfer = new DataTransfer();
       files.forEach(file => dataTransfer.items.add(file));
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
@@ -180,7 +180,7 @@ test.describe('File Loading Tests', () => {
         const ext = path.extname(fileName).toLowerCase();
         const expectedType = FILE_TYPE_MAP[ext] || 'other';
         const dataType = await tile.getAttribute('data-model-type');
-        
+
         // Type might be more specific (e.g., 'fbx' instead of '3d')
         expect(dataType).toBeTruthy();
       }
@@ -195,16 +195,16 @@ test.describe('File Loading Tests', () => {
     // Try to load it
     await page.evaluate((fileData) => {
       const file = new File([fileData.content], fileData.name, { type: fileData.type });
-      
+
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     }, {
       content: unsupportedContent,
@@ -228,7 +228,7 @@ test.describe('File Loading Tests', () => {
       // Check for no files message
       const noFilesMessage = await page.locator('.no-files-message');
       const messageVisible = await noFilesMessage.isVisible().catch(() => false);
-      
+
       // Or check that no tiles were created
       const tileCount = await utils.getTileCount();
       expect(tileCount).toBe(0);
@@ -238,7 +238,7 @@ test.describe('File Loading Tests', () => {
   test('Load files preserves existing files', async ({ page }) => {
     // Load first file
     const firstFile = path.join(TEST_CONFIG.testFolderPath, TEST_CONFIG.sampleFiles.fbx);
-    
+
     await page.evaluate(() => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -253,27 +253,27 @@ test.describe('File Loading Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-first-input');
       const file = input.files[0];
-      
+
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 
     await page.waitForTimeout(1000);
-    
+
     // Verify first file is loaded
     expect(await utils.getTileCount()).toBe(1);
 
     // Load second file - should replace, not add
     const secondFile = path.join(TEST_CONFIG.testFolderPath, TEST_CONFIG.sampleFiles.glb);
-    
+
     await page.evaluate(() => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -288,16 +288,16 @@ test.describe('File Loading Tests', () => {
     await page.evaluate(() => {
       const input = document.getElementById('test-second-input');
       const file = input.files[0];
-      
+
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
-      
+
       const dropEvent = new DragEvent('drop', {
         bubbles: true,
         cancelable: true,
         dataTransfer: dataTransfer
       });
-      
+
       document.getElementById('viewerContainer').dispatchEvent(dropEvent);
     });
 

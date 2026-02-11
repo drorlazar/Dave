@@ -46,13 +46,13 @@ let uiInitialized = false;
 // Initialize UI elements and return a promise
 export function initializeUI() {
   console.log(`INIT DIAGNOSTICS: initializeUI called, uiInitialized=${uiInitialized}`);
-  
+
   // Return the existing elements if we've already initialized
   if (uiInitialized && window.uiElements) {
     console.log('INIT DIAGNOSTICS: UI already initialized, returning existing elements');
     return Promise.resolve(window.uiElements);
   }
-  
+
   return new Promise((resolve) => {
     if (document.readyState === 'loading') {
       console.log('INIT DIAGNOSTICS: Document still loading, adding DOMContentLoaded listener');
@@ -70,13 +70,13 @@ function initializeElements() {
           resolve(window.uiElements);
           return;
         }
-        
+
         console.log('INIT DIAGNOSTICS: Starting UI element initialization');
-      
-      // IMPORTANT: We no longer use cached references for critical UI elements that could cause 
+
+      // IMPORTANT: We no longer use cached references for critical UI elements that could cause
       // cross-button issues. All UI functions should use direct document.getElementById() instead.
       // This global cache is maintained for backward compatibility with other parts of the code.
-      
+
       // Get all UI elements
       const darkModeRow = document.getElementById("darkModeRow");
       const subfolderToggle = document.getElementById("subfolderToggle");
@@ -114,7 +114,7 @@ function initializeElements() {
         searchInput,
         searchClear
       };
-      
+
       // Log all element IDs for debugging to verify correct elements are being found
       console.log('INIT DIAGNOSTICS: Element IDs found:');
       for (const [key, element] of Object.entries(window.uiElements)) {
@@ -122,7 +122,7 @@ function initializeElements() {
           console.log(`INIT DIAGNOSTICS: ${key} -> ${element.id || 'No ID'} (type: ${element.tagName})`);
         }
       }
-      
+
       // Extra verification for our key buttons
       console.log('DIRECT LOOKUP TEST:');
       console.log(`itemsPerPageBtn directly from DOM: ${document.getElementById('itemsPerPageBtn')?.id || 'Not Found'}`);
@@ -172,7 +172,7 @@ function initializeElements() {
       if (sortBtn) {
         setCurrentSort(_currentSort);
       }
-      
+
       // Initialize subfolder toggle with default state
       setLoadSubfolders(_loadSubfolders, _subfolderDepth);
 
@@ -225,11 +225,11 @@ function initializeElements() {
         let rafPending = false;
         let currentSize = lastSize;
         let isSliderActive = false;
-        
+
         // Initial size setup
         document.documentElement.style.setProperty('--tile-size', `${lastSize}px`);
         sizeValue.textContent = `${lastSize}px`;
-        
+
         // For smoother updating during fast slider movement
         const updateSize = (timestamp) => {
           // Limit updates to once per ~16ms (roughly 60fps) for optimal performance
@@ -239,28 +239,28 @@ function initializeElements() {
             lastRenderTime = timestamp;
             lastSize = currentSize;
           }
-          
+
           rafPending = false;
-          
+
           // If size has changed again while we were rendering, schedule another update
           if (lastSize !== currentSize) {
             scheduleUpdate();
           }
         };
-        
+
         const scheduleUpdate = () => {
           if (!rafPending) {
             rafPending = true;
             requestAnimationFrame(updateSize);
           }
         };
-        
+
         // Mark slider as active when interaction begins
         sizeSlider.addEventListener("mousedown", () => {
           document.body.classList.add('tile-slider-active');
           isSliderActive = true;
         });
-        
+
         // Mark slider as inactive when interaction ends
         document.addEventListener("mouseup", () => {
           if (isSliderActive) {
@@ -268,20 +268,20 @@ function initializeElements() {
             isSliderActive = false;
           }
         });
-        
+
         // For touch devices
         sizeSlider.addEventListener("touchstart", () => {
           document.body.classList.add('tile-slider-active');
           isSliderActive = true;
         });
-        
+
         document.addEventListener("touchend", () => {
           if (isSliderActive) {
             document.body.classList.remove('tile-slider-active');
             isSliderActive = false;
           }
         });
-        
+
         // Handle continuous slider movements with better throttling
         sizeSlider.addEventListener("input", (e) => {
           // Mark as active on first input (backup in case mousedown/touchstart missed)
@@ -289,11 +289,11 @@ function initializeElements() {
             document.body.classList.add('tile-slider-active');
             isSliderActive = true;
           }
-          
+
           // Update display immediately - this is just text and doesn't cause reflow
           currentSize = e.target.value;
           sizeValue.textContent = `${currentSize}px`;
-          
+
           // Schedule the update to happen optimally with browser rendering
           scheduleUpdate();
         });
@@ -309,7 +309,7 @@ function initializeElements() {
 
       document.querySelectorAll('.dropdown').forEach(dropdown => {
         let closeTimeout;
-        
+
         dropdown.addEventListener('mouseenter', () => {
           if (closeTimeout) {
             clearTimeout(closeTimeout);
@@ -317,7 +317,7 @@ function initializeElements() {
           closeAllDropdowns();
           dropdown.classList.add('active');
         });
-        
+
         dropdown.addEventListener('mouseleave', () => {
           closeTimeout = setTimeout(() => {
             dropdown.classList.remove('active');
@@ -379,7 +379,7 @@ function initializeElements() {
           sortBtnDropdownIcon.addEventListener('click', handleSortDropdownToggle);
         }
       }
-      
+
       document.querySelectorAll('.selection-option').forEach(option => {
         option.addEventListener('click', () => {
           const action = option.dataset.action;
@@ -483,22 +483,22 @@ function initializeElements() {
         // Fullscreen navigation areas
         const prevNav = document.getElementById('prevNav');
         const nextNav = document.getElementById('nextNav');
-        
+
         if (prevNav) {
           prevNav.addEventListener('click', () => navigateFullscreen('prev'));
         }
-        
+
         if (nextNav) {
           nextNav.addEventListener('click', () => navigateFullscreen('next'));
         }
       }
 
-      
+
       // Mark initialization as complete
       console.log('INIT DIAGNOSTICS: UI initialization complete, setting uiInitialized=true');
       uiInitialized = true;
       resolve(window.uiElements);
-      
+
       } catch (error) {
         console.error('INIT ERROR: Failed to initialize UI:', error);
         console.error('Stack trace:', error.stack);
@@ -507,7 +507,7 @@ function initializeElements() {
         errorDiv.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:red;color:white;padding:20px;border-radius:5px;z-index:9999';
         errorDiv.textContent = `UI initialization failed: ${error.message}`;
         document.body.appendChild(errorDiv);
-        
+
         // Still resolve but with partial elements
         resolve(window.uiElements || {});
       }
@@ -524,16 +524,16 @@ export function getUIElements() {
 // Function to check if a file matches the search criteria
 export const fileMatchesSearch = (file) => {
   if (!_searchTerm) return true;
-  
+
   const searchTerms = _searchTerm.split(' ').filter(term => term.length > 0);
   if (searchTerms.length === 0) return true;
-  
+
   const searchableContent = [
     file.name.toLowerCase(),
     file.type.toLowerCase(),
     file.fullPath?.toLowerCase() || ''
   ].join(' ');
-  
+
   return searchTerms.every(term => searchableContent.includes(term));
 };
 
@@ -555,7 +555,7 @@ export const setCurrentPage = (page) => {
 function updateItemsDropdownState(items) {
   const itemsDropdown = document.getElementById('itemsDropdown');
   if (!itemsDropdown) return;
-  
+
   itemsDropdown.querySelectorAll('.items-option').forEach(option => {
     const checkmark = option.querySelector('.items-check');
     if (checkmark) {
@@ -569,33 +569,33 @@ export const setItemsPerPage = (items) => {
   // Using direct DOM lookup instead of cached reference to avoid targeting the wrong button
   const itemsPerPageBtn = document.getElementById('itemsPerPageBtn');
   _itemsPerPage = items;
-  
+
   // Only proceed if we found the button
   if (itemsPerPageBtn) {
     // Clear existing content
     while (itemsPerPageBtn.firstChild) {
       itemsPerPageBtn.removeChild(itemsPerPageBtn.firstChild);
     }
-    
+
     // Add text node
     itemsPerPageBtn.appendChild(document.createTextNode(`${items} Items `));
-    
+
     // Add icon
     const icon = document.createElement('i');
     icon.className = 'fa fa-chevron-down';
     itemsPerPageBtn.appendChild(icon);
   }
-  
+
   // Update only items dropdown state
   updateItemsDropdownState(items);
-  
+
   return _itemsPerPage;
 };
 
 function updateSubfoldersDropdownState(depth) {
   const subfolderDropdown = document.getElementById('subfolderDropdown');
   if (!subfolderDropdown) return;
-  
+
   subfolderDropdown.querySelectorAll('.subfolder-option').forEach(option => {
     const checkmark = option.querySelector('.subfolder-check');
     if (checkmark) {
@@ -610,40 +610,40 @@ export const setLoadSubfolders = (value, depth = 'off') => {
   const subfolderToggle = document.getElementById('subfolderToggle');
   _loadSubfolders = value;
   _subfolderDepth = depth;
-  
+
   // Only proceed if we found the button
   if (subfolderToggle) {
     // Clear existing content
     while (subfolderToggle.firstChild) {
       subfolderToggle.removeChild(subfolderToggle.firstChild);
     }
-    
+
     // Add sitemap icon
     const sitemapIcon = document.createElement('i');
     sitemapIcon.className = `fa fa-sitemap${depth === 'off' ? '' : ' active'}`;
     subfolderToggle.appendChild(sitemapIcon);
-    
+
     // Add text span
     const textSpan = document.createElement('span');
     textSpan.textContent = depth === 'off' ? '' : (depth === 'all' ? 'All' : depth);
     subfolderToggle.appendChild(textSpan);
-    
+
     // Add chevron icon
     const chevronIcon = document.createElement('i');
     chevronIcon.className = 'fa fa-chevron-down';
     subfolderToggle.appendChild(chevronIcon);
   }
-  
+
   // Update only subfolders dropdown state
   updateSubfoldersDropdownState(depth);
-  
+
   return _loadSubfolders;
 };
 
 function updateSortDropdownState(field) {
   const sortDropdown = document.getElementById('sortDropdown');
   if (!sortDropdown) return;
-  
+
   // Update sort options
   sortDropdown.querySelectorAll('.sort-option').forEach(option => {
     const checkmark = option.querySelector('.fa-check');
@@ -658,23 +658,23 @@ export const setCurrentSort = (sort) => {
   // Using direct DOM lookup instead of cached reference for consistency
   const sortBtn = document.getElementById('sortBtn');
   _currentSort = { ...sort };
-  
+
   // Update sort button text and icon
   if (sortBtn) {
     // Clear existing content
     while (sortBtn.firstChild) {
       sortBtn.removeChild(sortBtn.firstChild);
     }
-    
+
     // Add text showing field and direction
     const directionIcon = document.createElement('i');
     directionIcon.className = _currentSort.direction === 'asc' ? 'fa fa-sort-down' : 'fa fa-sort-up';
     sortBtn.appendChild(directionIcon);
-    
+
     // Add text showing field with capitalized first letter
     const capitalizedField = _currentSort.field.charAt(0).toUpperCase() + _currentSort.field.slice(1);
     sortBtn.appendChild(document.createTextNode(` ${capitalizedField} `));
-    
+
     // Add dropdown icon
     const dropdownIcon = document.createElement('i');
     dropdownIcon.className = 'fa fa-chevron-down';
@@ -683,10 +683,10 @@ export const setCurrentSort = (sort) => {
     // Update button title
     sortBtn.title = `Sort by ${_currentSort.field} (${_currentSort.direction === 'asc' ? 'ascending' : 'descending'})`;
   }
-  
+
   // Update dropdown state
   updateSortDropdownState(_currentSort.field);
-  
+
   return _currentSort;
 };
 
@@ -696,17 +696,17 @@ export function updatePagination(totalPages) {
   const pageInfo = document.getElementById('pageInfo');
   const prevPageBtn = document.getElementById('prevPage');
   const nextPageBtn = document.getElementById('nextPage');
-  
+
   totalPages = Math.max(1, totalPages || 1);
-  
+
   if (pageInfo) {
     pageInfo.textContent = `Page ${_currentPage + 1} of ${totalPages}`;
   }
-  
+
   if (prevPageBtn) {
     prevPageBtn.disabled = _currentPage === 0;
   }
-  
+
   if (nextPageBtn) {
     nextPageBtn.disabled = _currentPage >= totalPages - 1;
   }
@@ -718,7 +718,7 @@ export function exitFullscreen(currentFullscreenViewer) {
   const fullscreenOverlay = document.getElementById('fullscreenOverlay');
   const fullscreenVideo = document.getElementById('fullscreenVideo');
   // const fullscreenInfo = document.getElementById('fullscreenInfo'); // This was not used, so commented out
-  
+
   // Hide the fullscreen overlay and info panel
   fullscreenOverlay.style.display = 'none';
   fullscreenOverlay.style.opacity = '0';
@@ -738,11 +738,11 @@ export function exitFullscreen(currentFullscreenViewer) {
   const fullscreenFilename = document.querySelector('.fullscreen-filename');
   const fullscreenDetails = document.querySelector('.fullscreen-details');
   const fullscreenPath = document.querySelector('.fullscreen-path');
-  
+
   if (fullscreenFilename) fullscreenFilename.textContent = '';
   if (fullscreenDetails) fullscreenDetails.textContent = '';
   if (fullscreenPath) fullscreenPath.textContent = '';
-  
+
   if (currentFullscreenViewer) {
     if (currentFullscreenViewer.type === 'video' && fullscreenVideo) {
       // Stop both fullscreen video and any preview video
@@ -769,7 +769,7 @@ export function updateSelectionCount() {
   // Using direct DOM lookup instead of cached reference for consistency
   const selectionDropdown = document.getElementById('selectionDropdown');
   const count = _selectedFiles.size;
-  
+
   if (selectionDropdown) {
     selectionDropdown.innerHTML = `${count} Selected <i class="fa fa-chevron-down"></i>`;
   }
@@ -786,14 +786,14 @@ export function clearSelection() {
 
 export function saveSelection(modelFiles) {
   if (_selectedFiles.size === 0) return;
-  
+
   const content = Array.from(_selectedFiles)
     .map(fileName => {
       const model = modelFiles.find(m => m.name === fileName);
       return model ? model.fullPath : fileName;
     })
     .join('\n');
-    
+
   const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -809,12 +809,12 @@ export async function downloadSelected(modelFiles) {
   if (_selectedFiles.size === 0) return;
 
   console.log(`DOWNLOAD DIAGNOSTICS: Starting download for ${_selectedFiles.size} selected files`);
-  
+
   for (const fileName of _selectedFiles) {
     const model = modelFiles.find(m => m.name === fileName);
     if (model) {
       console.log(`DOWNLOAD DIAGNOSTICS: Processing ${fileName}, type=${model.type}`);
-      
+
       try {
         let blob;
 
@@ -830,7 +830,7 @@ export async function downloadSelected(modelFiles) {
           const response = await fetch(url);
           blob = await response.blob();
         }
-        
+
         // Create download link and trigger download
         console.log(`DOWNLOAD DIAGNOSTICS: Creating object URL for ${fileName}`);
         const url = URL.createObjectURL(blob);
@@ -841,7 +841,7 @@ export async function downloadSelected(modelFiles) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         console.log(`DOWNLOAD DIAGNOSTICS: Download triggered for ${model.name}`);
       } catch (error) {
         console.error(`Error downloading ${model.name}:`, error);
@@ -855,7 +855,7 @@ export async function downloadSelected(modelFiles) {
 export function toggleSelectionUI(fileName) {
   const isSelected = _selectedFiles.has(fileName);
   const tile = document.querySelector(`.model-tile[data-model-name="${fileName}"]`);
-  
+
   if (isSelected) {
     _selectedFiles.delete(fileName);
     tile?.classList.remove('selected');
@@ -916,7 +916,7 @@ let currentFontTileFontId = null;
 
 export function openCustomTextModal(model, fontId) {
   console.log('openCustomTextModal called with:', model, fontId);
-  
+
   const modal = document.getElementById('customTextModal');
   const customTextInput = document.getElementById('customTextInput');
   const saveAsDefaultTextCheckbox = document.getElementById('saveAsDefaultFontText');
@@ -938,7 +938,7 @@ export function openCustomTextModal(model, fontId) {
   // Load current custom text or default
   customTextInput.value = localStorage.getItem(`fontPreviewText_${model.name}`) || localStorage.getItem('fontPreviewText') || '';
   saveAsDefaultTextCheckbox.checked = !!localStorage.getItem('fontPreviewText'); // Check if a global default is set
-  
+
   // Load current font size or default
   const savedFontSize = localStorage.getItem(`fontSize_${model.name}`) || localStorage.getItem('defaultFontSize') || '16';
   if (fontSizeSlider && fontSizeValue) {
@@ -986,7 +986,7 @@ function applyCustomFontText() {
     // Set individual text preference
     localStorage.setItem(`fontPreviewText_${currentFontTileModel.name}`, newText);
   }
-  
+
   // Process font size changes
   const newFontSize = fontSizeSlider ? fontSizeSlider.value : '16';
   if (saveAsDefaultSizeCheckbox && saveAsDefaultSizeCheckbox.checked) {
@@ -997,7 +997,7 @@ function applyCustomFontText() {
     // Set individual font size preference
     localStorage.setItem(`fontSize_${currentFontTileModel.name}`, newFontSize);
   }
-  
+
   // Update the specific tile's preview
   const currentTileTextContainer = document.querySelector(`.model-tile[data-model-name="${currentFontTileModel.name}"] .font-preview div`);
   if (currentTileTextContainer) {
@@ -1018,7 +1018,7 @@ function applyCustomFontText() {
       }
     });
   }
-  
+
   // If "Use size for all font previews" is checked, update all other visible font tiles
   if (saveAsDefaultSizeCheckbox && saveAsDefaultSizeCheckbox.checked) {
     document.querySelectorAll('.model-tile[data-model-type="font"]').forEach(fontTile => {
@@ -1042,9 +1042,9 @@ function applyCustomFontText() {
           fullscreenTextElement.style.fontFamily = currentFullscreenViewer.fontId;
         }
       }
-      
+
       // Apply font size changes
-      if ((saveAsDefaultSizeCheckbox && saveAsDefaultSizeCheckbox.checked) || 
+      if ((saveAsDefaultSizeCheckbox && saveAsDefaultSizeCheckbox.checked) ||
           currentFullscreenViewer.fileName === currentFontTileModel.name) {
         fullscreenTextElement.style.fontSize = `${newFontSize}px`;
         // Update the fullscreen slider if visible
@@ -1057,7 +1057,7 @@ function applyCustomFontText() {
       }
     }
   }
-  
+
   closeCustomTextModal();
 }
 
@@ -1066,14 +1066,14 @@ function applyCustomFontText() {
 function getAssetTypesFilterState(filterOptions) {
   let numChecked = 0;
   let numTotal = filterOptions.length;
-  
+
   // Count how many filter options are active (have 'active' class)
   filterOptions.forEach(option => {
     if (option.classList.contains('active')) {
       numChecked++;
     }
   });
-  
+
   return {
     numChecked,
     numTotal,
@@ -1086,9 +1086,9 @@ function getAssetTypesFilterState(filterOptions) {
 // Function to update the eye icon button tooltip based on the current state
 function updateAssetTypeFilterBtnTooltip(assetTypeFilterBtn, filterOptions) {
   if (!assetTypeFilterBtn) return;
-  
+
   const state = getAssetTypesFilterState(filterOptions);
-  
+
   if (state.allOn) {
     assetTypeFilterBtn.title = "Toggle all asset types OFF";
   } else if (state.allOff) {
@@ -1102,30 +1102,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Asset type filter toggle button event handler initialization
   const assetTypeFilterBtn = document.getElementById('assetTypeFilterToggleBtn');
   const filterOptions = document.querySelectorAll('.filter-option');
-  
+
   if (assetTypeFilterBtn && filterOptions.length > 0) {
     // Set initial tooltip
     updateAssetTypeFilterBtnTooltip(assetTypeFilterBtn, filterOptions);
-    
+
     // Handle clicks on the eye icon button
     assetTypeFilterBtn.addEventListener('click', (event) => {
       // Only handle clicks on the eye icon or the button itself, not the dropdown chevron
       if (event.target.classList.contains('fa-chevron-down')) {
         return; // Let the dropdown behavior handle this
       }
-      
+
       event.stopPropagation(); // Prevent dropdown from toggling
-      
+
       const state = getAssetTypesFilterState(filterOptions);
-      
+
       // Determine what to do based on current state
       let newVisibility = 'visible'; // Default for someOn or allOff case
-      
+
       if (state.allOn) {
         // If all are ON, turn all OFF
         newVisibility = 'hidden';
       }
-      
+
       // Update all filter options based on the current state
       filterOptions.forEach(option => {
         const type = option.dataset.type;
@@ -1148,17 +1148,17 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       });
-      
+
       // Update the displayed assets
       updateFilteredModelFiles();
       renderPage(getCurrentPage());
-      
+
       // Update the tooltip to reflect the new state
       updateAssetTypeFilterBtnTooltip(assetTypeFilterBtn, filterOptions);
-      
+
       // DO NOT close the dropdown: // closeAllDropdowns();
     });
-    
+
     // Add event listeners to individual filter options to update eye icon tooltip
     filterOptions.forEach(option => {
       option.addEventListener('click', () => {
@@ -1181,7 +1181,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fontSizeValue = document.getElementById('fontSizeValue');
   const fullscreenFontSizeSlider = document.getElementById('fullscreenFontSizeSlider');
   const fullscreenFontSizeValue = document.getElementById('fullscreenFontSizeValue');
-  
+
   // Modal event listeners
   if (closeButton) {
     closeButton.addEventListener('click', closeCustomTextModal);
@@ -1196,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-  
+
   // New preset text buttons (simpler version without arrow toggles)
   const presetTextButtons = customTextModal.querySelectorAll('.preset-text-btn');
   if (presetTextButtons && customTextInput) {
@@ -1204,13 +1204,13 @@ document.addEventListener('DOMContentLoaded', () => {
       button.addEventListener('click', () => {
         // Get the preset text from the data-text attribute
         const presetText = button.dataset.text || '';
-        
+
         // Set the text in the input area
         customTextInput.value = presetText;
-        
+
         // Update textBeforeAllCaps to match new value
         textBeforeAllCaps = presetText;
-        
+
         // If "All Caps" is active, immediately convert to uppercase
         const toggleAllCapsText = document.getElementById('toggleAllCapsText');
         if (toggleAllCapsText && toggleAllCapsText.checked) {
@@ -1219,16 +1219,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-  
+
   // All caps toggle functionality
   let textBeforeAllCaps = '';
   const toggleAllCapsText = document.getElementById('toggleAllCapsText');
   const allCapsIconSpan = customTextModal.querySelector('.all-caps-icon');
-  
+
   if (toggleAllCapsText && customTextInput && allCapsIconSpan) {
     // Initialize textBeforeAllCaps with the current input value
     textBeforeAllCaps = customTextInput.value;
-    
+
     // Function to update icon text
     const updateAllCapsIcon = () => {
       if (toggleAllCapsText.checked) {
@@ -1237,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         allCapsIconSpan.textContent = 'Aa';
       }
     };
-    
+
     // Set initial icon state
     updateAllCapsIcon();
 
@@ -1254,20 +1254,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       updateAllCapsIcon(); // Update icon text
     });
-    
+
     // When typing in the textarea while "All Caps" is active
     customTextInput.addEventListener('input', () => {
       if (toggleAllCapsText.checked) {
         // Save current cursor position
         const currentSelectionStart = customTextInput.selectionStart;
         const currentSelectionEnd = customTextInput.selectionEnd;
-        
+
         // Update textBeforeAllCaps with the current (mixed case) input
         textBeforeAllCaps = customTextInput.value;
-        
+
         // Convert to uppercase
         customTextInput.value = customTextInput.value.toUpperCase();
-        
+
         // Restore cursor position
         customTextInput.setSelectionRange(currentSelectionStart, currentSelectionEnd);
       } else {
@@ -1276,24 +1276,24 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
+
     // Font size slider in modal
     if (fontSizeSlider && fontSizeValue) {
       fontSizeSlider.addEventListener('input', () => {
         fontSizeValue.textContent = fontSizeSlider.value;
-        
+
         // Live preview in the modal
         if (customTextInput) {
           customTextInput.style.fontSize = `${fontSizeSlider.value}px`;
         }
       });
     }
-  
+
   // Fullscreen font size slider
   if (fullscreenFontSizeSlider && fullscreenFontSizeValue) {
     fullscreenFontSizeSlider.addEventListener('input', () => {
       fullscreenFontSizeValue.textContent = fullscreenFontSizeSlider.value;
-      
+
       // Apply the font size change to the fullscreen font preview
       if (currentFullscreenViewer && currentFullscreenViewer.type === 'font') {
         const fullscreenTextElement = document.querySelector('#fullscreenViewer .fullscreen-font-display p');
@@ -1303,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
+
   // Close modal on Escape key
   document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape' && customTextModal.style.display === 'flex') {

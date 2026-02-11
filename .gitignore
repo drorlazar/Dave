@@ -70,3 +70,10 @@ tests/test-results/
 tests/playwright-report/
 tests/e2e/test-results.json
 tests/package-lock.json
+
+# Security: credential/key patterns (defense in depth)
+*.pem
+*.key
+*.p12
+*.pfx
+service-account*.json

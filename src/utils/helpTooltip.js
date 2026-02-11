@@ -66,7 +66,7 @@ export class HelpTooltip {
           <h3>D.A.V.E Help & Info</h3>
           <span class="tooltip-version">v1.0.0</span>
         </div>
-        
+
         <div class="tooltip-section about-section">
           <h4><i class="fa fa-info-circle"></i> About</h4>
           <p><strong>Dror's Assets Viewing Experience</strong></p>

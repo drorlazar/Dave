@@ -1,9 +1,9 @@
 // tree_folder_view.js - Tree Folder View functionality for Dave - Dror's Assets Viewing Experience
 
 // Import necessary functions and variables from other modules
-import { 
-    handleDragOver, handleDragLeave, handleDrop, 
-    getFilesFromDirectory, updateFilteredModelFiles, 
+import {
+    handleDragOver, handleDragLeave, handleDrop,
+    getFilesFromDirectory, updateFilteredModelFiles,
     renderPage, handleFolderPick
 } from '../core/asset_loading.js';
 import { getCurrentPage } from '../core/ui.js';
@@ -294,7 +294,7 @@ async function hasSubdirectories(dirHandle, cacheKey = null) {
   if (cacheKey && hasSubdirCache.has(cacheKey)) {
     return hasSubdirCache.get(cacheKey);
   }
-  
+
   try {
     for await (const [name, handle] of dirHandle.entries()) {
       if (handle.kind === 'directory') {
@@ -324,7 +324,7 @@ function loadTreeViewState() {
             const state = JSON.parse(savedState);
             isTreeVisible = state.isVisible || false;
             isPanelOnRightSide = state.isOnRightSide || false;
-            
+
             // Load the panel width if it exists
             if (state.treePanelWidth) {
                 document.documentElement.style.setProperty('--tree-panel-width', `${state.treePanelWidth}px`);
@@ -347,7 +347,7 @@ function saveTreeViewState() {
     try {
         const treePanel = document.querySelector('.tree-folder-panel');
         const currentWidth = treePanel ? parseInt(treePanel.style.width) || 300 : 300;
-        
+
         const state = {
             isVisible: isTreeVisible,
             isOnRightSide: isPanelOnRightSide,
@@ -428,7 +428,7 @@ function setupResizer(resizer) {
         animationFrameId = requestAnimationFrame(() => {
             const currentX = e.clientX;
             let deltaX = 0;
-            
+
             // Calculate delta based on panel position (left or right)
             if (isPanelOnRightSide) {
                 // For right panel, dragging left increases width
@@ -437,19 +437,19 @@ function setupResizer(resizer) {
                 // For left panel, dragging right increases width
                 deltaX = currentX - startX;
             }
-            
+
             let newWidth = startWidth + deltaX;
-            
+
             const viewportWidth = window.innerWidth;
             const maxWidth = viewportWidth * maxWidthPercentage;
 
             // Apply constraints
             newWidth = Math.max(minWidth, newWidth);
             newWidth = Math.min(maxWidth, newWidth);
-            
+
             // Update the CSS variable (for viewerContainer margins)
             document.documentElement.style.setProperty('--tree-panel-width', `${newWidth}px`);
-            
+
             // Directly update the panel's width as well
             if (treePanel) {
                 treePanel.style.width = `${newWidth}px`;
@@ -464,7 +464,7 @@ function setupResizer(resizer) {
             document.body.classList.remove('is-resizing'); // Re-enable transitions
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
-            
+
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
@@ -509,7 +509,7 @@ async function handleTreeDrop(e) {
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.classList.remove('tree-drag-over');
-    
+
     try {
         // Currently we only support directory drops (not individual files)
         for (const item of e.dataTransfer.items) {
@@ -530,10 +530,10 @@ async function handleTreeDrop(e) {
 // Initialize the tree folder view
 export function initTreeFolderView() {
     console.log("Initializing Tree Folder View with enhanced keyboard navigation");
-    
+
     // Load initial state but NOT width (now using fixed width)
     loadTreeViewState();
-    
+
     // Get references to UI elements
     const treeFolderToggle = document.getElementById('treeFolderToggle');
     const treeFolderPanel = document.getElementById('treeFolderPanel');
@@ -547,36 +547,36 @@ export function initTreeFolderView() {
     const treeRefreshFolder = document.getElementById('treeRefreshFolder');
     const folderTreeContainer = document.getElementById('folderTreeContainer');
     const treeEmptyState = document.querySelector('.tree-empty-state');
-    
+
     // Apply initial panel position class
     updatePanelPosition();
-    
+
     // Apply initial visibility state
     if (isTreeVisible) {
         document.body.classList.add('tree-panel-visible');
     }
-    
+
     // Initialize scan depth from UI dropdown
     initScanDepthFromUI();
-    
+
     // Setup event listeners
     if (treeFolderToggle) {
         treeFolderToggle.addEventListener('click', toggleTreePanel);
     }
-    
+
     if (treeClosePanel) {
         treeClosePanel.addEventListener('click', hideTreePanel);
     }
-    
+
     if (treeSideToggle) {
         treeSideToggle.addEventListener('click', togglePanelSide);
     }
-    
+
     // Enable resizer
     if (treeFolderResizer) {
         setupResizer(treeFolderResizer);
     }
-    
+
     if (treeCollapseAll) {
         treeCollapseAll.addEventListener('click', collapseAllFolders);
     }
@@ -592,7 +592,7 @@ export function initTreeFolderView() {
     if (treeExpandLevel1) treeExpandLevel1.addEventListener('click', () => expandToLevel(1));
     if (treeExpandLevel2) treeExpandLevel2.addEventListener('click', () => expandToLevel(2));
     if (treeExpandLevel3) treeExpandLevel3.addEventListener('click', () => expandToLevel(3));
-    
+
     if (treeDownloadFolder) {
         treeDownloadFolder.addEventListener('click', downloadSelectedFolder);
     }
@@ -600,14 +600,14 @@ export function initTreeFolderView() {
     if (treeRefreshFolder) {
         treeRefreshFolder.addEventListener('click', refreshCurrentFolder);
     }
-    
+
     // Setup drag and drop for the tree panel
     if (treeFolderPanel) {
         treeFolderPanel.addEventListener('dragover', handleTreeDragOver);
         treeFolderPanel.addEventListener('dragleave', handleTreeDragLeave);
         treeFolderPanel.addEventListener('drop', handleTreeDrop);
     }
-    
+
     // Setup keyboard navigation
     setupKeyboardNavigation();
 
@@ -666,10 +666,10 @@ async function buildLocalFolderStructure(dirHandle, path = '', fullScan = false,
         // If maxDepth not specified, use global scanDepth for fullScan, otherwise 0 (only current level)
         maxDepth = fullScan ? scanDepth : 0;
     }
-    
+
     const shouldScanRecursively = fullScan && (currentDepth < maxDepth);
     // console.log(`Building local structure for ${dirHandle.name}, path: ${path}, depth: ${currentDepth}/${maxDepth}, shouldScanRecursively: ${shouldScanRecursively}, fullScanThisLevel: ${fullScan}`);
-    
+
     const result = {
         name: dirHandle.name,
         path: path + dirHandle.name,
@@ -677,14 +677,14 @@ async function buildLocalFolderStructure(dirHandle, path = '', fullScan = false,
         type: 'directory',
         children: fullScan ? [] : undefined // Initialize if scanning this level, else undefined
     };
-    
+
     // Only scan for subdirectories if fullScan is true for this level
     if (fullScan) {
         try {
             let entriesFound = false;
             for await (const [name, handle] of dirHandle.entries()) {
                 entriesFound = true;
-                
+
                 if (handle.kind === 'directory') {
                     if (shouldScanRecursively && currentDepth + 1 < maxDepth) {
                         if (batchCounter.count >= batchSize) {
@@ -694,10 +694,10 @@ async function buildLocalFolderStructure(dirHandle, path = '', fullScan = false,
                         batchCounter.count++;
                         // Recursively scan subdirectory
                         const subDir = await buildLocalFolderStructure(
-                            handle, 
+                            handle,
                             result.path + '/' + name + '/', // Corrected path for subdir
-                            true, 
-                            currentDepth + 1, 
+                            true,
+                            currentDepth + 1,
                             maxDepth,
                             batchCounter,
                             batchSize
@@ -717,7 +717,7 @@ async function buildLocalFolderStructure(dirHandle, path = '', fullScan = false,
                         } catch (e) {
                             console.error(`Error checking if ${name} has subdirectories:`, e);
                         }
-                        
+
                         // Add to tree with appropriate children state
                         result.children.push({
                             name: name,
@@ -729,7 +729,7 @@ async function buildLocalFolderStructure(dirHandle, path = '', fullScan = false,
                     }
                 }
             } // End of for-await loop
-            
+
             // Check that we actually found directory entries
             if (!entriesFound) {
                 console.log(`${dirHandle.name} could not be read or has no entries`);
@@ -751,44 +751,44 @@ async function buildLocalFolderStructure(dirHandle, path = '', fullScan = false,
             result.children = []; // Mark as scanned but failed/empty
         }
     } // End of if (fullScan)
-    
+
     return result;
 }
 
 // Render the folder tree in the panel (optimized for performance)
 function renderFolderTree(folderData) {
     if (!folderData) return;
-    
+
     const startTime = performance.now();
     logDebug("Starting folder tree render...");
-    
+
     const folderTreeContainer = document.getElementById('folderTreeContainer');
     const treeEmptyState = document.querySelector('.tree-empty-state');
-    
+
     if (folderTreeContainer && treeEmptyState) {
         // Hide empty state, show tree container
         treeEmptyState.style.display = 'none';
         folderTreeContainer.classList.add('has-folders');
         folderTreeContainer.style.display = 'block';
-        
+
         // Clear existing content
         folderTreeContainer.innerHTML = '';
-        
+
         // Create a document fragment (doesn't cause reflow during modifications)
         const fragment = document.createDocumentFragment();
-        
+
         // Add root ul element to the fragment
         const rootUl = document.createElement('ul');
         rootUl.setAttribute('role', 'tree');
         rootUl.setAttribute('aria-label', 'Folder structure');
         fragment.appendChild(rootUl);
-        
+
         // Recursively add the folder structure to the fragment
         addFolderToTree(folderData, rootUl);
-        
+
         // Append the entire fragment to the DOM at once (single reflow)
         folderTreeContainer.appendChild(fragment);
-        
+
         const endTime = performance.now();
         logDebug(`Folder tree render complete in ${(endTime - startTime).toFixed(2)}ms`);
     }
@@ -803,13 +803,13 @@ function addFolderToTree(folder, parentElement) {
     li.dataset.path = folder.path;
     // Store folder data directly on the li element for easy access during expand all
     li.folderData = folder;
-    
+
     const chevronIcon = document.createElement('span');
     chevronIcon.className = 'chevron-icon';
-    
+
     // Improved logic for determining if chevron is needed:
     let canHaveChildren = false;
-    
+
     {
         // For local folders:
         // If the folder has a handle and we haven't checked for children yet (i.e., at the deeper levels),
@@ -820,44 +820,44 @@ function addFolderToTree(folder, parentElement) {
             folder.children.length > 0         // Has actual children
         );
     }
-    
+
     chevronIcon.innerHTML = canHaveChildren ? '<i class="fa fa-chevron-right"></i>' : '<i class="fa fa-fw"></i>'; // fa-fw for spacing
     li.appendChild(chevronIcon);
-    
+
     // Add folder icon
     const folderIcon = document.createElement('span');
     folderIcon.className = 'folder-icon';
     folderIcon.innerHTML = '<i class="fa fa-folder"></i>';
     li.appendChild(folderIcon);
-    
+
     // Add folder name
     const folderName = document.createElement('span');
     folderName.className = 'folder-name';
     folderName.textContent = folder.name;
     li.appendChild(folderName);
-    
+
     // Add to parent
     parentElement.appendChild(li);
-    
+
     // Handle click events
     li.addEventListener('click', (e) => {
         e.stopPropagation();
         selectFolder(li, folder);
     });
-    
+
     // Handle chevron click separately
     chevronIcon.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleFolder(li, folder);
     });
-    
+
     // If this folder can have children, prepare for them but don't expand by default
     if (canHaveChildren) {
         const ul = document.createElement('ul');
         ul.setAttribute('role', 'group');
         ul.style.display = 'none'; // Start collapsed
         // Store folder data on the ul for lazy loading/expansion
-        ul.dataset.folderPath = folder.path; 
+        ul.dataset.folderPath = folder.path;
         if (folder.handle) {
             // For local, we might need to re-attach the handle if not passed down
             // but it should be on the `folder` object itself.
@@ -875,17 +875,17 @@ async function expandSubfolders(li, folder, expandAllMode = false) {
     // If we haven't populated this list yet (lazy loading)
     if (ul.children.length === 0) {
         let subFolders = [];
-        
+
         // When using expandAllMode, override maxDepth to scan deeply.
         // Pass batchCounter for deep scans initiated by expandAll.
         const maxDepthForExpand = expandAllMode ? Infinity : 0; // 0 for normal click, Infinity for expandAll
         const batchCounterForExpand = expandAllMode ? { count: 0 } : undefined; // Only use new batch for expandAll
-        
+
         if (folder.handle) { // Local folder
             // When expanding a folder, always do a full scan to properly find all subfolders
             const localSubStructure = await buildLocalFolderStructure(
-                folder.handle, 
-                folder.path + '/', 
+                folder.handle,
+                folder.path + '/',
                 true, // fullScan = true for expanding a folder
                 0,    // currentDepth for this new scan context
                 maxDepthForExpand, // maxDepth for this scan
@@ -900,7 +900,7 @@ async function expandSubfolders(li, folder, expandAllMode = false) {
                 folder.children = [];
             }
         }
-        
+
         if (subFolders.length > 0) {
             // Add all discovered subfolders to the tree
             subFolders.forEach(child => addFolderToTree(child, ul));
@@ -914,23 +914,23 @@ async function expandSubfolders(li, folder, expandAllMode = false) {
             folder.children = [];
         }
     }
-    
+
     // Show the sub-list
     ul.style.display = 'block';
-    
+
     // Update the icons
     const chevronIcon = li.querySelector('.chevron-icon i');
     if (chevronIcon) {
         chevronIcon.classList.remove('fa-chevron-right');
         chevronIcon.classList.add('fa-chevron-down');
     }
-    
+
     const folderIcon = li.querySelector('.folder-icon i');
     if (folderIcon) {
         folderIcon.classList.remove('fa-folder');
         folderIcon.classList.add('fa-folder-open');
     }
-    
+
     li.setAttribute('aria-expanded', 'true');
 }
 
@@ -938,33 +938,33 @@ async function expandSubfolders(li, folder, expandAllMode = false) {
 function collapseSubfolders(li) {
     const ul = li.querySelector('ul');
     if (!ul) return;
-    
+
     // Hide the sub-list
     ul.style.display = 'none';
-    
+
     // Update the icons
     const chevronIcon = li.querySelector('.chevron-icon i');
     if (chevronIcon) {
         chevronIcon.classList.remove('fa-chevron-down');
         chevronIcon.classList.add('fa-chevron-right');
     }
-    
+
     const folderIcon = li.querySelector('.folder-icon i');
     if (folderIcon) {
         folderIcon.classList.remove('fa-folder-open');
         folderIcon.classList.add('fa-folder');
     }
-    
+
     li.setAttribute('aria-expanded', 'false');
 }
 
 // Toggle folder expansion
 async function toggleFolder(li, folder) {
     const isExpanded = li.getAttribute('aria-expanded') === 'true';
-    
+
     // Important: Set the state first to avoid race conditions
     li.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
-    
+
     if (isExpanded) {
         collapseSubfolders(li);
     } else {
@@ -985,14 +985,14 @@ async function selectFolder(li, folder) {
         item.removeAttribute('aria-selected');
         item.setAttribute('tabindex', '-1'); // Make previously selected item not focusable
     });
-    
+
     // Add selection to this folder
     li.classList.add('selected');
     li.setAttribute('aria-selected', 'true');
     li.setAttribute('tabindex', '0'); // Make current item focusable
     li.focus(); // Set focus to the selected item
     selectedTreeFolder = folder;
-    
+
     // Load the files from this folder into the viewer (debounced)
     debouncedLoadFiles(folder);
 }
@@ -1012,7 +1012,7 @@ async function loadFilesFromSelectedFolder(folder) {
             await handleFolderPick(folder.handle, folder.path + '/');
             // Record in folder history with full tree path
             addToHistory(folder.handle, folder.path);
-            
+
             // Then ensure a proper render with an animation frame delay
             // This helps ensure all DOM updates are processed before re-rendering
             await new Promise(resolve => {
@@ -1020,21 +1020,21 @@ async function loadFilesFromSelectedFolder(folder) {
                     // Get the current state after the initial load
                     const currentPage = getCurrentPage();
                     console.log(`Re-rendering page ${currentPage} after folder load to ensure complete display`);
-                    
+
                     // After a brief delay, force a re-render of the current page
                     setTimeout(() => {
                         // Import these functions directly to avoid circular dependencies
                         const { updateFilteredModelFiles, renderPage, updatePagination } = window.assetLoading || {};
-                        
+
                         if (typeof updateFilteredModelFiles === 'function') {
                             updateFilteredModelFiles();
                         }
-                        
+
                         if (typeof renderPage === 'function') {
                             renderPage(currentPage);
                             console.log("Forced re-render complete");
                         }
-                        
+
                         resolve();
                     }, 50); // Short delay to ensure all async operations are complete
                 });
@@ -1069,7 +1069,7 @@ async function expandAllFoldersRecursive(parentElement, batchCounter = { count: 
             if (chevron && !chevron.querySelector('.fa-fw')) {
                 await expandSubfolders(li, folder, true); // expandAllMode = true
                 batchCounter.count++;
-                
+
                 const subUl = li.querySelector('ul');
                 if (subUl) {
                     await expandAllFoldersRecursive(subUl, batchCounter, batchSize);
@@ -1209,13 +1209,13 @@ async function downloadSelectedFolder() {
         }
 
         const zip = new JSZip();
-        
+
         if (selectedTreeFolder.handle) { // Local folder
             await addLocalFolderToZip(selectedTreeFolder.handle, zip, selectedTreeFolder.name);
         } else {
             throw new Error("Selected folder type not recognized for download.");
         }
-        
+
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         const downloadLink = document.createElement('a');
         downloadLink.href = URL.createObjectURL(zipBlob);
@@ -1257,23 +1257,23 @@ async function addLocalFolderToZip(dirHandle, zip, currentPathInZip) {
 // Keyboard navigation for the tree view
 function setupKeyboardNavigation() {
     const treeContainer = document.getElementById('folderTreeContainer');
-    
+
     if (treeContainer) {
         treeContainer.addEventListener('keydown', (e) => {
             const currentItem = document.querySelector('.tree-container li.selected');
             if (!currentItem) return;
-            
+
             switch (e.key) {
                 case 'ArrowDown':
                     e.preventDefault();
                     navigateNext(currentItem);
                     break;
-                    
+
                 case 'ArrowUp':
                     e.preventDefault();
                     navigatePrevious(currentItem);
                     break;
-                    
+
                 case 'ArrowRight':
                     e.preventDefault();
                     const isExpanded = currentItem.getAttribute('aria-expanded') === 'true';
@@ -1287,7 +1287,7 @@ function setupKeyboardNavigation() {
                         if (chevron) chevron.click();
                     }
                     break;
-                    
+
                 case 'ArrowLeft':
                     e.preventDefault();
                     const expandedState = currentItem.getAttribute('aria-expanded');
@@ -1301,7 +1301,7 @@ function setupKeyboardNavigation() {
                         if (parentLi) selectTreeItem(parentLi);
                     }
                     break;
-                    
+
                 case 'Enter':
                 case ' ': // Space
                     e.preventDefault();
@@ -1323,14 +1323,14 @@ function navigateNext(currentItem) {
             return;
         }
     }
-    
+
     // Try to find next sibling
     let nextItem = currentItem.nextElementSibling;
     if (nextItem) {
         selectTreeItem(nextItem);
         return;
     }
-    
+
     // If no next sibling, go up the tree to find next parent sibling
     let parent = currentItem.parentElement.closest('li');
     while (parent) {
@@ -1357,12 +1357,12 @@ function navigatePrevious(currentItem) {
                 return;
             }
         }
-        
+
         // Otherwise, select the previous sibling itself
         selectTreeItem(prevItem);
         return;
     }
-    
+
     // If no previous sibling, go to parent
     const parent = currentItem.parentElement.closest('li');
     if (parent) {
@@ -1374,19 +1374,19 @@ function navigatePrevious(currentItem) {
 function getLastVisibleDescendant(item) {
     const isExpanded = item.getAttribute('aria-expanded') === 'true';
     if (!isExpanded) return null;
-    
+
     const children = item.querySelectorAll('ul > li');
     if (children.length === 0) return null;
-    
+
     const lastChild = children[children.length - 1];
-    
+
     // Check if last child is itself expanded
     const lastChildExpanded = lastChild.getAttribute('aria-expanded') === 'true';
     if (lastChildExpanded) {
         const lastDescendant = getLastVisibleDescendant(lastChild);
         if (lastDescendant) return lastDescendant;
     }
-    
+
     return lastChild;
 }
 
@@ -1395,7 +1395,7 @@ function selectTreeItem(item) {
     // Get the data from the ul
     const ul = item.querySelector('ul');
     let folderData = null;
-    
+
     if (ul && ul.folderData) {
         folderData = ul.folderData;
     } else {
@@ -1406,7 +1406,7 @@ function selectTreeItem(item) {
                 // Find this folder in the parent's children
                 const path = item.dataset.path;
                 if (path && parent.folderData.children) {
-                    folderData = parent.folderData.children.find(child => 
+                    folderData = parent.folderData.children.find(child =>
                         child.type === 'directory' && child.path === path
                     );
                 }
@@ -1414,7 +1414,7 @@ function selectTreeItem(item) {
             parent = parent.parentElement;
         }
     }
-    
+
     if (folderData) {
         // Programmatically trigger selection
         selectFolder(item, folderData);
@@ -1425,10 +1425,10 @@ function selectTreeItem(item) {
         });
         item.classList.add('selected');
     }
-    
+
     // Ensure the item is visible
     item.scrollIntoView({ block: 'nearest' });
-    
+
     // Set focus for continued keyboard navigation
     item.focus(); // Ensure focus is set
 }
@@ -1438,19 +1438,19 @@ function initScanDepthFromUI() {
     // Get the subfolder toggle dropdown
     const subfolderDropdown = document.getElementById('subfolderDropdown');
     if (!subfolderDropdown) return;
-    
+
     // Find the currently selected depth option
     const activeOption = subfolderDropdown.querySelector('.subfolder-option .subfolder-check[style*="visible"]');
     const depthValue = activeOption ? activeOption.closest('.subfolder-option').dataset.depth : '1';
-    
+
     // Set the global scan depth based on the UI selection
     setScanDepth(depthValue);
-    
+
     // Add event listeners to all depth options
     document.querySelectorAll('.subfolder-option').forEach(option => {
         option.addEventListener('click', handleScanDepthChange);
     });
-    
+
     console.log(`Tree View: Initialized scan depth to ${scanDepth}`);
 }
 
@@ -1458,7 +1458,7 @@ function initScanDepthFromUI() {
 function handleScanDepthChange(event) {
     const depthValue = event.currentTarget.dataset.depth;
     setScanDepth(depthValue);
-    
+
     // If we have a current folder structure, reload it with the new depth
     if (currentDirectoryHandle) {
         console.log(`Tree View: Scan depth changed to ${scanDepth}, reloading folder structure...`);

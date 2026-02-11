@@ -6,7 +6,7 @@ class MemoryManager {
     this.activeFbxViewers = new Set();
     this.activeModelViewers = new Set();
     this.disposalQueue = [];
-    
+
     // Schedule periodic cleanup
     this.cleanupInterval = setInterval(() => {
       this.processDisposalQueue();
@@ -113,14 +113,14 @@ class MemoryManager {
   // Clean up model resources
   cleanupModel(model) {
     const modelId = model.fullPath || model.name;
-    
+
     // Revoke blob URL
     if (model.blobUrl) {
       this.revokeBlobUrl(modelId);
       model.blobUrl = null;
       model.blobData = null;
     }
-    
+
     // Clear thumbnail
     if (model.thumbnailDataUrl) {
       model.thumbnailDataUrl = null;
