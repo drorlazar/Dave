@@ -229,116 +229,7 @@ export class SettingsModal {
   }
 
   _releaseLogHTML() {
-    const releases = [
-      {
-        version: '1.5.0',
-        date: 'Feb 11, 2026',
-        title: 'Settings, Themes & Release Log',
-        features: [
-          'Settings menu redesigned: gear icon, tabbed sections',
-          '14 color themes: Default, Midnight, Monokai, Dracula, Nord, Solarized, Cyberpunk, Forest, Ocean, Sunset, Rose Pine, Light, Paper, Arctic',
-          'Theme preview swatches with live application',
-          'Release log section with versioned changelog',
-        ]
-      },
-      {
-        version: '1.4.0',
-        date: 'Feb 11, 2026',
-        title: '3D Inspector - Material Editor & Export Tools',
-        features: [
-          'Material editor panel with per-material property editing (color, roughness, metalness, emissive, opacity, side, transparency)',
-          'Texture drag & drop: load custom textures onto material slots with live preview',
-          'Per-texture on/off toggle and strength slider (normal, roughness, metalness, AO, emissive, diffuse, alpha)',
-          'Export animation-only GLB (rig + animation clip, no mesh geometry)',
-          'Bind-pose export fix: models exported without animations now retain correct T/A-pose',
-          'Floating/dockable inspector panel with drag-to-reposition support',
-          'Material editor dockable to left or floating, resizable via drag handle',
-          'Toolbar moved inside 3D preview window (floating top-right)',
-          'Larger toolbar icons for better visibility',
-          'New grid icon: 3D cube wireframe with colored axis arrows (RGB = XYZ)',
-        ]
-      },
-      {
-        version: '1.3.0',
-        date: 'Feb 11, 2026',
-        title: '3D Model Inspector',
-        features: [
-          '3D inspector toolbar: wireframe, grid, auto-rotate, reset camera, screenshot',
-          'Slide-in inspector panel with Stats, Materials, Animations, Helpers, Scene, and Export sections',
-          'GLB/GLTF and FBX model support via adapter pattern',
-          'Animation transport bar: play/pause, scrub, speed control, animation selection',
-          'Export tools: GLB with/without textures, texture-only export, texture resize, mesh simplification',
-          'Draco compression detection with badge indicator',
-          'Resizable inspector panel via left-edge drag handle',
-          'File size estimation for exports',
-          'Keyboard shortcuts: W (wireframe), G (grid), R (auto-rotate), C (reset camera), P (screenshot), I (inspector)',
-        ]
-      },
-      {
-        version: '1.2.0',
-        date: 'Feb 10, 2026',
-        title: 'Easter Eggs & Visual Effects',
-        features: [
-          'Dangerous Dave easter egg on D.A.V.E title click',
-          'Matrix rain effect with Rezmason digital rain modes',
-          'CRT power-on entrance animation',
-          'Favicon added',
-        ]
-      },
-      {
-        version: '1.1.0',
-        date: 'Feb 9, 2026',
-        title: 'Cloud Storage & Image Viewer',
-        features: [
-          'Client-side AWS S3 integration with SigV4 signing (no server required)',
-          'Google Drive integration via OAuth2 and Drive REST API',
-          'Cloud folder browser modal for navigating remote storage',
-          'Settings panel for configuring cloud credentials (stored in localStorage)',
-          'Fullscreen image viewer with zoom and pan controls',
-          'Support for unrecognized file types as "other" category',
-          'Drag & drop overlay flicker fix',
-        ]
-      },
-      {
-        version: '1.0.0',
-        date: 'Feb 6, 2026',
-        title: 'Text Files & Testing',
-        features: [
-          'Text file support: TXT, MD, JSON, XML, CSV, YAML, LOG, INI, TOML',
-          'Markdown rendered mode by default',
-          'Playwright E2E test suite (file loading, UI, keyboard, memory, errors)',
-        ]
-      },
-      {
-        version: '0.9.0',
-        date: 'Jul 2025',
-        title: 'Initial Release',
-        features: [
-          'Grid-based asset viewer for 3D models, images, videos, audio, and fonts',
-          'Folder pick and drag & drop with Web Worker file scanning',
-          'Fullscreen preview with keyboard navigation',
-          'Filter bar by asset type and search',
-          'Pagination and lazy-loaded thumbnails',
-          'Dark and light mode',
-          'Interactive help tooltip with keyboard shortcuts',
-          'Three.js 0.161 for 3D model rendering (GLB/GLTF, FBX)',
-        ]
-      },
-    ];
-
-    return releases.map((r, i) => `
-      <div class="release-entry${i === 0 ? ' latest' : ''}">
-        <div class="release-header">
-          <span class="release-version">${r.version}</span>
-          <span class="release-date">${r.date}</span>
-          ${i === 0 ? '<span class="release-badge">Latest</span>' : ''}
-        </div>
-        <div class="release-title">${r.title}</div>
-        <ul class="release-features">
-          ${r.features.map(f => `<li>${f}</li>`).join('')}
-        </ul>
-      </div>
-    `).join('');
+    return SettingsModal._releaseLogEntriesHTML();
   }
 
   loadStatus() {
@@ -504,5 +395,128 @@ export class SettingsModal {
     if (saved) {
       SettingsModal.applyTheme(saved);
     }
+  }
+
+  /** Populate theme swatches + release log in the settings dropdown */
+  static initDropdownSections() {
+    const themeGrid = document.getElementById('themeGridDD');
+    const releaseLogBody = document.getElementById('releaseLogBody');
+    if (!themeGrid && !releaseLogBody) return;
+
+    // Theme swatches
+    if (themeGrid) {
+      const current = localStorage.getItem(THEME_STORAGE_KEY) || 'default';
+      themeGrid.innerHTML = THEMES.map(t => `
+        <button class="theme-swatch${t.id === current ? ' active' : ''}" data-theme="${t.id}" title="${t.name}">
+          <div class="theme-swatch-preview" style="background:${t.bg};border-color:${t.border}">
+            <div class="theme-swatch-bar" style="background:${t.surface}"></div>
+            <div class="theme-swatch-accent" style="background:${t.accent}"></div>
+            <div class="theme-swatch-text" style="background:${t.text}"></div>
+          </div>
+          <span class="theme-swatch-name">${t.name}</span>
+        </button>
+      `).join('');
+
+      themeGrid.addEventListener('click', (e) => {
+        const swatch = e.target.closest('.theme-swatch');
+        if (!swatch) return;
+        const themeId = swatch.dataset.theme;
+        SettingsModal.applyTheme(themeId);
+        themeGrid.querySelectorAll('.theme-swatch').forEach(s =>
+          s.classList.toggle('active', s.dataset.theme === themeId)
+        );
+        // Also update modal swatches if open
+        const modalGrid = document.getElementById('themeGrid');
+        if (modalGrid) {
+          modalGrid.querySelectorAll('.theme-swatch').forEach(s =>
+            s.classList.toggle('active', s.dataset.theme === themeId)
+          );
+        }
+      });
+    }
+
+    // Release log
+    if (releaseLogBody) {
+      releaseLogBody.innerHTML = SettingsModal._releaseLogEntriesHTML();
+    }
+
+    // Collapsible section toggles
+    document.querySelectorAll('.settings-dd-section-header').forEach(header => {
+      header.addEventListener('click', () => {
+        header.closest('.settings-dd-section').classList.toggle('collapsed');
+      });
+    });
+  }
+
+  static _releaseLogEntriesHTML() {
+    const releases = [
+      {
+        version: '1.5.0', date: 'Feb 11, 2026', title: 'Themes & Release Log',
+        features: [
+          '14 color themes with live preview swatches',
+          'Theme picker and release log in settings dropdown',
+          'CSS custom properties for full UI theming',
+        ]
+      },
+      {
+        version: '1.4.0', date: 'Feb 11, 2026', title: '3D Inspector - Material Editor & Export',
+        features: [
+          'Material editor with per-material property editing and texture drag & drop',
+          'Export animation-only GLB (rig + clip, no mesh)',
+          'Floating/dockable inspector panel',
+          'Toolbar inside 3D preview, larger icons, new grid icon',
+        ]
+      },
+      {
+        version: '1.3.0', date: 'Feb 11, 2026', title: '3D Model Inspector',
+        features: [
+          'Inspector toolbar: wireframe, grid, auto-rotate, screenshot',
+          'Slide-in panel with Stats, Materials, Animations, Export',
+          'Animation transport bar with scrub, speed, selection',
+          'Export tools: GLB with/without textures, mesh simplification',
+        ]
+      },
+      {
+        version: '1.2.0', date: 'Feb 10, 2026', title: 'Easter Eggs & Effects',
+        features: [
+          'Dangerous Dave easter egg, Matrix rain, CRT power-on animation',
+        ]
+      },
+      {
+        version: '1.1.0', date: 'Feb 9, 2026', title: 'Cloud Storage & Image Viewer',
+        features: [
+          'Client-side AWS S3 and Google Drive integration',
+          'Cloud folder browser, fullscreen image viewer with zoom/pan',
+        ]
+      },
+      {
+        version: '1.0.0', date: 'Feb 6, 2026', title: 'Text Files & Testing',
+        features: [
+          'Text file support with markdown rendering',
+          'Playwright E2E test suite',
+        ]
+      },
+      {
+        version: '0.9.0', date: 'Jul 2025', title: 'Initial Release',
+        features: [
+          'Grid asset viewer for 3D models, images, videos, audio, fonts',
+          'Drag & drop, search, pagination, dark/light mode',
+        ]
+      },
+    ];
+
+    return releases.map((r, i) => `
+      <div class="release-entry${i === 0 ? ' latest' : ''}">
+        <div class="release-header">
+          <span class="release-version">${r.version}</span>
+          <span class="release-date">${r.date}</span>
+          ${i === 0 ? '<span class="release-badge">Latest</span>' : ''}
+        </div>
+        <div class="release-title">${r.title}</div>
+        <ul class="release-features">
+          ${r.features.map(f => `<li>${f}</li>`).join('')}
+        </ul>
+      </div>
+    `).join('');
   }
 }

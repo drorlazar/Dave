@@ -56,8 +56,9 @@ UI.initializeUI().then(() => {
   // Initialize easter egg (click D.A.V.E title to play Dangerous Dave!)
   initEasterEgg();
 
-  // Initialize saved theme
+  // Initialize saved theme + dropdown sections (themes, release log)
   SettingsModal.initTheme();
+  SettingsModal.initDropdownSections();
   
   // Initial render
   AssetLoading.renderPage(UI.getCurrentPage());
