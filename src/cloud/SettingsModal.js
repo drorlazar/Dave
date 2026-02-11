@@ -424,6 +424,14 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '1.6.0', date: 'Feb 11, 2026', title: 'Settings & UX Overhaul',
+        features: [
+          'Tree view side tab toggle + expand/collapse dropdown',
+          '50 whimsical welcome messages for empty state',
+          'Themed scrollbars, honest edit tooltips, dropdown z-index fix',
+        ]
+      },
+      {
         version: '1.5.0', date: 'Feb 11, 2026', title: 'Themes & Release Log',
         features: [
           '14 color themes with live preview swatches',
