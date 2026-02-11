@@ -2089,8 +2089,9 @@ body.tree-panel-visible .panel-right ~ #viewerContainer {
 }
 
 .tree-folder-header {
+  position: relative;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   padding: 10px 15px;
   border-bottom: 1px solid var(--theme-border);
@@ -2159,9 +2160,68 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
   color: #fff;
 }
 
+/* Tree Expand/Collapse Dropdown */
+.tree-expand-dropdown {
+  position: static;
+  display: flex;
+  align-items: center;
+}
+
+.tree-expand-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 4px;
+  right: 4px;
+  margin-top: 4px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  overflow: hidden;
+  padding: 4px 0;
+}
+
+.tree-expand-dropdown.active .tree-expand-menu {
+  display: block;
+}
+
+.tree-expand-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  color: var(--theme-text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s;
+}
+
+.tree-expand-item:hover {
+  background-color: color-mix(in srgb, var(--theme-accent) 15%, transparent);
+}
+
+.tree-expand-item i {
+  width: 16px;
+  text-align: center;
+  color: var(--theme-accent);
+  font-size: 0.85rem;
+}
+
+.tree-expand-divider {
+  height: 1px;
+  background: var(--theme-border);
+  margin: 4px 8px;
+}
+
 /* Tree History Dropdown */
 .tree-history-dropdown {
-  position: relative;
+  position: static;
   display: flex;
   align-items: center;
 }
@@ -2170,10 +2230,9 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
   display: none;
   position: absolute;
   top: 100%;
-  left: 0;
+  left: 4px;
+  right: 4px;
   margin-top: 4px;
-  min-width: 260px;
-  max-width: 340px;
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-radius: 6px;
@@ -2307,6 +2366,12 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
 }
 
 /* Light mode */
+body:not(.dark-mode) .tree-expand-menu {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
 body:not(.dark-mode) .tree-history-menu {
   background: #fff;
   border-color: #ddd;
@@ -2346,11 +2411,7 @@ body:not(.dark-mode) .tree-history-empty {
   color: #bbb;
 }
 
-/* When panel is on right side, align dropdown to the right */
-.panel-right .tree-history-menu {
-  left: auto;
-  right: 0;
-}
+/* Menu spans full header width on both sides */
 
 .tree-folder-content {
   flex: 1;

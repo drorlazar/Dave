@@ -50,30 +50,6 @@ export class SettingsModal {
         </div>
         <div class="settings-body">
 
-          <!-- Theme Section -->
-          <div class="settings-section">
-            <div class="settings-section-header settings-collapsible-header">
-              <i class="fa fa-palette"></i> Theme
-              <span class="settings-collapse-icon">&#9656;</span>
-            </div>
-            <div class="settings-collapsible-body theme-body">
-              <div class="theme-grid" id="themeGrid">
-                ${this._themeSwatchesHTML()}
-              </div>
-            </div>
-          </div>
-
-          <!-- Release Log Section -->
-          <div class="settings-section collapsed">
-            <div class="settings-section-header settings-collapsible-header">
-              <i class="fa fa-clock-rotate-left"></i> Release Log
-              <span class="settings-collapse-icon">&#9656;</span>
-            </div>
-            <div class="settings-collapsible-body release-log-body">
-              ${this._releaseLogHTML()}
-            </div>
-          </div>
-
           <div class="settings-warning">
             <i class="fa fa-shield-halved"></i>
             Credentials are stored in your browser's local storage. Use scoped, read-only credentials.
