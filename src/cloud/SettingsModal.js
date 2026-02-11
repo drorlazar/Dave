@@ -1,6 +1,69 @@
 // SettingsModal.js - In-app settings for cloud storage credentials and appearance
 
 import { CredentialStore } from './CredentialStore.js';
+import { MatrixRain } from '../matrix_rain.js';
+import { RezmasonRain } from '../matrix_rain_rezmason.js';
+
+// ── Matrix theme state (module-level) ──
+let matrixThemeRain = null;
+let matrixModeIndex = 0;
+
+const MATRIX_THEME_COLORS = {
+  id: 'matrix', accent: '#00ff41', bg: '#0a0a0a', surface: '#0d1a0d',
+  text: '#00ff41', border: '#0a3a0a', mode: 'dark'
+};
+
+const MATRIX_MODE_NAMES = [
+  "Dror's Matrix", 'Classic', '3D', 'Mirror', 'Resurrections',
+  'Trinity', 'Operator', 'Megacity', 'Awakening'
+];
+
+const MATRIX_MODE_PARAMS = [
+  null, // index 0 = custom MatrixRain
+  'version=classic',
+  'version=3d',
+  'version=classic&fallSpeed=-0.3&glyphFlip=true&rippleTypeName=circle&rippleSpeed=0.2&rippleThickness=0.25',
+  'version=resurrections',
+  'version=trinity',
+  'version=operator',
+  'version=megacity',
+  'version=classic&skipIntro=false',
+];
+
+function startMatrixBackground(modeIndex) {
+  stopMatrixBackground();
+  if (modeIndex === 0) {
+    matrixThemeRain = new MatrixRain();
+    matrixThemeRain.start(1);
+    matrixThemeRain.canvas.style.opacity = '0.10';
+  } else {
+    const params = MATRIX_MODE_PARAMS[modeIndex];
+    matrixThemeRain = new RezmasonRain(params);
+    matrixThemeRain.start(1);
+    matrixThemeRain.container.style.opacity = '0.10';
+  }
+}
+
+function stopMatrixBackground() {
+  if (matrixThemeRain) {
+    matrixThemeRain.stop();
+    matrixThemeRain = null;
+  }
+}
+
+let _matrixToastTimer = null;
+function showMatrixModeToast(modeName) {
+  let toast = document.querySelector('.matrix-mode-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'matrix-mode-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = modeName;
+  toast.classList.add('visible');
+  clearTimeout(_matrixToastTimer);
+  _matrixToastTimer = setTimeout(() => toast.classList.remove('visible'), 2000);
+}
 
 const THEMES = [
   { id: 'default',    name: 'Default',      accent: '#9b77ff', bg: '#1e1e1e', surface: '#2a2a2a', text: '#e0e0e0', border: '#444', mode: 'dark' },
@@ -326,6 +389,38 @@ export class SettingsModal {
   // --- Theme system ---
 
   static applyTheme(themeId) {
+    // ── Matrix theme special-case ──
+    if (themeId === 'matrix') {
+      const t = MATRIX_THEME_COLORS;
+      localStorage.setItem(THEME_STORAGE_KEY, 'matrix');
+      localStorage.setItem('dave_theme_css', JSON.stringify({
+        bg: t.bg, surface: t.surface, text: t.text,
+        border: t.border, accent: t.accent, mode: t.mode
+      }));
+
+      document.documentElement.classList.add('dark-mode');
+      document.body.classList.add('dark-mode');
+      document.body.classList.add('matrix-theme');
+      localStorage.setItem('theme', 'dark');
+
+      const indicator = document.getElementById('darkModeIndicator');
+      if (indicator) { indicator.textContent = 'ON'; indicator.classList.remove('off'); }
+
+      const root = document.documentElement;
+      root.style.setProperty('--theme-bg', t.bg);
+      root.style.setProperty('--theme-surface', t.surface);
+      root.style.setProperty('--theme-text', t.text);
+      root.style.setProperty('--theme-border', t.border);
+      root.style.setProperty('--theme-accent', t.accent);
+
+      startMatrixBackground(matrixModeIndex);
+      return;
+    }
+
+    // ── Normal themes: clean up matrix if active ──
+    document.body.classList.remove('matrix-theme');
+    stopMatrixBackground();
+
     const theme = THEMES.find(t => t.id === themeId);
     if (!theme) return;
 
@@ -366,6 +461,7 @@ export class SettingsModal {
   static initTheme() {
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
     if (saved) {
+      if (saved === 'matrix') matrixModeIndex = 0;
       SettingsModal.applyTheme(saved);
     }
   }
@@ -390,7 +486,31 @@ export class SettingsModal {
         </button>
       `).join('');
 
+      // Hidden matrix trigger: tiny green dot absolutely positioned in grid corner
+      themeGrid.style.position = 'relative';
+      const trigger = document.createElement('button');
+      trigger.className = 'matrix-trigger';
+      trigger.title = '';
+      trigger.innerHTML = '<div class="matrix-trigger-dot"></div>';
+      themeGrid.appendChild(trigger);
+
       themeGrid.addEventListener('click', (e) => {
+        // ── Matrix trigger click ──
+        if (e.target.closest('.matrix-trigger')) {
+          // If matrix is already active, advance to next mode; otherwise start at 0
+          const isActive = document.body.classList.contains('matrix-theme');
+          if (isActive) {
+            matrixModeIndex = (matrixModeIndex + 1) % MATRIX_MODE_NAMES.length;
+          } else {
+            matrixModeIndex = 0;
+          }
+          SettingsModal.applyTheme('matrix');
+          showMatrixModeToast(MATRIX_MODE_NAMES[matrixModeIndex]);
+          // Deactivate all normal swatches
+          themeGrid.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
+          return;
+        }
+
         const swatch = e.target.closest('.theme-swatch');
         if (!swatch) return;
         const themeId = swatch.dataset.theme;
@@ -423,6 +543,14 @@ export class SettingsModal {
 
   static _releaseLogEntriesHTML() {
     const releases = [
+      {
+        version: '1.7.0', date: 'Feb 12, 2026', title: 'Matrix Theme Easter Egg',
+        features: [
+          'Hidden Matrix theme trigger in theme grid (find the green dot!)',
+          '9 Matrix rain modes cycle on each click with background rain at 10% opacity',
+          'Full Matrix UI: CRT scanlines, vignette, green glow, monospace font',
+        ]
+      },
       {
         version: '1.6.0', date: 'Feb 11, 2026', title: 'Settings & UX Overhaul',
         features: [
