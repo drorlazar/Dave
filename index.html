@@ -63,14 +63,11 @@
     <div class="searchControls">
       <div class="search-wrapper">
         <i class="fa fa-search search-icon"></i>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search by name, type, or path" data-tooltip="Press Ctrl+F to focus">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search or paste links here..." data-tooltip="Press Ctrl+F to focus">
         <button class="search-clear" title="Clear search"><i class="fa fa-times"></i></button>
       </div>
     </div>
     <div class="fileControls">
-      <button id="treeFolderToggle" class="btn" title="Toggle Folder Tree View">
-        <i class="fa fa-folder-tree"></i>
-      </button>
       <div class="dropdown" id="sourceDropdown">
         <button id="folderPicker" class="btn dropdown-btn" title="Choose file source">
           <i class="fa fa-folder-open"></i> Source <i class="fa fa-chevron-down"></i>
@@ -243,14 +240,19 @@
   </div>
 
   <!-- Tree Folder View Panel -->
+  <!-- Side tab to toggle tree panel -->
+  <button id="treeFolderToggle" class="tree-side-tab tree-side-tab-left" title="Toggle Folder Tree View">
+    <i class="fa fa-folder-tree"></i>
+  </button>
+
   <div id="treeFolderPanel" class="tree-folder-panel panel-left">
     <div class="tree-folder-header">
       <div class="tree-folder-actions">
-        <button id="treeRefreshFolder" class="btn tree-btn" title="Refresh Current Folder">
+        <button id="treeRefreshFolder" class="tree-btn" title="Refresh Current Folder">
             <i class="fa fa-rotate-right"></i>
         </button>
         <div class="tree-expand-dropdown" id="treeExpandDropdown">
-          <button class="btn tree-btn" title="Expand / Collapse Options">
+          <button class="tree-btn" title="Expand / Collapse Options">
             <i class="fa fa-sitemap"></i>
           </button>
           <div class="tree-expand-menu" id="treeExpandMenu">
@@ -273,7 +275,7 @@
             </button>
           </div>
         </div>
-        <button id="treeDownloadFolder" class="btn tree-btn" title="Download Selected Folder (Ctrl+Shift+S)">
+        <button id="treeDownloadFolder" class="tree-btn" title="Download Selected Folder (Ctrl+Shift+S)">
             <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="custom-fa-icon">
                 <title>Download Folder - ZIP FA Style</title>
                 <path class="folder-shape-fa" d="M4,4 C2.895,4 2,4.895 2,6 L2,26 C2,27.105 2.895,28 4,28 L28,28 C29.105,28 30,27.105 30,26 L30,9 C30,7.895 29.105,7 28,7 L15,7 L12,4 L4,4 Z"/>
@@ -281,7 +283,7 @@
             </svg>
         </button>
         <div class="tree-history-dropdown" id="treeHistoryDropdown">
-          <button id="treeHistoryBtn" class="btn tree-btn" title="Folder History">
+          <button id="treeHistoryBtn" class="tree-btn" title="Folder History">
             <i class="fa fa-bookmark"></i>
           </button>
           <div class="tree-history-menu" id="treeHistoryMenu">
@@ -296,10 +298,10 @@
             </div>
           </div>
         </div>
-        <button id="treeSideToggle" class="btn tree-btn" title="Move Panel to Right Side">
+        <button id="treeSideToggle" class="tree-btn" title="Move Panel to Right Side">
             <i class="fa fa-arrow-right"></i>
         </button>
-        <button id="treeClosePanel" class="btn tree-btn" title="Close Panel (Esc when panel focused)">
+        <button id="treeClosePanel" class="tree-btn" title="Close Panel (Esc when panel focused)">
             <i class="fa fa-times"></i>
         </button>
       </div>

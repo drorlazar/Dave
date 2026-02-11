@@ -363,24 +363,31 @@ function saveTreeViewState() {
 function updatePanelPosition() {
     const treePanel = document.getElementById('treeFolderPanel');
     if (!treePanel) return;
-    
+
     // Remove both classes first
     treePanel.classList.remove('panel-left', 'panel-right');
-    
+
     // Add the appropriate class based on current position state
     if (isPanelOnRightSide) {
         treePanel.classList.add('panel-right');
     } else {
         treePanel.classList.add('panel-left');
     }
-    
+
+    // Update side tab position
+    const sideTab = document.getElementById('treeFolderToggle');
+    if (sideTab) {
+        sideTab.classList.remove('tree-side-tab-left', 'tree-side-tab-right');
+        sideTab.classList.add(isPanelOnRightSide ? 'tree-side-tab-right' : 'tree-side-tab-left');
+    }
+
     // Update tooltip and icon class on toggle button
     const treeSideToggleButton = document.getElementById('treeSideToggle');
     if (treeSideToggleButton) {
-        treeSideToggleButton.title = isPanelOnRightSide ? 
-            "Move Panel to Left Side" : 
+        treeSideToggleButton.title = isPanelOnRightSide ?
+            "Move Panel to Left Side" :
             "Move Panel to Right Side";
-        
+
         // Update icon to indicate current position
         const icon = treeSideToggleButton.querySelector('i');
         if (icon) {
