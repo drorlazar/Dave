@@ -4627,6 +4627,106 @@ body:not(.dark-mode) .cloud-path-btn:hover { color: #333; background: rgba(0,0,0
   text-decoration: underline;
 }
 
+/* Settings - section label (non-collapsible heading) */
+.settings-section-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: -12px;
+}
+
+/* Release Log */
+.release-log-body {
+  padding: 12px 14px;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.release-log-body::-webkit-scrollbar { width: 5px; }
+.release-log-body::-webkit-scrollbar-track { background: transparent; }
+.release-log-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.release-log-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+.release-entry {
+  border-left: 2px solid #444;
+  padding-left: 12px;
+}
+
+.release-entry.latest {
+  border-left-color: #9b77ff;
+}
+
+.release-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.release-version {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ddd;
+  font-variant-numeric: tabular-nums;
+}
+
+.release-date {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.release-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9b77ff;
+  background: rgba(155, 119, 255, 0.12);
+  border: 1px solid rgba(155, 119, 255, 0.25);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.release-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #bbb;
+  margin-bottom: 4px;
+}
+
+.release-features {
+  margin: 0;
+  padding-left: 16px;
+  list-style: none;
+}
+
+.release-features li {
+  font-size: 0.75rem;
+  color: #999;
+  line-height: 1.5;
+  position: relative;
+  padding-left: 2px;
+}
+
+.release-features li::before {
+  content: '\2022';
+  color: #555;
+  position: absolute;
+  left: -12px;
+}
+
+.release-entry.latest .release-features li::before {
+  color: #9b77ff;
+}
+
 /* Settings modal - light mode */
 body:not(.dark-mode) .settings-section {
   border-color: #ddd;
@@ -4662,4 +4762,42 @@ body:not(.dark-mode) .settings-description {
 
 body:not(.dark-mode) .settings-toggle-vis:hover {
   color: #333;
+}
+
+body:not(.dark-mode) .settings-section-label {
+  color: #999;
+}
+
+body:not(.dark-mode) .release-entry {
+  border-left-color: #ddd;
+}
+
+body:not(.dark-mode) .release-entry.latest {
+  border-left-color: #7c5ccc;
+}
+
+body:not(.dark-mode) .release-version {
+  color: #333;
+}
+
+body:not(.dark-mode) .release-title {
+  color: #555;
+}
+
+body:not(.dark-mode) .release-features li {
+  color: #666;
+}
+
+body:not(.dark-mode) .release-badge {
+  color: #7c5ccc;
+  background: rgba(124, 92, 204, 0.08);
+  border-color: rgba(124, 92, 204, 0.2);
+}
+
+body:not(.dark-mode) .release-log-body::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+}
+
+body:not(.dark-mode) .release-log-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
 }

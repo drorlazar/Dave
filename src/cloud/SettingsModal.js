@@ -24,12 +24,27 @@ export class SettingsModal {
       <div class="cloud-modal-content settings-modal-content">
         <div class="cloud-modal-header">
           <span class="cloud-modal-title">
-            <i class="fa fa-cloud"></i>
-            Cloud Storage Settings
+            <i class="fa fa-gear"></i>
+            Settings
           </span>
           <button class="cloud-modal-close" id="settingsClose" title="Close">&times;</button>
         </div>
         <div class="settings-body">
+
+          <!-- Release Log Section -->
+          <div class="settings-section collapsed">
+            <div class="settings-section-header settings-collapsible-header">
+              <i class="fa fa-clock-rotate-left"></i> Release Log
+              <span class="settings-collapse-icon">&#9656;</span>
+            </div>
+            <div class="settings-collapsible-body release-log-body">
+              ${SettingsModal._releaseLogHTML()}
+            </div>
+          </div>
+
+          <!-- Cloud Storage -->
+          <div class="settings-section-label"><i class="fa fa-cloud"></i> Cloud Storage</div>
+
           <div class="settings-warning">
             <i class="fa fa-shield-halved"></i>
             Credentials are stored in your browser's local storage. Use scoped, read-only credentials.
@@ -275,5 +290,107 @@ export class SettingsModal {
       this.modal.remove();
       this.modal = null;
     }
+  }
+
+  static _releaseLogHTML() {
+    const releases = [
+      {
+        version: '1.4.0',
+        date: 'Feb 11, 2026',
+        title: '3D Inspector - Material Editor & Export Tools',
+        features: [
+          'Material editor panel with per-material property editing (color, roughness, metalness, emissive, opacity, side, transparency)',
+          'Texture drag & drop: load custom textures onto material slots with live preview',
+          'Per-texture on/off toggle and strength slider (normal, roughness, metalness, AO, emissive, diffuse, alpha)',
+          'Export animation-only GLB (rig + animation clip, no mesh geometry)',
+          'Bind-pose export fix: models exported without animations now retain correct T/A-pose',
+          'Floating/dockable inspector panel with drag-to-reposition support',
+          'Material editor dockable to left or floating, resizable via drag handle',
+          'Toolbar moved inside 3D preview window (floating top-right)',
+          'Larger toolbar icons for better visibility',
+          'New grid icon: 3D cube wireframe with colored axis arrows (RGB = XYZ)',
+        ]
+      },
+      {
+        version: '1.3.0',
+        date: 'Feb 11, 2026',
+        title: '3D Model Inspector',
+        features: [
+          '3D inspector toolbar: wireframe, grid, auto-rotate, reset camera, screenshot',
+          'Slide-in inspector panel with Stats, Materials, Animations, Helpers, Scene, and Export sections',
+          'GLB/GLTF and FBX model support via adapter pattern',
+          'Animation transport bar: play/pause, scrub, speed control, animation selection',
+          'Export tools: GLB with/without textures, texture-only export, texture resize, mesh simplification',
+          'Draco compression detection with badge indicator',
+          'Resizable inspector panel via left-edge drag handle',
+          'File size estimation for exports',
+          'Keyboard shortcuts: W (wireframe), G (grid), R (auto-rotate), C (reset camera), P (screenshot), I (inspector)',
+        ]
+      },
+      {
+        version: '1.2.0',
+        date: 'Feb 10, 2026',
+        title: 'Easter Eggs & Visual Effects',
+        features: [
+          'Dangerous Dave easter egg on D.A.V.E title click',
+          'Matrix rain effect with Rezmason digital rain modes',
+          'CRT power-on entrance animation',
+          'Favicon added',
+        ]
+      },
+      {
+        version: '1.1.0',
+        date: 'Feb 9, 2026',
+        title: 'Cloud Storage & Image Viewer',
+        features: [
+          'Client-side AWS S3 integration with SigV4 signing (no server required)',
+          'Google Drive integration via OAuth2 and Drive REST API',
+          'Cloud folder browser modal for navigating remote storage',
+          'Settings panel for configuring cloud credentials (stored in localStorage)',
+          'Fullscreen image viewer with zoom and pan controls',
+          'Support for unrecognized file types as "other" category',
+          'Drag & drop overlay flicker fix',
+        ]
+      },
+      {
+        version: '1.0.0',
+        date: 'Feb 6, 2026',
+        title: 'Text Files & Testing',
+        features: [
+          'Text file support: TXT, MD, JSON, XML, CSV, YAML, LOG, INI, TOML',
+          'Markdown rendered mode by default',
+          'Playwright E2E test suite (file loading, UI, keyboard, memory, errors)',
+        ]
+      },
+      {
+        version: '0.9.0',
+        date: 'Jul 2025',
+        title: 'Initial Release',
+        features: [
+          'Grid-based asset viewer for 3D models, images, videos, audio, and fonts',
+          'Folder pick and drag & drop with Web Worker file scanning',
+          'Fullscreen preview with keyboard navigation',
+          'Filter bar by asset type and search',
+          'Pagination and lazy-loaded thumbnails',
+          'Dark and light mode',
+          'Interactive help tooltip with keyboard shortcuts',
+          'Three.js 0.161 for 3D model rendering (GLB/GLTF, FBX)',
+        ]
+      },
+    ];
+
+    return releases.map((r, i) => `
+      <div class="release-entry${i === 0 ? ' latest' : ''}">
+        <div class="release-header">
+          <span class="release-version">${r.version}</span>
+          <span class="release-date">${r.date}</span>
+          ${i === 0 ? '<span class="release-badge">Latest</span>' : ''}
+        </div>
+        <div class="release-title">${r.title}</div>
+        <ul class="release-features">
+          ${r.features.map(f => `<li>${f}</li>`).join('')}
+        </ul>
+      </div>
+    `).join('');
   }
 }
