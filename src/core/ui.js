@@ -188,6 +188,15 @@ function initializeElements() {
             document.body.classList.remove('dark-mode');
           }
           localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          // Clear custom theme so CSS custom property defaults take over
+          localStorage.removeItem('dave_theme');
+          localStorage.removeItem('dave_theme_css');
+          const root = document.documentElement;
+          root.style.removeProperty('--theme-bg');
+          root.style.removeProperty('--theme-surface');
+          root.style.removeProperty('--theme-text');
+          root.style.removeProperty('--theme-border');
+          root.style.removeProperty('--theme-accent');
           if (indicator) {
             indicator.textContent = isDark ? 'ON' : 'OFF';
             indicator.classList.toggle('off', !isDark);

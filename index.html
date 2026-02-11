@@ -8,10 +8,28 @@
   <link rel="stylesheet" href="src/styles/model_inspector.css">
 
   <script>
-    // Check if user has explicitly chosen light mode
-    if (localStorage.getItem('theme') === 'light') {
-      document.documentElement.classList.remove('dark-mode');
-    }
+    // Apply saved theme before render to prevent flash of wrong colors
+    (function() {
+      const themeId = localStorage.getItem('dave_theme');
+      if (themeId) {
+        // Theme data is stored as CSS custom properties - apply from saved values
+        const themeCss = localStorage.getItem('dave_theme_css');
+        if (themeCss) {
+          try {
+            const t = JSON.parse(themeCss);
+            const r = document.documentElement;
+            r.style.setProperty('--theme-bg', t.bg);
+            r.style.setProperty('--theme-surface', t.surface);
+            r.style.setProperty('--theme-text', t.text);
+            r.style.setProperty('--theme-border', t.border);
+            r.style.setProperty('--theme-accent', t.accent);
+            if (t.mode === 'light') r.classList.remove('dark-mode');
+          } catch(e) {}
+        }
+      } else if (localStorage.getItem('theme') === 'light') {
+        document.documentElement.classList.remove('dark-mode');
+      }
+    })();
   </script>
 
   <!-- Import map for Three.js modules -->

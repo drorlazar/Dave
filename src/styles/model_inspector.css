@@ -41,9 +41,9 @@
 }
 
 .model-toolbar-btn.active {
-  background: rgba(155, 119, 255, 0.25);
-  border-color: #9b77ff;
-  color: #9b77ff;
+  background: color-mix(in srgb, var(--theme-accent) 25%, transparent);
+  border-color: var(--theme-accent);
+  color: var(--theme-accent);
 }
 
 .model-toolbar-divider {
@@ -152,8 +152,8 @@
 }
 
 .model-anim-bar-btn.playing {
-  color: #9b77ff;
-  border-color: #9b77ff;
+  color: var(--theme-accent);
+  border-color: var(--theme-accent);
 }
 
 .model-anim-bar-scrubber {
@@ -173,7 +173,7 @@
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -182,7 +182,7 @@
 .model-anim-bar-scrubber::-moz-range-thumb {
   width: 14px;
   height: 14px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -246,7 +246,7 @@
 
 .inspector-resize-handle:hover,
 .inspector-resize-handle.dragging {
-  background: rgba(155, 119, 255, 0.4);
+  background: color-mix(in srgb, var(--theme-accent) 40%, transparent);
 }
 
 /* Scrollbar styling */
@@ -336,7 +336,7 @@
 }
 
 .inspector-title i {
-  color: #9b77ff;
+  color: var(--theme-accent);
   font-size: 14px;
 }
 
@@ -440,7 +440,7 @@
 }
 
 .inspector-stat-value.accent {
-  color: #9b77ff;
+  color: var(--theme-accent);
 }
 
 .inspector-stat.full-width {
@@ -602,7 +602,7 @@
   -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -611,7 +611,7 @@
 .inspector-mat-range::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -619,7 +619,7 @@
 
 .inspector-mat-range-val {
   font-size: 10px;
-  color: #9b77ff;
+  color: var(--theme-accent);
   min-width: 30px;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -656,7 +656,7 @@
 .inspector-tool-link-btn {
   background: none;
   border: none;
-  color: #9b77ff;
+  color: var(--theme-accent);
   font-size: 10px;
   cursor: pointer;
   padding: 0 4px;
@@ -691,7 +691,7 @@
 
 .inspector-texture-type {
   font-size: 10px;
-  color: #9b77ff;
+  color: var(--theme-accent);
   font-weight: 600;
   text-transform: uppercase;
   min-width: 60px;
@@ -752,12 +752,12 @@
 }
 
 .inspector-toggle input:checked + .inspector-toggle-slider {
-  background: rgba(155, 119, 255, 0.4);
+  background: color-mix(in srgb, var(--theme-accent) 40%, transparent);
 }
 
 .inspector-toggle input:checked + .inspector-toggle-slider::before {
   transform: translateX(12px);
-  background: #9b77ff;
+  background: var(--theme-accent);
 }
 
 .inspector-no-data {
@@ -812,7 +812,7 @@
 }
 
 .inspector-anim-select:focus {
-  border-color: #9b77ff;
+  border-color: var(--theme-accent);
 }
 
 .inspector-anim-transport {
@@ -842,8 +842,8 @@
 }
 
 .inspector-anim-btn.playing {
-  color: #9b77ff;
-  border-color: #9b77ff;
+  color: var(--theme-accent);
+  border-color: var(--theme-accent);
 }
 
 .inspector-anim-scrubber {
@@ -862,7 +862,7 @@
   -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -871,7 +871,7 @@
 .inspector-anim-scrubber::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -928,7 +928,7 @@
 }
 
 .inspector-bg-swatch.active {
-  border-color: #9b77ff;
+  border-color: var(--theme-accent);
 }
 
 .inspector-bg-swatch.dark {
@@ -973,7 +973,7 @@
 }
 
 .inspector-lighting-select:focus {
-  border-color: #9b77ff;
+  border-color: var(--theme-accent);
 }
 
 .inspector-scene-label {
@@ -1006,7 +1006,7 @@
 }
 
 .inspector-tool-label i {
-  color: #9b77ff;
+  color: var(--theme-accent);
   width: 14px;
   text-align: center;
   font-size: 11px;
@@ -1046,13 +1046,13 @@
 }
 
 .inspector-tool-btn.accent {
-  border-color: rgba(155, 119, 255, 0.4);
+  border-color: color-mix(in srgb, var(--theme-accent) 40%, transparent);
   color: #b89fff;
 }
 
 .inspector-tool-btn.accent:hover {
-  background: rgba(155, 119, 255, 0.15);
-  border-color: #9b77ff;
+  background: color-mix(in srgb, var(--theme-accent) 15%, transparent);
+  border-color: var(--theme-accent);
 }
 
 .inspector-tool-btn i {
@@ -1077,8 +1077,8 @@
 }
 
 .inspector-tool-btn-sm:hover {
-  background: rgba(155, 119, 255, 0.15);
-  color: #9b77ff;
+  background: color-mix(in srgb, var(--theme-accent) 15%, transparent);
+  color: var(--theme-accent);
 }
 
 .inspector-tool-select {
@@ -1094,7 +1094,7 @@
 }
 
 .inspector-tool-select:focus {
-  border-color: #9b77ff;
+  border-color: var(--theme-accent);
 }
 
 .inspector-tool-slider-row {
@@ -1119,7 +1119,7 @@
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1128,7 +1128,7 @@
 .inspector-tool-range::-moz-range-thumb {
   width: 14px;
   height: 14px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1137,7 +1137,7 @@
 .inspector-tool-range-label {
   font-size: 12px;
   font-weight: 600;
-  color: #9b77ff;
+  color: var(--theme-accent);
   min-width: 36px;
   text-align: right;
 }
@@ -1291,7 +1291,7 @@
 
 .me-resize-handle:hover,
 .me-resize-handle.dragging {
-  background: rgba(155, 119, 255, 0.4);
+  background: color-mix(in srgb, var(--theme-accent) 40%, transparent);
 }
 
 .mat-editor-panel.floating .me-resize-handle {
@@ -1336,7 +1336,7 @@
   min-width: 0;
 }
 
-.me-title i { color: #9b77ff; font-size: 12px; }
+.me-title i { color: var(--theme-accent); font-size: 12px; }
 
 .me-header-actions {
   display: flex;
@@ -1421,7 +1421,7 @@
   -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1430,7 +1430,7 @@
 .me-row input[type="range"]::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1450,13 +1450,13 @@
 .me-checkbox {
   width: 14px;
   height: 14px;
-  accent-color: #9b77ff;
+  accent-color: var(--theme-accent);
   cursor: pointer;
 }
 
 .me-val {
   font-size: 10px;
-  color: #9b77ff;
+  color: var(--theme-accent);
   min-width: 26px;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1513,14 +1513,14 @@
 
 .me-tex-row.empty:hover {
   opacity: 0.8;
-  border-color: #9b77ff;
-  background: rgba(155, 119, 255, 0.04);
+  border-color: var(--theme-accent);
+  background: color-mix(in srgb, var(--theme-accent) 4%, transparent);
 }
 
 .me-tex-row.drag-over {
-  border-color: #9b77ff;
+  border-color: var(--theme-accent);
   border-style: solid;
-  background: rgba(155, 119, 255, 0.1);
+  background: color-mix(in srgb, var(--theme-accent) 10%, transparent);
 }
 
 .me-tex-thumb {
@@ -1588,7 +1588,7 @@
   -webkit-appearance: none;
   width: 10px;
   height: 10px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1597,7 +1597,7 @@
 .me-tex-strength::-moz-range-thumb {
   width: 10px;
   height: 10px;
-  background: #9b77ff;
+  background: var(--theme-accent);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1610,7 +1610,7 @@
 
 .me-tex-strength-val {
   font-size: 9px;
-  color: #9b77ff;
+  color: var(--theme-accent);
   min-width: 20px;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1645,8 +1645,8 @@
 }
 
 .inspector-mat-edit-btn:hover {
-  color: #9b77ff;
-  background: rgba(155, 119, 255, 0.1);
+  color: var(--theme-accent);
+  background: color-mix(in srgb, var(--theme-accent) 10%, transparent);
 }
 
 /* --- Light Mode Overrides --- */
@@ -1667,8 +1667,8 @@ body:not(.dark-mode) .model-toolbar-btn:hover {
 }
 
 body:not(.dark-mode) .model-toolbar-btn.active {
-  background: rgba(155, 119, 255, 0.15);
-  border-color: #9b77ff;
+  background: color-mix(in srgb, var(--theme-accent) 15%, transparent);
+  border-color: var(--theme-accent);
   color: #7c5ccc;
 }
 
@@ -1772,7 +1772,7 @@ body:not(.dark-mode) .inspector-toggle-slider::before {
 }
 
 body:not(.dark-mode) .inspector-toggle input:checked + .inspector-toggle-slider {
-  background: rgba(155, 119, 255, 0.3);
+  background: color-mix(in srgb, var(--theme-accent) 30%, transparent);
 }
 
 body:not(.dark-mode) .inspector-no-data {
@@ -1841,12 +1841,12 @@ body:not(.dark-mode) .inspector-tool-btn:hover {
 }
 
 body:not(.dark-mode) .inspector-tool-btn.accent {
-  border-color: rgba(155, 119, 255, 0.3);
+  border-color: color-mix(in srgb, var(--theme-accent) 30%, transparent);
   color: #7c5ccc;
 }
 
 body:not(.dark-mode) .inspector-tool-btn.accent:hover {
-  background: rgba(155, 119, 255, 0.08);
+  background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
 }
 
 body:not(.dark-mode) .inspector-tool-select {
@@ -1966,12 +1966,12 @@ body:not(.dark-mode) .inspector-export-size strong {
 
 body:not(.dark-mode) .inspector-resize-handle:hover,
 body:not(.dark-mode) .inspector-resize-handle.dragging {
-  background: rgba(155, 119, 255, 0.2);
+  background: color-mix(in srgb, var(--theme-accent) 20%, transparent);
 }
 
 body:not(.dark-mode) .me-resize-handle:hover,
 body:not(.dark-mode) .me-resize-handle.dragging {
-  background: rgba(155, 119, 255, 0.2);
+  background: color-mix(in srgb, var(--theme-accent) 20%, transparent);
 }
 
 body:not(.dark-mode) .model-inspector-panel::-webkit-scrollbar-thumb {
@@ -2094,12 +2094,12 @@ body:not(.dark-mode) .me-tex-row:hover {
 }
 
 body:not(.dark-mode) .me-tex-row.empty:hover {
-  border-color: #9b77ff;
-  background: rgba(155, 119, 255, 0.04);
+  border-color: var(--theme-accent);
+  background: color-mix(in srgb, var(--theme-accent) 4%, transparent);
 }
 
 body:not(.dark-mode) .me-tex-row.drag-over {
-  background: rgba(155, 119, 255, 0.08);
+  background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
 }
 
 body:not(.dark-mode) .me-tex-thumb {
@@ -2148,5 +2148,5 @@ body:not(.dark-mode) .inspector-mat-edit-btn {
 
 body:not(.dark-mode) .inspector-mat-edit-btn:hover {
   color: #7c5ccc;
-  background: rgba(155, 119, 255, 0.06);
+  background: color-mix(in srgb, var(--theme-accent) 6%, transparent);
 }

@@ -8,6 +8,7 @@ import { errorHandler } from '../utils/errorHandler.js';
 import { memoryManager } from '../utils/memoryManager.js';
 import { initHelpTooltip } from '../utils/helpTooltip.js';
 import { initEasterEgg } from '../easter_egg.js';
+import { SettingsModal } from '../cloud/SettingsModal.js';
 
 // Global debugging configuration
 window.APP_DEBUG = {
@@ -54,6 +55,9 @@ UI.initializeUI().then(() => {
 
   // Initialize easter egg (click D.A.V.E title to play Dangerous Dave!)
   initEasterEgg();
+
+  // Initialize saved theme
+  SettingsModal.initTheme();
   
   // Initial render
   AssetLoading.renderPage(UI.getCurrentPage());
