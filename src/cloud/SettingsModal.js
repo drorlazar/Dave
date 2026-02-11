@@ -424,6 +424,15 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '1.7.0', date: 'Feb 11, 2026', title: 'Repository Security Hardening',
+        features: [
+          'SSH commit signing with Ed25519 key verification',
+          'Pre-commit hooks: gitleaks, detect-secrets, large file & whitespace checks',
+          'Branch protection: PRs required, force push blocked, signed commits enforced',
+          'SECURITY.md, CODEOWNERS, CONTRIBUTING.md governance files',
+        ]
+      },
+      {
         version: '1.6.0', date: 'Feb 11, 2026', title: 'Settings & UX Overhaul',
         features: [
           'Tree view side tab toggle + expand/collapse dropdown',
