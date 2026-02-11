@@ -29,6 +29,7 @@ body {
   color: var(--theme-text);
   margin: 0;
   transition: background-color 0.4s, color 0.4s;
+  overflow-x: hidden;
 }
 
 /* Light mode logo styles */
@@ -52,6 +53,7 @@ body:not(.dark-mode) .logo-subtitle {
   align-items: center;
   border-bottom: 1px solid var(--theme-border);
   gap: 12px;
+  overflow: visible;
 }
 
 @media (max-width: 1200px) {
@@ -2036,6 +2038,54 @@ body:not(.dark-mode) .preset-text-btn:hover {
   z-index: 1001;
 }
 
+/* Tree Side Tab - collapsible toggle on screen edge */
+.tree-side-tab {
+  position: fixed;
+  top: 64px;
+  z-index: 89; /* Below panel (90) so it slides behind */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  color: var(--theme-text);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: left 0.3s ease-in-out, right 0.3s ease-in-out, background 0.2s, color 0.2s;
+}
+
+.tree-side-tab:hover {
+  background: var(--theme-accent);
+  color: #fff;
+  border-color: var(--theme-accent);
+}
+
+/* Left-side tab */
+.tree-side-tab-left {
+  left: 0;
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+}
+
+/* When panel is open, tab slides behind the panel */
+body.tree-panel-visible .tree-side-tab-left {
+  left: 0;
+}
+
+/* Right-side tab */
+.tree-side-tab-right {
+  right: 0;
+  left: auto;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+}
+
+body.tree-panel-visible .tree-side-tab-right {
+  right: 0;
+}
+
 /* Tree Folder View Panel Styles */
 .tree-folder-panel {
   position: fixed;
@@ -2091,40 +2141,37 @@ body.tree-panel-visible .panel-right ~ #viewerContainer {
 .tree-folder-header {
   position: relative;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px 15px;
+  height: 38px;
   border-bottom: 1px solid var(--theme-border);
   background-color: var(--theme-surface);
 }
 
-.tree-folder-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: normal;
-  color: var(--theme-text);
-}
-
 .tree-folder-actions {
   display: flex;
-  gap: 4px;
-  align-items: center;
+  gap: 0;
+  width: 100%;
 }
 
 .tree-btn {
-  padding: 4px;
-  width: 30px;
-  height: 30px;
+  all: unset;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  height: 100%;
+  padding-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--theme-surface);
-  border: 1px solid var(--theme-border);
-  border-radius: 4px;
+  border-right: 1px solid var(--theme-border);
   color: var(--theme-text);
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
-  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.tree-folder-actions > .tree-btn:last-child,
+.tree-folder-actions > :last-child .tree-btn {
+  border-right: none;
 }
 
 /* SVG Icon Styles */
@@ -2156,15 +2203,15 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
 }
 
 .tree-btn:hover {
-  background-color: #444;
-  color: #fff;
+  background-color: color-mix(in srgb, var(--theme-accent) 20%, transparent);
+  color: var(--theme-accent);
 }
 
 /* Tree Expand/Collapse Dropdown */
 .tree-expand-dropdown {
   position: static;
   display: flex;
-  align-items: center;
+  flex: 1 1 0;
 }
 
 .tree-expand-menu {
@@ -2223,7 +2270,7 @@ body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
 .tree-history-dropdown {
   position: static;
   display: flex;
-  align-items: center;
+  flex: 1 1 0;
 }
 
 .tree-history-menu {
@@ -2616,13 +2663,9 @@ body:not(.dark-mode) .tree-folder-header {
   border-bottom-color: var(--theme-border);
 }
 
-body:not(.dark-mode) .tree-folder-header h3 {
-  color: var(--theme-text);
-}
-
 body:not(.dark-mode) .tree-btn {
   background-color: var(--theme-surface);
-  border-color: var(--theme-border);
+  border-right-color: var(--theme-border);
   color: var(--theme-text);
 }
 
@@ -5147,4 +5190,30 @@ body:not(.dark-mode) .release-log-body::-webkit-scrollbar-thumb:hover {
 
 body:not(.dark-mode) .theme-swatch-name {
   color: #666;
+}
+
+/* Welcome message - empty state affirmation */
+.welcome-message {
+  grid-column: 1 / -1;
+  min-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--theme-text);
+  opacity: 0.45;
+  user-select: none;
+  pointer-events: none;
+}
+
+.welcome-message i {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+}
+
+.welcome-message p {
+  font-size: 1.1rem;
+  max-width: 400px;
+  line-height: 1.5;
 }

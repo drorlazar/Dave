@@ -64,6 +64,9 @@ UI.initializeUI().then(() => {
   AssetLoading.renderPage(UI.getCurrentPage());
   UI.updatePagination(Math.ceil(AssetLoading.filteredModelFiles.length / UI.getItemsPerPage()));
   UI.updateSelectionCount();
+
+  // Show welcome message in empty state
+  UI.showWelcomeMessage();
   
   // Initialize keyboard shortcuts
   const shortcutManager = new KeyboardShortcutManager();

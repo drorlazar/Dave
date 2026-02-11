@@ -30,7 +30,8 @@ import {
   fileMatchesSearch,
   getUIElements,
   initializeUI,
-  openCustomTextModal
+  openCustomTextModal,
+  showWelcomeMessage
 } from './ui.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -802,6 +803,11 @@ function renderPage(pageIndex) {
   });
   
   updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
+
+  // Show welcome message if no files loaded
+  if (modelFiles.length === 0) {
+    showWelcomeMessage();
+  }
 }
 
 async function showFullscreen(model) {
