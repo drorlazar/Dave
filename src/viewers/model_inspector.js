@@ -24,6 +24,8 @@ export class ModelInspectorPanel {
       skeleton: false, normals: false, bounds: false
     };
     this._currentBg = 'dark';
+    this._isFloating = false;
+    this._floatDragData = null;
 
     this._bindToolbarEvents();
     this._bindPanelEvents();
@@ -84,14 +86,38 @@ export class ModelInspectorPanel {
     if (this._disposed) return;
     this.isOpen = !this.isOpen;
     if (this.panel) this.panel.classList.toggle('open', this.isOpen);
-    if (this.toolbar) {
-      this.toolbar.classList.toggle('panel-open', this.isOpen);
-      if (this.isOpen) this.toolbar.style.right = (this._panelWidth + 20) + 'px';
-      else this.toolbar.style.right = '20px';
-    }
     const panelBtn = this.toolbar?.querySelector('[data-action="togglepanel"]');
     if (panelBtn) panelBtn.classList.toggle('active', this.isOpen);
     if (this.isOpen) this._populate();
+  }
+
+  _toggleFloat() {
+    if (!this.panel) return;
+    this._isFloating = !this._isFloating;
+    const floatBtn = this.panel.querySelector('.inspector-float-toggle i');
+
+    if (this._isFloating) {
+      // Switch to floating mode
+      this.panel.classList.add('floating');
+      // Position centered on screen
+      this.panel.style.left = 'calc(50% - 175px)';
+      this.panel.style.top = '10%';
+      this.panel.style.right = '';
+      if (floatBtn) floatBtn.className = 'fa fa-window-maximize'; // dock icon
+      this.panel.querySelector('.inspector-float-toggle')?.setAttribute('title', 'Dock panel');
+      const header = this.panel.querySelector('.inspector-header');
+      if (header) header.style.cursor = 'grab';
+    } else {
+      // Switch to docked mode
+      this.panel.classList.remove('floating');
+      this.panel.style.left = '';
+      this.panel.style.top = '';
+      this.panel.style.right = '';
+      if (floatBtn) floatBtn.className = 'fa fa-up-right-from-square'; // float icon
+      this.panel.querySelector('.inspector-float-toggle')?.setAttribute('title', 'Float / Dock panel');
+      const header = this.panel.querySelector('.inspector-header');
+      if (header) header.style.cursor = '';
+    }
   }
 
   _bindToolbarEvents() {
@@ -133,6 +159,8 @@ export class ModelInspectorPanel {
     const signal = this._abortController.signal;
     const closeBtn = this.panel.querySelector('.inspector-close');
     if (closeBtn) closeBtn.addEventListener('click', () => this.togglePanel(), { signal });
+    const floatBtn = this.panel.querySelector('.inspector-float-toggle');
+    if (floatBtn) floatBtn.addEventListener('click', () => this._toggleFloat(), { signal });
     this.panel.querySelectorAll('.inspector-section-header').forEach(header => {
       header.addEventListener('click', () => {
         header.closest('.inspector-section')?.classList.toggle('collapsed');
@@ -140,6 +168,41 @@ export class ModelInspectorPanel {
     });
     this.panel.addEventListener('click', (e) => e.stopPropagation(), { signal });
     this.toolbar?.addEventListener('click', (e) => e.stopPropagation(), { signal });
+
+    // Drag handler for floating panel (on header bar)
+    const header = this.panel.querySelector('.inspector-header');
+    if (header) {
+      header.addEventListener('mousedown', (e) => {
+        if (!this._isFloating) return;
+        // Don't drag if clicking a button
+        if (e.target.closest('button')) return;
+        e.preventDefault();
+        const rect = this.panel.getBoundingClientRect();
+        this._floatDragData = {
+          startX: e.clientX,
+          startY: e.clientY,
+          startLeft: rect.left,
+          startTop: rect.top
+        };
+        header.style.cursor = 'grabbing';
+
+        const onMove = (ev) => {
+          if (!this._floatDragData) return;
+          const dx = ev.clientX - this._floatDragData.startX;
+          const dy = ev.clientY - this._floatDragData.startY;
+          this.panel.style.left = (this._floatDragData.startLeft + dx) + 'px';
+          this.panel.style.top = (this._floatDragData.startTop + dy) + 'px';
+        };
+        const onUp = () => {
+          this._floatDragData = null;
+          header.style.cursor = '';
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      }, { signal });
+    }
   }
 
   _initPanelResize() {
@@ -160,9 +223,6 @@ export class ModelInspectorPanel {
         const newW = Math.max(250, Math.min(600, startW + dx));
         this._panelWidth = newW;
         this.panel.style.width = newW + 'px';
-        if (this.toolbar && this.isOpen) {
-          this.toolbar.style.right = (newW + 20) + 'px';
-        }
       };
       const onUp = () => {
         handle.classList.remove('dragging');
@@ -266,6 +326,7 @@ export class ModelInspectorPanel {
               ${colorHex ? `<span class="inspector-material-swatch" style="background:${colorHex}"></span>` : ''}
               <span class="inspector-material-name">${mat.name || `Material ${matIdx + 1}`}</span>
               <span class="inspector-material-type">${mat.type?.replace('Mesh', '').replace('Material', '') || ''}</span>
+              <button class="inspector-mat-edit-btn" data-mat-edit="${matIdx}" title="Open material editor"><i class="fa fa-pen"></i></button>
               <i class="fa fa-chevron-right inspector-material-collapse-icon"></i>
             </div>
             <div class="inspector-material-body">
@@ -331,8 +392,18 @@ export class ModelInspectorPanel {
 
       // Material collapse toggle
       container.querySelectorAll('[data-mat-toggle]').forEach(header => {
-        header.addEventListener('click', () => {
+        header.addEventListener('click', (e) => {
+          // Don't toggle if clicking edit button
+          if (e.target.closest('.inspector-mat-edit-btn')) return;
           header.closest('.inspector-material-item')?.classList.toggle('collapsed');
+        }, { signal });
+      });
+
+      // Material editor popup button
+      container.querySelectorAll('.inspector-mat-edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._openMaterialEditor(parseInt(btn.dataset.matEdit));
         }, { signal });
       });
 
@@ -386,7 +457,8 @@ export class ModelInspectorPanel {
       case 'opacity': {
         mat[prop] = parseFloat(el.value);
         const valSpan = el.nextElementSibling;
-        if (valSpan?.classList.contains('inspector-mat-range-val')) valSpan.textContent = parseFloat(el.value).toFixed(2);
+        if (valSpan?.classList.contains('inspector-mat-range-val') || valSpan?.classList.contains('me-val'))
+          valSpan.textContent = parseFloat(el.value).toFixed(2);
         if (prop === 'opacity' && mat.opacity < 1) { mat.transparent = true; }
         break;
       }
@@ -408,6 +480,345 @@ export class ModelInspectorPanel {
       alphaMap: 'Alpha', envMap: 'Env', lightMap: 'Light', displacementMap: 'Displace'
     };
     return names[type] || type;
+  }
+
+  // =========== MATERIAL EDITOR POPUP ===========
+
+  _openMaterialEditor(matIdx) {
+    // Save state before closing (for refresh preservation)
+    const _prevFloating = this._matEditorFloating;
+    const _prevPos = _prevFloating && this._matEditorPopup
+      ? { left: this._matEditorPopup.style.left, top: this._matEditorPopup.style.top } : null;
+    this._closeMaterialEditor();
+    this._matEditorFloating = _prevFloating; // restore after close reset
+
+    const materials = this.adapter.getAllMaterials?.() || [];
+    const mat = materials[matIdx];
+    if (!mat) return;
+
+    const isPBR = mat.type?.includes('Standard') || mat.type?.includes('Physical');
+    const colorHex = mat.color ? '#' + mat.color.getHexString() : '#ffffff';
+    const emissiveHex = mat.emissive ? '#' + mat.emissive.getHexString() : '#000000';
+
+    const slotNames = {
+      map: 'Diffuse', normalMap: 'Normal', roughnessMap: 'Roughness', metalnessMap: 'Metalness',
+      emissiveMap: 'Emissive', aoMap: 'AO', bumpMap: 'Bump', alphaMap: 'Alpha', specularMap: 'Specular'
+    };
+    const slotsToShow = isPBR
+      ? ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'alphaMap']
+      : ['map', 'normalMap', 'specularMap', 'emissiveMap', 'bumpMap', 'alphaMap'];
+
+    // Build compact texture rows (thumb + label + toggle + strength + drop + remove)
+    let slotsHtml = '';
+    for (const prop of slotsToShow) {
+      const tex = mat[prop];
+      const savedTex = mat[`_savedTex_${prop}`]; // texture toggled off but still saved
+      const activeTex = tex || savedTex;
+      const has = !!activeTex;
+      const isOn = !!tex; // currently active (not toggled off)
+      const thumbId = `mat-tex-thumb-${matIdx}-${prop}`;
+      const w = activeTex?.image?.width || activeTex?.image?.naturalWidth;
+      const h = activeTex?.image?.height || activeTex?.image?.naturalHeight;
+      const sizeStr = (w && h) ? `${w}x${h}` : '';
+      const strength = activeTex ? (activeTex._editorStrength ?? 1.0) : 1.0;
+
+      slotsHtml += `
+        <div class="me-tex-row${has ? '' : ' empty'}" data-slot="${prop}" data-mat-idx="${matIdx}">
+          <div class="me-tex-thumb" id="${thumbId}">${has ? '' : '<i class="fa fa-plus"></i>'}</div>
+          <div class="me-tex-info">
+            <span class="me-tex-label">${slotNames[prop] || prop}</span>
+            <span class="me-tex-size">${sizeStr}</span>
+          </div>
+          ${has ? `<label class="inspector-toggle me-tex-toggle"><input type="checkbox" ${isOn ? 'checked' : ''} data-tex-toggle="${prop}"><span class="inspector-toggle-slider"></span></label>
+          <input type="range" class="me-tex-strength" data-tex-strength="${prop}" min="0" max="2" step="0.05" value="${strength}" title="Strength"${!isOn ? ' disabled' : ''}>
+          <span class="me-tex-strength-val">${strength.toFixed(1)}</span>
+          <button class="me-tex-remove" data-remove-slot="${prop}" title="Remove"><i class="fa fa-times"></i></button>` : ''}
+          <input type="file" accept="image/*" class="me-tex-file" data-slot-input="${prop}" style="display:none">
+        </div>`;
+    }
+
+    const wasFloating = this._matEditorFloating;
+
+    const panel = document.createElement('div');
+    panel.className = wasFloating ? 'mat-editor-panel floating' : 'mat-editor-panel docked';
+    panel.id = 'matEditorPanel';
+    if (_prevPos) { panel.style.left = _prevPos.left; panel.style.top = _prevPos.top; }
+    panel.innerHTML = `
+      <div class="me-resize-handle"></div>
+      <div class="me-header"${wasFloating ? ' style="cursor:grab"' : ''}>
+        <span class="me-title"><i class="fa fa-palette"></i> ${mat.name || `Material ${matIdx + 1}`}</span>
+        <div class="me-header-actions">
+          <button class="me-float-btn" title="${wasFloating ? 'Dock to left' : 'Undock'}"><i class="fa fa-${wasFloating ? 'window-maximize' : 'up-right-from-square'}"></i></button>
+          <button class="me-close-btn" title="Close"><i class="fa fa-times"></i></button>
+        </div>
+      </div>
+      <div class="me-body">
+        <div class="me-props">
+          <div class="me-row"><label>Color</label><input type="color" value="${colorHex}" data-eprop="color"></div>
+          ${isPBR ? `<div class="me-row"><label>Rough</label><input type="range" min="0" max="1" step="0.01" value="${mat.roughness ?? 1}" data-eprop="roughness"><span class="me-val">${(mat.roughness ?? 1).toFixed(2)}</span></div>
+          <div class="me-row"><label>Metal</label><input type="range" min="0" max="1" step="0.01" value="${mat.metalness ?? 0}" data-eprop="metalness"><span class="me-val">${(mat.metalness ?? 0).toFixed(2)}</span></div>` : ''}
+          <div class="me-row"><label>Emissive</label><input type="color" value="${emissiveHex}" data-eprop="emissive"></div>
+          <div class="me-row"><label>Opacity</label><input type="range" min="0" max="1" step="0.01" value="${mat.opacity ?? 1}" data-eprop="opacity"><span class="me-val">${(mat.opacity ?? 1).toFixed(2)}</span></div>
+          <div class="me-row"><label>Side</label><select data-eprop="side"><option value="0" ${mat.side === 0 ? 'selected' : ''}>Front</option><option value="1" ${mat.side === 1 ? 'selected' : ''}>Back</option><option value="2" ${mat.side === 2 ? 'selected' : ''}>Double</option></select></div>
+          <div class="me-row"><label>Transp.</label><input type="checkbox" class="me-checkbox" ${mat.transparent ? 'checked' : ''} data-eprop="transparent"></div>
+        </div>
+        <div class="me-tex-title">Textures <span class="me-tex-hint">drop images onto rows</span></div>
+        <div class="me-tex-list">${slotsHtml}</div>
+      </div>`;
+
+    const overlay = document.getElementById('fullscreenOverlay');
+    (overlay || document.body).appendChild(panel);
+
+    // Draw thumbnails (use active or saved texture)
+    for (const prop of slotsToShow) {
+      const tex = mat[prop] || mat[`_savedTex_${prop}`];
+      if (tex?.image) this._drawTexThumb(`mat-tex-thumb-${matIdx}-${prop}`, tex.image);
+    }
+
+    // --- Events ---
+    const signal = this._abortController.signal;
+    panel.addEventListener('click', (e) => e.stopPropagation(), { signal });
+
+    panel.querySelector('.me-close-btn').addEventListener('click', () => this._closeMaterialEditor(), { signal });
+    panel.querySelector('.me-float-btn').addEventListener('click', () => this._toggleMatEditorFloat(), { signal });
+
+    // Right-edge resize handle (docked mode)
+    const resizeHandle = panel.querySelector('.me-resize-handle');
+    if (resizeHandle) {
+      resizeHandle.addEventListener('mousedown', (e) => {
+        if (panel.classList.contains('floating')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const startX = e.clientX;
+        const startW = panel.offsetWidth;
+        resizeHandle.classList.add('dragging');
+        const onMove = (ev) => {
+          const newW = Math.max(200, Math.min(500, startW + (ev.clientX - startX)));
+          panel.style.width = newW + 'px';
+        };
+        const onUp = () => {
+          resizeHandle.classList.remove('dragging');
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      }, { signal });
+    }
+
+    // Draggable header when floating
+    const header = panel.querySelector('.me-header');
+    header.addEventListener('mousedown', (e) => {
+      if (!panel.classList.contains('floating') || e.target.closest('button')) return;
+      e.preventDefault();
+      const rect = panel.getBoundingClientRect();
+      const sx = e.clientX, sy = e.clientY, sl = rect.left, st = rect.top;
+      header.style.cursor = 'grabbing';
+      const onMove = (ev) => {
+        panel.style.left = (sl + ev.clientX - sx) + 'px';
+        panel.style.top = (st + ev.clientY - sy) + 'px';
+      };
+      const onUp = () => {
+        header.style.cursor = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }, { signal });
+
+    // Property edits
+    panel.querySelectorAll('[data-eprop]').forEach(el => {
+      const handler = () => this._applyMaterialEdit(matIdx, el.dataset.eprop, el);
+      el.addEventListener('input', handler, { signal });
+      el.addEventListener('change', handler, { signal });
+    });
+
+    // Texture toggle on/off (per-material, not global)
+    panel.querySelectorAll('[data-tex-toggle]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const prop = cb.dataset.texToggle;
+        const row = cb.closest('.me-tex-row');
+        const strengthSlider = row?.querySelector('.me-tex-strength');
+        if (!cb.checked) {
+          if (mat[prop]) { mat[`_savedTex_${prop}`] = mat[prop]; mat[prop] = null; }
+          if (strengthSlider) strengthSlider.disabled = true;
+        } else {
+          const saved = mat[`_savedTex_${prop}`];
+          if (saved) { mat[prop] = saved; delete mat[`_savedTex_${prop}`]; }
+          if (strengthSlider) strengthSlider.disabled = false;
+        }
+        mat.needsUpdate = true;
+        this.adapter._requestRender?.();
+      }, { signal });
+    });
+
+    // Texture strength
+    panel.querySelectorAll('[data-tex-strength]').forEach(slider => {
+      slider.addEventListener('input', () => {
+        const prop = slider.dataset.texStrength;
+        const val = parseFloat(slider.value);
+        const valSpan = slider.nextElementSibling;
+        if (valSpan) valSpan.textContent = val.toFixed(1);
+        const tex = mat[prop];
+        if (!tex) return;
+        tex._editorStrength = val;
+        // Map strength to the appropriate Three.js property
+        if (prop === 'normalMap' && mat.normalScale) {
+          mat.normalScale.set(val, val);
+        } else if (prop === 'bumpMap') {
+          mat.bumpScale = val;
+        } else if (prop === 'displacementMap') {
+          mat.displacementScale = val;
+        } else if (prop === 'aoMap') {
+          mat.aoMapIntensity = val;
+        } else if (prop === 'emissiveMap') {
+          mat.emissiveIntensity = val;
+        } else if (prop === 'lightMap') {
+          mat.lightMapIntensity = val;
+        } else if (prop === 'roughnessMap') {
+          // roughness scalar multiplies the roughnessMap in the shader
+          if (mat._baseRoughness === undefined) mat._baseRoughness = mat.roughness ?? 1;
+          mat.roughness = Math.min(1, mat._baseRoughness * val);
+        } else if (prop === 'metalnessMap') {
+          if (mat._baseMetalness === undefined) mat._baseMetalness = mat.metalness ?? 0;
+          mat.metalness = Math.min(1, mat._baseMetalness * val);
+        } else if (prop === 'alphaMap') {
+          if (mat._baseOpacity === undefined) mat._baseOpacity = mat.opacity ?? 1;
+          mat.opacity = Math.min(1, mat._baseOpacity * val);
+          if (mat.opacity < 1) mat.transparent = true;
+        } else if (prop === 'map' && mat.color) {
+          // color multiplies the diffuse map; scale toward white (full texture) or black (no texture)
+          if (!mat._baseColor) mat._baseColor = mat.color.clone();
+          mat.color.copy(mat._baseColor).multiplyScalar(Math.min(val, 1));
+          // For strength > 1, keep at original color (saturated)
+          if (val > 1) mat.color.copy(mat._baseColor);
+        }
+        mat.needsUpdate = true;
+        this.adapter._requestRender?.();
+      }, { signal });
+    });
+
+    // Thumb click -> file picker
+    panel.querySelectorAll('.me-tex-thumb').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        const row = thumb.closest('.me-tex-row');
+        row?.querySelector('.me-tex-file')?.click();
+      }, { signal });
+    });
+
+    // File input
+    panel.querySelectorAll('.me-tex-file').forEach(input => {
+      input.addEventListener('change', () => {
+        if (input.files?.[0]) this._loadTextureToSlot(matIdx, input.dataset.slotInput, input.files[0]);
+      }, { signal });
+    });
+
+    // Remove buttons
+    panel.querySelectorAll('[data-remove-slot]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._removeTextureFromSlot(matIdx, btn.dataset.removeSlot);
+      }, { signal });
+    });
+
+    // Drag & drop on rows
+    panel.querySelectorAll('.me-tex-row').forEach(row => {
+      row.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); row.classList.add('drag-over'); }, { signal });
+      row.addEventListener('dragleave', () => row.classList.remove('drag-over'), { signal });
+      row.addEventListener('drop', (e) => {
+        e.preventDefault(); e.stopPropagation(); row.classList.remove('drag-over');
+        const file = e.dataTransfer?.files?.[0];
+        if (file?.type.startsWith('image/')) this._loadTextureToSlot(matIdx, row.dataset.slot, file);
+      }, { signal });
+    });
+
+    this._matEditorPopup = panel;
+    this._matEditorIdx = matIdx;
+    // Keep floating state if it was already floating (refresh preserves state)
+    if (!wasFloating) this._matEditorFloating = false;
+  }
+
+  _toggleMatEditorFloat() {
+    const panel = this._matEditorPopup;
+    if (!panel) return;
+    this._matEditorFloating = !this._matEditorFloating;
+    const icon = panel.querySelector('.me-float-btn i');
+
+    if (this._matEditorFloating) {
+      panel.classList.remove('docked');
+      panel.classList.add('floating');
+      panel.style.left = 'calc(50% - 160px)';
+      panel.style.top = '12%';
+      if (icon) icon.className = 'fa fa-window-maximize';
+      panel.querySelector('.me-float-btn')?.setAttribute('title', 'Dock to left');
+      panel.querySelector('.me-header').style.cursor = 'grab';
+    } else {
+      panel.classList.remove('floating');
+      panel.classList.add('docked');
+      panel.style.left = '';
+      panel.style.top = '';
+      if (icon) icon.className = 'fa fa-up-right-from-square';
+      panel.querySelector('.me-float-btn')?.setAttribute('title', 'Undock');
+      panel.querySelector('.me-header').style.cursor = '';
+    }
+  }
+
+  _closeMaterialEditor() {
+    if (this._matEditorPopup) {
+      this._matEditorPopup.remove();
+      this._matEditorPopup = null;
+      this._matEditorIdx = null;
+      this._matEditorFloating = false;
+    }
+  }
+
+  _drawTexThumb(elementId, image) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.innerHTML = '';
+    const c = document.createElement('canvas');
+    c.width = 40; c.height = 40;
+    try { c.getContext('2d').drawImage(image, 0, 0, 40, 40); } catch {}
+    el.appendChild(c);
+  }
+
+  async _loadTextureToSlot(matIdx, slotProp, file) {
+    const materials = this.adapter.getAllMaterials?.() || [];
+    const mat = materials[matIdx];
+    if (!mat) return;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      import('three').then(three => {
+        const texture = new three.Texture(img);
+        texture.flipY = true;
+        texture.needsUpdate = true;
+        texture.name = file.name;
+        texture._editorStrength = 1.0;
+        mat[slotProp] = texture;
+        mat.needsUpdate = true;
+        this.adapter._requestRender?.();
+        // Refresh the editor to show new texture
+        this._openMaterialEditor(matIdx);
+        this._populateMaterials();
+      });
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  _removeTextureFromSlot(matIdx, slotProp) {
+    const materials = this.adapter.getAllMaterials?.() || [];
+    const mat = materials[matIdx];
+    if (!mat) return;
+    mat[slotProp] = null;
+    delete mat[`_savedTex_${slotProp}`]; // also clear any toggled-off reference
+    mat.needsUpdate = true;
+    this.adapter._requestRender?.();
+    // Refresh the editor
+    this._openMaterialEditor(matIdx);
+    this._populateMaterials();
   }
 
   // =========== ANIMATIONS (bottom bar + panel info) ===========
@@ -832,9 +1243,9 @@ export class ModelInspectorPanel {
           const idx = parseInt(clickEvent?.target?.closest('[data-anim-idx]')?.dataset?.animIdx ?? '0');
           const clips = this.adapter.getAnimationClips?.() || [];
           if (clips[idx]) {
-            setStatus(`Exporting "${clips[idx].name}"...`);
-            await this._doExport({ stripTextures: false, forceAnims: [clips[idx]] });
-            setStatus('Animation exported!');
+            setStatus(`Exporting animation "${clips[idx].name}" (rig only)...`);
+            await this._doExport({ animOnly: true, forceAnims: [clips[idx]] });
+            setStatus('Animation exported (rig only)!');
           }
           break;
         }
@@ -864,7 +1275,8 @@ export class ModelInspectorPanel {
   }
 
   // Unified export that applies texture resize + simplify + animation selection
-  async _doExport({ stripTextures = false, forceAnims = undefined } = {}) {
+  // animOnly: export only skeleton/rig + animations, no mesh geometry
+  async _doExport({ stripTextures = false, forceAnims = undefined, animOnly = false } = {}) {
     const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
     const root = this.adapter.getModelRoot();
     if (!root) throw new Error('No model loaded');
@@ -892,6 +1304,14 @@ export class ModelInspectorPanel {
 
     // 0. If no animations selected, reset skeleton to bind pose (prevents squashed export)
     if (animations.length === 0) {
+      // Pause animation to prevent mixer from overwriting bones during export
+      const wasPlaying = this.adapter.isPlaying?.();
+      if (wasPlaying) {
+        this.adapter.togglePlayback?.();
+        // Wait 2 frames for the pause to propagate through the animation system
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      }
+
       const meshes = this.adapter.getAllMeshes?.() || [];
       for (const mesh of meshes) {
         if (mesh.isSkinnedMesh && mesh.skeleton) {
@@ -902,14 +1322,17 @@ export class ModelInspectorPanel {
             rot: bone.quaternion.clone(),
             scale: bone.scale.clone()
           }));
-          // Reset to bind pose
+          // Reset to bind pose and update bone matrices
           mesh.skeleton.pose();
+          mesh.skeleton.update();
           restorers.push(() => {
             savedBones.forEach(({ bone, pos, rot, scale }) => {
               bone.position.copy(pos);
               bone.quaternion.copy(rot);
               bone.scale.copy(scale);
             });
+            // Resume playback if it was playing before
+            if (wasPlaying) this.adapter.togglePlayback?.();
           });
         }
       }
@@ -917,8 +1340,28 @@ export class ModelInspectorPanel {
       root.updateMatrixWorld(true);
     }
 
+    // 0b. If animOnly, remove all mesh nodes (keep only bone hierarchy)
+    if (animOnly) {
+      const removedMeshes = [];
+      // Collect meshes first, then remove (can't modify tree during traversal)
+      root.traverse(child => {
+        if (child.isMesh || child.isSkinnedMesh) {
+          removedMeshes.push({ mesh: child, parent: child.parent });
+        }
+      });
+      removedMeshes.forEach(({ mesh, parent }) => {
+        if (parent) parent.remove(mesh);
+      });
+      restorers.push(() => {
+        removedMeshes.forEach(({ mesh, parent }) => {
+          if (parent) parent.add(mesh);
+        });
+        this.adapter._requestRender?.();
+      });
+    }
+
     // 1. Texture resize
-    if (texSize > 0) {
+    if (texSize > 0 && !animOnly) {
       const materials = this.adapter.getAllMaterials?.() || [];
       const processed = new Set();
       for (const mat of materials) {
@@ -944,7 +1387,7 @@ export class ModelInspectorPanel {
     }
 
     // 2. Strip textures
-    if (stripTextures) {
+    if (stripTextures && !animOnly) {
       const materials = this.adapter.getAllMaterials?.() || [];
       for (const mat of materials) {
         for (const prop of TEX_PROPS) {
@@ -959,7 +1402,7 @@ export class ModelInspectorPanel {
     }
 
     // 3. Simplify geometry
-    if (simplifyRatio < 1) {
+    if (simplifyRatio < 1 && !animOnly) {
       try {
         const { SimplifyModifier } = await import('three/addons/modifiers/SimplifyModifier.js');
         const { BufferGeometryUtils } = await import('three/addons/utils/BufferGeometryUtils.js');
@@ -999,9 +1442,13 @@ export class ModelInspectorPanel {
 
     // --- Download ---
     const suffix = [];
-    if (texSize > 0) suffix.push(`${texSize}px`);
-    if (simplifyRatio < 1) suffix.push(`${Math.round(simplifyRatio * 100)}pct`);
-    if (stripTextures) suffix.push('notex');
+    if (animOnly && forceAnims?.length) {
+      const clipName = (forceAnims[0].name || 'animation').replace(/[^a-zA-Z0-9_-]/g, '_');
+      suffix.push(`anim_${clipName}`);
+    }
+    if (texSize > 0 && !animOnly) suffix.push(`${texSize}px`);
+    if (simplifyRatio < 1 && !animOnly) suffix.push(`${Math.round(simplifyRatio * 100)}pct`);
+    if (stripTextures && !animOnly) suffix.push('notex');
     const name = this._getModelName() + (suffix.length ? '_' + suffix.join('_') : '') + '.glb';
 
     const blob = new Blob([result], { type: 'application/octet-stream' });
@@ -1108,6 +1555,7 @@ export class ModelInspectorPanel {
     if (this._disposed) return;
     this._disposed = true;
     this._stopAnimPolling();
+    this._closeMaterialEditor();
     this._abortController.abort();
     this._hide();
 
@@ -1124,8 +1572,13 @@ export class ModelInspectorPanel {
     }
 
     this.toolbar?.querySelectorAll('.model-toolbar-btn.active').forEach(btn => btn.classList.remove('active'));
-    if (this.panel) this.panel.style.width = '';
-    if (this.toolbar) this.toolbar.style.right = '';
+    if (this.panel) {
+      this.panel.style.width = '';
+      this.panel.classList.remove('floating');
+      this.panel.style.left = '';
+      this.panel.style.top = '';
+    }
+    this._isFloating = false;
     this._exportEventsBound = false;
     this.adapter = null;
   }

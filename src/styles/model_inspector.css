@@ -3,27 +3,24 @@
    Floating toolbar + slide-in panel for fullscreen 3D models
    ============================================================ */
 
-/* --- Floating Toolbar (right side) --- */
+/* --- Floating Toolbar (inside preview, top-right) --- */
 .model-toolbar {
-  position: fixed;
-  top: 80px;
-  right: 20px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  z-index: 1003;
+  z-index: 10;
   background: rgba(0, 0, 0, 0.7);
   padding: 8px;
   border-radius: 8px;
   backdrop-filter: blur(8px);
-  transition: right 0.3s ease;
 }
 
-/* .panel-open right is set dynamically via JS for resize support */
-
 .model-toolbar-btn {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: transparent;
@@ -32,7 +29,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 18px;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   position: relative;
 }
@@ -77,6 +74,7 @@
 
 /* --- Fullscreen Viewer Wrapper (for anim bar placement) --- */
 #fullscreenViewerWrap {
+  position: relative;
   width: 50%;
   height: 75%;
   max-width: 50%;
@@ -269,6 +267,30 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* --- Floating Panel Mode --- */
+.model-inspector-panel.floating {
+  transform: none;
+  border-radius: 8px;
+  border: 1px solid #444;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  resize: both;
+  overflow: auto;
+  height: 70vh;
+  width: 350px;
+}
+
+.model-inspector-panel.floating:not(.open) {
+  display: none;
+}
+
+.model-inspector-panel.floating .inspector-header {
+  cursor: grab;
+}
+
+.model-inspector-panel.floating .inspector-resize-handle {
+  display: none;
+}
+
 /* --- Panel Header --- */
 .inspector-header {
   display: flex;
@@ -277,6 +299,31 @@
   padding: 14px 16px;
   border-bottom: 1px solid #333;
   flex-shrink: 0;
+}
+
+.inspector-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inspector-float-toggle {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.inspector-float-toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .inspector-title {
@@ -1211,6 +1258,397 @@
   font-size: 12px;
 }
 
+/* --- Material Editor Panel (docked left / floating) --- */
+.mat-editor-panel {
+  position: fixed;
+  z-index: 1004;
+  background: rgba(26, 26, 26, 0.95);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.mat-editor-panel.docked {
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  border-right: 1px solid #333;
+}
+
+.me-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 2;
+  transition: background 0.15s;
+}
+
+.me-resize-handle:hover,
+.me-resize-handle.dragging {
+  background: rgba(155, 119, 255, 0.4);
+}
+
+.mat-editor-panel.floating .me-resize-handle {
+  display: none;
+}
+
+.mat-editor-panel.floating {
+  width: 300px;
+  height: auto;
+  max-height: 80vh;
+  border-radius: 8px;
+  border: 1px solid #444;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  resize: both;
+  overflow: auto;
+}
+
+.mat-editor-panel.floating .me-header {
+  cursor: grab;
+}
+
+.me-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.me-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.me-title i { color: #9b77ff; font-size: 12px; }
+
+.me-header-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.me-float-btn,
+.me-close-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.me-float-btn:hover,
+.me-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.me-body {
+  padding: 8px 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.me-body::-webkit-scrollbar { width: 5px; }
+.me-body::-webkit-scrollbar-track { background: transparent; }
+.me-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.me-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* --- Material properties (compact grid) --- */
+.me-props {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.me-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+}
+
+.me-row label {
+  font-size: 10px;
+  color: #888;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.me-row input[type="color"] {
+  width: 28px;
+  height: 20px;
+  border: 1px solid #444;
+  border-radius: 3px;
+  background: transparent;
+  padding: 1px;
+  cursor: pointer;
+}
+
+.me-row input[type="range"] {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 3px;
+  background: #444;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.me-row input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #9b77ff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.me-row input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #9b77ff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.me-row select {
+  background: #2a2a2a;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 10px;
+  cursor: pointer;
+  outline: none;
+}
+
+.me-checkbox {
+  width: 14px;
+  height: 14px;
+  accent-color: #9b77ff;
+  cursor: pointer;
+}
+
+.me-val {
+  font-size: 10px;
+  color: #9b77ff;
+  min-width: 26px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Texture section --- */
+.me-tex-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 6px 0 3px;
+  border-top: 1px solid #2a2a2a;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.me-tex-hint {
+  font-size: 9px;
+  color: #555;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.me-tex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Texture row: thumb | label+size | toggle | strength slider | val | remove */
+.me-tex-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px dashed transparent;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 36px;
+}
+
+.me-tex-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.me-tex-row.empty {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.me-tex-row.empty:hover {
+  opacity: 0.8;
+  border-color: #9b77ff;
+  background: rgba(155, 119, 255, 0.04);
+}
+
+.me-tex-row.drag-over {
+  border-color: #9b77ff;
+  border-style: solid;
+  background: rgba(155, 119, 255, 0.1);
+}
+
+.me-tex-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 3px;
+  background: #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.me-tex-thumb canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.me-tex-thumb i {
+  color: #555;
+  font-size: 11px;
+}
+
+.me-tex-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 50px;
+  flex-shrink: 0;
+}
+
+.me-tex-label {
+  font-size: 10px;
+  color: #aaa;
+  font-weight: 600;
+}
+
+.me-tex-size {
+  font-size: 8px;
+  color: #666;
+  font-variant-numeric: tabular-nums;
+}
+
+.me-tex-toggle {
+  flex-shrink: 0;
+}
+
+.me-tex-strength {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 3px;
+  background: #444;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  min-width: 40px;
+  max-width: 60px;
+}
+
+.me-tex-strength::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  background: #9b77ff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.me-tex-strength::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: #9b77ff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.me-tex-strength:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.me-tex-strength-val {
+  font-size: 9px;
+  color: #9b77ff;
+  min-width: 20px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.me-tex-remove {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.me-tex-remove:hover {
+  color: #f88;
+}
+
+.inspector-mat-edit-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.inspector-mat-edit-btn:hover {
+  color: #9b77ff;
+  background: rgba(155, 119, 255, 0.1);
+}
+
 /* --- Light Mode Overrides --- */
 body:not(.dark-mode) .model-toolbar {
   background: rgba(255, 255, 255, 0.85);
@@ -1531,6 +1969,11 @@ body:not(.dark-mode) .inspector-resize-handle.dragging {
   background: rgba(155, 119, 255, 0.2);
 }
 
+body:not(.dark-mode) .me-resize-handle:hover,
+body:not(.dark-mode) .me-resize-handle.dragging {
+  background: rgba(155, 119, 255, 0.2);
+}
+
 body:not(.dark-mode) .model-inspector-panel::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.1);
 }
@@ -1567,4 +2010,143 @@ body:not(.dark-mode) .model-anim-bar-scrubber {
 
 body:not(.dark-mode) .model-anim-bar-time {
   color: #999;
+}
+
+body:not(.dark-mode) .inspector-float-toggle {
+  color: #999;
+}
+
+body:not(.dark-mode) .inspector-float-toggle:hover {
+  color: #333;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body:not(.dark-mode) .model-inspector-panel.floating {
+  border-color: #ddd;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+body:not(.dark-mode) .mat-editor-panel {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+body:not(.dark-mode) .mat-editor-panel.docked {
+  border-right-color: #ddd;
+}
+
+body:not(.dark-mode) .mat-editor-panel.floating {
+  border-color: #ddd;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+body:not(.dark-mode) .me-header {
+  border-bottom-color: #eee;
+}
+
+body:not(.dark-mode) .me-title {
+  color: #333;
+}
+
+body:not(.dark-mode) .me-float-btn,
+body:not(.dark-mode) .me-close-btn {
+  color: #999;
+}
+
+body:not(.dark-mode) .me-float-btn:hover,
+body:not(.dark-mode) .me-close-btn:hover {
+  color: #333;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body:not(.dark-mode) .me-row label {
+  color: #999;
+}
+
+body:not(.dark-mode) .me-row input[type="color"] {
+  border-color: #ddd;
+}
+
+body:not(.dark-mode) .me-row input[type="range"] {
+  background: #ddd;
+}
+
+body:not(.dark-mode) .me-row select {
+  background: #f5f5f5;
+  color: #333;
+  border-color: #ddd;
+}
+
+body:not(.dark-mode) .me-val {
+  color: #7c5ccc;
+}
+
+body:not(.dark-mode) .me-tex-title {
+  color: #999;
+  border-top-color: #eee;
+}
+
+body:not(.dark-mode) .me-tex-hint {
+  color: #bbb;
+}
+
+body:not(.dark-mode) .me-tex-row:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body:not(.dark-mode) .me-tex-row.empty:hover {
+  border-color: #9b77ff;
+  background: rgba(155, 119, 255, 0.04);
+}
+
+body:not(.dark-mode) .me-tex-row.drag-over {
+  background: rgba(155, 119, 255, 0.08);
+}
+
+body:not(.dark-mode) .me-tex-thumb {
+  background: #f0f0f0;
+}
+
+body:not(.dark-mode) .me-tex-thumb i {
+  color: #bbb;
+}
+
+body:not(.dark-mode) .me-tex-label {
+  color: #666;
+}
+
+body:not(.dark-mode) .me-tex-size {
+  color: #999;
+}
+
+body:not(.dark-mode) .me-tex-strength {
+  background: #ddd;
+}
+
+body:not(.dark-mode) .me-tex-strength-val {
+  color: #7c5ccc;
+}
+
+body:not(.dark-mode) .me-tex-remove {
+  color: #bbb;
+}
+
+body:not(.dark-mode) .me-tex-remove:hover {
+  color: #e55;
+}
+
+body:not(.dark-mode) .me-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode) .me-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body:not(.dark-mode) .inspector-mat-edit-btn {
+  color: #bbb;
+}
+
+body:not(.dark-mode) .inspector-mat-edit-btn:hover {
+  color: #7c5ccc;
+  background: rgba(155, 119, 255, 0.06);
 }

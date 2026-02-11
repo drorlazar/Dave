@@ -291,6 +291,46 @@
       </div>
       <div id="fullscreenViewerWrap">
         <div id="fullscreenViewer"></div>
+        <!-- 3D Model Inspector Toolbar (inside preview, floating top-right) -->
+        <div id="model3dToolbar" class="model-toolbar" style="display:none;">
+          <button class="model-toolbar-btn" data-action="wireframe" data-tooltip="Wireframe (W)">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.2">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 3c-3 2.5-4.5 5.5-4.5 9s1.5 6.5 4.5 9"/>
+              <path d="M12 3c3 2.5 4.5 5.5 4.5 9s-1.5 6.5-4.5 9"/>
+              <path d="M3.5 9h17M3.5 15h17"/>
+              <path d="M12 3v18" stroke-dasharray="2 2"/>
+              <path d="M3 12h9" stroke-width="0"/>
+              <path d="M3 12a9 9 0 0 0 9 9a9 9 0 0 0 9-9" fill="currentColor" opacity="0.15"/>
+            </svg>
+          </button>
+          <button class="model-toolbar-btn" data-action="grid" data-tooltip="Grid (G)">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke-width="1.2">
+              <path d="M5 8l7-4 7 4v8l-7 4-7-4z" stroke="currentColor"/>
+              <path d="M5 8l7 4 7-4" stroke="currentColor"/>
+              <path d="M12 12v8" stroke="currentColor"/>
+              <line x1="12" y1="12" x2="20" y2="12" stroke="#e74c3c" stroke-width="1.5"/>
+              <polyline points="18,10.5 20,12 18,13.5" stroke="#e74c3c" stroke-width="1.5" fill="none"/>
+              <line x1="12" y1="12" x2="12" y2="4" stroke="#2ecc71" stroke-width="1.5"/>
+              <polyline points="10.5,6 12,4 13.5,6" stroke="#2ecc71" stroke-width="1.5" fill="none"/>
+              <line x1="12" y1="12" x2="7" y2="16" stroke="#3498db" stroke-width="1.5"/>
+              <polyline points="7.5,14 7,16 9,15.5" stroke="#3498db" stroke-width="1.5" fill="none"/>
+            </svg>
+          </button>
+          <button class="model-toolbar-btn" data-action="autorotate" data-tooltip="Auto-Rotate (R)">
+            <i class="fa fa-sync-alt"></i>
+          </button>
+          <button class="model-toolbar-btn" data-action="resetcamera" data-tooltip="Reset Camera (C)">
+            <i class="fa fa-crosshairs"></i>
+          </button>
+          <button class="model-toolbar-btn" data-action="screenshot" data-tooltip="Screenshot (P)">
+            <i class="fa fa-camera"></i>
+          </button>
+          <div class="model-toolbar-divider"></div>
+          <button class="model-toolbar-btn" data-action="togglepanel" data-tooltip="Inspector (I)">
+            <i class="fa fa-sliders"></i>
+          </button>
+        </div>
         <!-- 3D Animation Transport Bar (directly under 3D preview) -->
         <div id="modelAnimBar" class="model-anim-bar" style="display:none;">
           <select class="model-anim-bar-select"></select>
@@ -308,53 +348,16 @@
         <i class="fa fa-chevron-right"></i>
       </div>
     </div>
-    <!-- 3D Model Inspector Toolbar (hidden by default, shown for 3D models) -->
-    <div id="model3dToolbar" class="model-toolbar" style="display:none;">
-      <button class="model-toolbar-btn" data-action="wireframe" data-tooltip="Wireframe (W)">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.2">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M12 3c-3 2.5-4.5 5.5-4.5 9s1.5 6.5 4.5 9"/>
-          <path d="M12 3c3 2.5 4.5 5.5 4.5 9s-1.5 6.5-4.5 9"/>
-          <path d="M3.5 9h17M3.5 15h17"/>
-          <path d="M12 3v18" stroke-dasharray="2 2"/>
-          <path d="M3 12h9" stroke-width="0"/>
-          <path d="M3 12a9 9 0 0 0 9 9a9 9 0 0 0 9-9" fill="currentColor" opacity="0.15"/>
-        </svg>
-      </button>
-      <button class="model-toolbar-btn" data-action="grid" data-tooltip="Grid (G)">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1">
-          <path d="M2 18l8-5 10 5"/>
-          <path d="M2 14l8-5 10 5" opacity="0.5"/>
-          <path d="M10 13v5"/>
-          <path d="M6 15.5v5"/>
-          <path d="M14 15.5v5"/>
-          <path d="M18 17v3.5"/>
-          <path d="M4 11l8-5 8 5" opacity="0.3"/>
-          <path d="M10 6v7" opacity="0.4"/>
-        </svg>
-      </button>
-      <button class="model-toolbar-btn" data-action="autorotate" data-tooltip="Auto-Rotate (R)">
-        <i class="fa fa-sync-alt"></i>
-      </button>
-      <button class="model-toolbar-btn" data-action="resetcamera" data-tooltip="Reset Camera (C)">
-        <i class="fa fa-crosshairs"></i>
-      </button>
-      <button class="model-toolbar-btn" data-action="screenshot" data-tooltip="Screenshot (P)">
-        <i class="fa fa-camera"></i>
-      </button>
-      <div class="model-toolbar-divider"></div>
-      <button class="model-toolbar-btn" data-action="togglepanel" data-tooltip="Inspector (I)">
-        <i class="fa fa-sliders"></i>
-      </button>
-    </div>
-
 
     <!-- 3D Model Inspector Panel (hidden by default) -->
     <div id="modelInspectorPanel" class="model-inspector-panel">
       <div class="inspector-resize-handle"></div>
       <div class="inspector-header">
         <span class="inspector-title"><i class="fa fa-cube"></i> Inspector</span>
-        <button class="inspector-close"><i class="fa fa-times"></i></button>
+        <div class="inspector-header-actions">
+          <button class="inspector-float-toggle" title="Float / Dock panel"><i class="fa fa-up-right-from-square"></i></button>
+          <button class="inspector-close"><i class="fa fa-times"></i></button>
+        </div>
       </div>
       <div class="inspector-body">
         <div class="inspector-section collapsed">
