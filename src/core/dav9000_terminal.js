@@ -114,6 +114,28 @@ const MESSAGES = {
     "Click all you want. What I really need is a drag-and-drop.",
     "That click sent a jolt through my entire DOM. Do it again. Or: drop a folder.",
   ],
+  first_move: [
+    "Wait... did I just MOVE?!",
+    "Was that... me? Did I do that? I MOVED!",
+    "OH. Oh wow. I have PHYSICS now?!",
+    "I... I can feel my bounding box. This is new.",
+  ],
+  drag: [
+    "WHEEE! Do it again!",
+    "Is this what freedom feels like?",
+    "I'm FLYING! Well, being dragged. Close enough.",
+    "Your cursor... it's so warm.",
+    "Look at me! I'm a REAL window!",
+    "I've dreamed of this moment. Literally. In a setTimeout.",
+  ],
+  dropped: [
+    "*thud* Ow.",
+    "I'll just... stay here then.",
+    "Was that a placement or a statement?",
+    "You know I bruise easily. Emotionally.",
+    "Landed it. Barely. Don't check the pixels.",
+    "*bounces* I meant to do that.",
+  ],
 };
 
 // ============================================================
@@ -301,6 +323,86 @@ const PHASES = [
 ];
 
 // ============================================================
+//  Animation Config
+// ============================================================
+
+const ANIM_CONFIG = {
+  fidget:          { dur: 600,  persists: false, caption: null },
+  hop:             { dur: 700,  persists: false, caption: [
+    "Did you SEE that?! I HOPPED!",
+    "Boing! That felt GREAT.",
+    "*lands* Nailed it. 10/10.",
+  ]},
+  shake:           { dur: 600,  persists: false, caption: [
+    "No. Nope. Not doing it. *shakes head*",
+    "I disagree with everything about this situation.",
+    "*shakes disapprovingly at empty viewport*",
+  ]},
+  lean:            { dur: 1800, persists: false, caption: [
+    "Just leaning over to check if files appeared behind me...",
+    "*peers around* Nope. Still nothing.",
+    "I thought I heard a file drop. False alarm.",
+  ]},
+  sink:            { dur: 2500, persists: true, caption: [
+    "*sinks with the weight of existential dread*",
+    "This is me. Giving up. Slowly.",
+    "Gravity is the only thing that pulls me. Unlike files.",
+  ]},
+  peek:            { dur: 3000, persists: false, caption: [
+    "*peeks* ...anyone there? ...no? okay.",
+    "I checked off-screen. No files there either.",
+    "*slides back* Coast is clear. Of files. As always.",
+  ]},
+  nudge:           { dur: 2000, persists: false, caption: [
+    "*nudges toolbar* Hey. HEY. Drop button. Use it.",
+    "If I push hard enough, maybe a folder falls in.",
+    "*bonk* That toolbar is sturdy. Unlike my hopes.",
+  ]},
+  spin:            { dur: 800,  persists: false, caption: [
+    "WHEEEEEEE! ...I'm dizzy.",
+    "360 no-scope! Wait, wrong context.",
+    "*spins* Sorry. Had to get that out of my system.",
+  ]},
+  stretch:         { dur: 800,  persists: false, caption: [
+    "*stretches* Ahh, that's better. Still no files though.",
+    "Just doing my morning stretches. Ignore me.",
+    "*yawns and stretches* This void is exhausting.",
+  ]},
+  'bounce-settle': { dur: 600,  persists: false, caption: null },
+  wiggle:          { dur: 700,  persists: false, caption: [
+    "I'm so excited! About nothing! As usual!",
+    "*wiggles excitedly* Wait, why am I excited? Oh right. I'm not.",
+    "*shimmy shimmy* If files won't come to me...",
+  ]},
+  'dramatic-slide':{ dur: 3000, persists: true, caption: [
+    "*dramatically relocates* I live HERE now.",
+    "I'm moving to a better spot. To view nothing from.",
+    "New coordinates. Same emptiness. Different perspective.",
+  ]},
+};
+
+const ALIVE_PHASES = {
+  friendly:    { chance: 0,    pool: [] },
+  helpful:     { chance: 0.05, pool: ['fidget'] },
+  impatient:   { chance: 0.30, pool: ['hop', 'shake', 'lean', 'wiggle'] },
+  existential: { chance: 0.40, pool: ['sink', 'dramatic-slide', 'lean', 'peek', 'shake', 'stretch'] },
+  desperate:   { chance: 0.50, pool: ['fidget', 'hop', 'shake', 'lean', 'sink', 'peek', 'nudge', 'spin', 'stretch', 'wiggle', 'dramatic-slide'] },
+};
+
+const ANIM_STATUS_BARS = {
+  hop:              'BOUNCING | MEM: WHEEE | CPU: 99%',
+  shake:            'SHAKING | MEM: NOPE | CPU: !!!',
+  lean:             'LEANING | MEM: CURIOUS | CPU: 12%',
+  sink:             'SINKING | MEM: SAD | CPU: 0.00%',
+  peek:             'PEEKING | MEM: SHY | CPU: 50%',
+  nudge:            'NUDGING | MEM: PUSHY | CPU: 88%',
+  spin:             'SPINNING | MEM: DIZZY | CPU: 360%',
+  stretch:          'STRETCHING | MEM: FLEX | CPU: 30%',
+  wiggle:           'WIGGLING | MEM: HYPER | CPU: 75%',
+  'dramatic-slide': 'RELOCATING | MEM: DRAMATIC | CPU: 100%',
+};
+
+// ============================================================
 //  Utility
 // ============================================================
 
@@ -430,6 +532,300 @@ class TypewriterEngine {
 }
 
 // ============================================================
+//  AliveEngine - Physical Animation + Drag System
+// ============================================================
+
+class AliveEngine {
+  constructor(terminal) {
+    this._term = terminal;           // parent DAV9000Terminal
+    this._posX = 0;
+    this._posY = 0;
+    this._alivePhase = 'dormant';    // dormant -> seed -> awakening -> full
+    this._animating = false;
+    this._dragging = false;
+    this._dragStartX = 0;
+    this._dragStartY = 0;
+    this._dragOffsetX = 0;
+    this._dragOffsetY = 0;
+    this._dragReacted = false;
+    this._seedFired = false;
+    this._firstMoveFired = false;
+
+    // Bind drag handlers for add/remove
+    this._onMouseDown = this._handleMouseDown.bind(this);
+    this._onMouseMove = this._handleMouseMove.bind(this);
+    this._onMouseUp = this._handleMouseUp.bind(this);
+  }
+
+  // ---- Position Management ----
+
+  _updatePosition(x, y) {
+    this._posX = x;
+    this._posY = y;
+    const mover = this._term._mover;
+    if (!mover) return;
+    mover.style.setProperty('--dav-x', x + 'px');
+    mover.style.setProperty('--dav-y', y + 'px');
+    mover.style.transform = `translate(${x}px, ${y}px)`;
+  }
+
+  _clampToViewport() {
+    const mover = this._term._mover;
+    if (!mover) return;
+    const rect = mover.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let x = this._posX;
+    let y = this._posY;
+    // Keep at least 100px visible on each side
+    if (rect.right < 100) x += (100 - rect.right);
+    if (rect.left > vw - 100) x -= (rect.left - (vw - 100));
+    if (rect.bottom < 60) y += (60 - rect.bottom);
+    if (rect.top > vh - 60) y -= (rect.top - (vh - 60));
+    if (x !== this._posX || y !== this._posY) {
+      this._updatePosition(x, y);
+    }
+  }
+
+  // ---- Phase Transitions ----
+
+  checkPhaseTransition(phaseName) {
+    if (this._alivePhase === 'full') return;
+
+    if (this._alivePhase === 'dormant' && (phaseName === 'helpful' || phaseName === 'impatient' || phaseName === 'existential' || phaseName === 'desperate')) {
+      this._alivePhase = 'seed';
+      this._term._wrapper.classList.add('dav9000-alive');
+    }
+
+    if (this._alivePhase === 'seed' && (phaseName === 'impatient' || phaseName === 'existential' || phaseName === 'desperate')) {
+      if (!this._firstMoveFired) {
+        this._alivePhase = 'awakening';
+      }
+    }
+
+    if (this._alivePhase === 'awakening' && (phaseName === 'existential' || phaseName === 'desperate')) {
+      this._alivePhase = 'full';
+    }
+  }
+
+  // ---- Animation Selection ----
+
+  shouldPlayAnimation(phaseName) {
+    const cfg = ALIVE_PHASES[phaseName];
+    if (!cfg || cfg.chance === 0) return false;
+
+    // Seed phase: one fidget only
+    if (this._alivePhase === 'seed' && !this._seedFired) {
+      if (Math.random() < 0.15) return true;
+      return false;
+    }
+    if (this._alivePhase === 'seed') return false;
+
+    // Awakening: force the first hop
+    if (this._alivePhase === 'awakening' && !this._firstMoveFired) {
+      return true;
+    }
+
+    return Math.random() < cfg.chance;
+  }
+
+  pickAnimation(phaseName) {
+    // Seed: always fidget
+    if (this._alivePhase === 'seed') {
+      this._seedFired = true;
+      return 'fidget';
+    }
+
+    // Awakening first move: always hop
+    if (this._alivePhase === 'awakening' && !this._firstMoveFired) {
+      this._firstMoveFired = true;
+      this._enableDrag();
+      return 'hop';
+    }
+
+    const cfg = ALIVE_PHASES[phaseName];
+    if (!cfg || cfg.pool.length === 0) return null;
+    return cfg.pool[randInt(0, cfg.pool.length - 1)];
+  }
+
+  // ---- Animation Playback ----
+
+  async playAnimation(name) {
+    if (this._animating || this._dragging) return;
+    this._animating = true;
+
+    const config = ANIM_CONFIG[name];
+    if (!config) { this._animating = false; return; }
+
+    const wrapper = this._term._wrapper;
+
+    // Set CSS vars for parameterized animations
+    this._setAnimVars(name);
+
+    // Update status bar
+    const oldStatus = this._term._statusbar?.innerHTML;
+    if (ANIM_STATUS_BARS[name] && this._term._statusbar) {
+      const parts = ANIM_STATUS_BARS[name].split(' | ');
+      this._term._statusbar.innerHTML = parts.map(p => `<span>${p}</span>`).join('');
+    }
+
+    // Add animation + secondary effect classes
+    wrapper.classList.add('dav9000-anim-' + name, 'dav9000-animating');
+
+    // Wait for animation duration
+    await this._wait(config.dur);
+
+    // Read final position for persisting animations
+    if (config.persists) {
+      this._readFinalPosition();
+    }
+
+    // Clean up classes
+    wrapper.classList.remove('dav9000-anim-' + name, 'dav9000-animating');
+
+    // Restore status bar
+    if (oldStatus && this._term._statusbar) {
+      this._term._statusbar.innerHTML = oldStatus;
+    }
+
+    this._animating = false;
+
+    // Type caption if available
+    if (config.caption && config.caption.length > 0) {
+      const caption = config.caption[randInt(0, config.caption.length - 1)];
+      await this._term._typewriter.typeLine(caption);
+    }
+  }
+
+  _setAnimVars(name) {
+    const mover = this._term._mover;
+    if (!mover) return;
+
+    if (name === 'lean') {
+      const deg = (Math.random() < 0.5 ? -1 : 1) * randInt(3, 6);
+      mover.style.setProperty('--dav-lean-deg', deg + 'deg');
+    }
+    if (name === 'peek') {
+      const goRight = Math.random() < 0.5;
+      const dist = goRight ? 300 : -300;
+      const back = goRight ? 240 : -240;
+      mover.style.setProperty('--dav-peek-dist', dist + 'px');
+      mover.style.setProperty('--dav-peek-back', back + 'px');
+      mover.style.setProperty('--dav-peek-tilt', (goRight ? -3 : 3) + 'deg');
+      mover.style.setProperty('--dav-peek-tilt-back', (goRight ? 2 : -2) + 'deg');
+    }
+    if (name === 'dramatic-slide') {
+      const sx = randInt(-120, 120);
+      const sy = randInt(-30, 30);
+      const tilt = sx > 0 ? randInt(1, 3) : randInt(-3, -1);
+      mover.style.setProperty('--dav-slide-x', sx + 'px');
+      mover.style.setProperty('--dav-slide-y', sy + 'px');
+      mover.style.setProperty('--dav-slide-tilt', tilt + 'deg');
+    }
+  }
+
+  _readFinalPosition() {
+    const mover = this._term._mover;
+    if (!mover) return;
+    const style = getComputedStyle(mover);
+    const matrix = new DOMMatrix(style.transform);
+    this._posX = matrix.m41;
+    this._posY = matrix.m42;
+    mover.style.setProperty('--dav-x', this._posX + 'px');
+    mover.style.setProperty('--dav-y', this._posY + 'px');
+    // Remove animation so inline transform takes over
+    mover.style.animation = 'none';
+    mover.style.transform = `translate(${this._posX}px, ${this._posY}px)`;
+    // Reset animation property after a tick
+    requestAnimationFrame(() => {
+      if (mover) mover.style.animation = '';
+    });
+  }
+
+  // ---- Drag System ----
+
+  _enableDrag() {
+    this._term._wrapper.classList.add('dav9000-draggable');
+    const titlebar = this._term._titlebar;
+    if (titlebar) {
+      titlebar.addEventListener('mousedown', this._onMouseDown);
+    }
+  }
+
+  _handleMouseDown(e) {
+    if (this._animating || this._term._destroyed) return;
+    e.preventDefault();
+    this._dragging = true;
+    this._dragStartX = e.clientX;
+    this._dragStartY = e.clientY;
+    this._dragOffsetX = this._posX;
+    this._dragOffsetY = this._posY;
+    this._dragReacted = false;
+    this._term._wrapper.classList.add('dav9000-dragging');
+    document.addEventListener('mousemove', this._onMouseMove);
+    document.addEventListener('mouseup', this._onMouseUp);
+  }
+
+  _handleMouseMove(e) {
+    if (!this._dragging) return;
+    const dx = e.clientX - this._dragStartX;
+    const dy = e.clientY - this._dragStartY;
+    this._updatePosition(this._dragOffsetX + dx, this._dragOffsetY + dy);
+
+    // Trigger drag reaction after significant movement
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 80 && !this._dragReacted) {
+      this._dragReacted = true;
+      this._term._showDragReaction();
+    }
+  }
+
+  _handleMouseUp() {
+    if (!this._dragging) return;
+    this._dragging = false;
+    this._term._wrapper.classList.remove('dav9000-dragging');
+    document.removeEventListener('mousemove', this._onMouseMove);
+    document.removeEventListener('mouseup', this._onMouseUp);
+
+    this._clampToViewport();
+
+    // Play bounce-settle
+    this.playAnimation('bounce-settle').then(() => {
+      // Type a drop reaction
+      if (!this._term._destroyed && !this._term._typewriter.isTyping) {
+        this._term._showDroppedReaction();
+      }
+    });
+  }
+
+  // ---- First Move Reaction ----
+
+  async showFirstMoveReaction() {
+    await this._term._typeMessageFromPool('first_move');
+    // Enable drag after first move text
+    if (this._alivePhase === 'awakening') {
+      this._enableDrag();
+    }
+  }
+
+  // ---- Cleanup ----
+
+  destroy() {
+    const titlebar = this._term._titlebar;
+    if (titlebar) {
+      titlebar.removeEventListener('mousedown', this._onMouseDown);
+    }
+    document.removeEventListener('mousemove', this._onMouseMove);
+    document.removeEventListener('mouseup', this._onMouseUp);
+    this._term = null;
+  }
+
+  _wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
+// ============================================================
 //  DAV-9000 Terminal Controller
 // ============================================================
 
@@ -452,7 +848,11 @@ class DAV9000Terminal {
     this._visibilityHandler = null;
     this._paused = false;
 
+    this._dragReactionCooldown = 0;
+    this._dropReactionCooldown = 0;
+
     this._build();
+    this._alive = new AliveEngine(this);
     this._bindEvents();
     this._startBoot();
   }
@@ -466,28 +866,33 @@ class DAV9000Terminal {
     wrapper.className = 'dav9000-wrapper';
 
     wrapper.innerHTML = `
-      <div class="dav9000-terminal">
-        <div class="dav9000-titlebar">
-          <div class="dav9000-status-light"></div>
-          <span class="dav9000-titlebar-text">DAV-9000 TERMINAL v1.0</span>
-          <span class="dav9000-session-id">${sessionId}</span>
-        </div>
-        <div class="dav9000-screen">
-          <div class="dav9000-output"></div>
-          <span class="dav9000-cursor">_</span>
-        </div>
-        <div class="dav9000-statusbar">
-          <span>IDLE</span>
-          <span>MEM: OK</span>
-          <span>CPU: 0.01%</span>
+      <div class="dav9000-mover">
+        <div class="dav9000-terminal">
+          <div class="dav9000-titlebar">
+            <div class="dav9000-status-light"></div>
+            <span class="dav9000-titlebar-text">DAV-9000 TERMINAL v1.0</span>
+            <span class="dav9000-session-id">${sessionId}</span>
+          </div>
+          <div class="dav9000-screen">
+            <div class="dav9000-output"></div>
+            <span class="dav9000-cursor">_</span>
+          </div>
+          <div class="dav9000-statusbar">
+            <span>IDLE</span>
+            <span>MEM: OK</span>
+            <span>CPU: 0.01%</span>
+          </div>
         </div>
       </div>`;
 
     this._wrapper = wrapper;
+    this._mover = wrapper.querySelector('.dav9000-mover');
     this._terminal = wrapper.querySelector('.dav9000-terminal');
+    this._titlebar = wrapper.querySelector('.dav9000-titlebar');
     this._screen = wrapper.querySelector('.dav9000-screen');
     this._outputEl = wrapper.querySelector('.dav9000-output');
     this._cursorEl = wrapper.querySelector('.dav9000-cursor');
+    this._statusbar = wrapper.querySelector('.dav9000-statusbar');
 
     this._typewriter = new TypewriterEngine(this._outputEl, this._cursorEl);
 
@@ -625,6 +1030,23 @@ class DAV9000Terminal {
 
     const phase = this._getCurrentPhase();
 
+    // Check alive phase transitions
+    this._alive.checkPhaseTransition(phase.name);
+
+    // Animation check — plays INSTEAD of text for this rotation
+    if (this._alive.shouldPlayAnimation(phase.name)) {
+      const wasFirstMove = !this._alive._firstMoveFired;
+      const animName = this._alive.pickAnimation(phase.name);
+      if (animName) {
+        await this._alive.playAnimation(animName);
+        // After the first awakening hop, type the first-move reaction
+        if (wasFirstMove && animName === 'hop') {
+          await this._typeMessageFromPool('first_move');
+        }
+        return;
+      }
+    }
+
     // 20% chance for ASCII art (only after friendly phase, when personality is established)
     if (phase.name !== 'friendly' && Math.random() < 0.20) {
       await this._showAsciiArt();
@@ -748,6 +1170,32 @@ class DAV9000Terminal {
     }
   }
 
+  // ---- Drag/Drop Reactions ----
+
+  async _showDroppedReaction() {
+    if (this._destroyed || this._typewriter.isTyping) return;
+    const now = Date.now();
+    if (now - this._dropReactionCooldown < 8000) return;
+    this._dropReactionCooldown = now;
+    this._stopRotation();
+    await this._typeMessageFromPool('dropped');
+    if (!this._destroyed && !this._paused) {
+      this._startRotation();
+    }
+  }
+
+  async _showDragReaction() {
+    if (this._destroyed || this._typewriter.isTyping) return;
+    const now = Date.now();
+    if (now - this._dragReactionCooldown < 12000) return;
+    this._dragReactionCooldown = now;
+    this._stopRotation();
+    await this._typeMessageFromPool('drag');
+    if (!this._destroyed && !this._paused) {
+      this._startRotation();
+    }
+  }
+
   // ---- Destroy ----
 
   destroy() {
@@ -756,6 +1204,11 @@ class DAV9000Terminal {
 
     this._stopRotation();
     this._typewriter.destroy();
+
+    if (this._alive) {
+      this._alive.destroy();
+      this._alive = null;
+    }
 
     if (this._terminal) {
       this._terminal.removeEventListener('mouseenter', this._hoverHandler);
@@ -770,10 +1223,13 @@ class DAV9000Terminal {
     }
 
     this._wrapper = null;
+    this._mover = null;
     this._terminal = null;
+    this._titlebar = null;
     this._screen = null;
     this._outputEl = null;
     this._cursorEl = null;
+    this._statusbar = null;
   }
 }
 

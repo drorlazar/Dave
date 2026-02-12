@@ -22,7 +22,6 @@
 /* ---------- terminal window ---------- */
 .dav9000-terminal {
   width: 100%;
-  max-width: 640px;
   background: #0a0e0a;
   border: 1px solid #1a3a1a;
   border-radius: 6px;
@@ -229,9 +228,291 @@
   100% { opacity: 1; transform: translateY(0) scale(1); filter: none; }
 }
 
+/* ============================================================
+   ALIVE TERMINAL - Movement, Drag, Animations
+   ============================================================ */
+
+/* ---------- mover layer (position via translate) ---------- */
+.dav9000-mover {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  transform: translate(var(--dav-x, 0px), var(--dav-y, 0px));
+  will-change: transform;
+  transition: none;
+}
+
+/* Ground shadow (only visible when alive) */
+.dav9000-mover::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 10%;
+  right: 10%;
+  height: 12px;
+  background: radial-gradient(ellipse at center, rgba(0, 255, 65, 0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.dav9000-alive .dav9000-mover::after {
+  opacity: 1;
+}
+
+/* ---------- drag cursors ---------- */
+.dav9000-draggable .dav9000-titlebar {
+  cursor: grab;
+}
+.dav9000-dragging .dav9000-titlebar {
+  cursor: grabbing;
+}
+.dav9000-dragging .dav9000-terminal {
+  box-shadow:
+    0 0 30px rgba(0, 255, 65, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- secondary effects during animation ---------- */
+.dav9000-animating .dav9000-terminal {
+  box-shadow:
+    0 0 35px rgba(0, 255, 65, 0.25),
+    0 4px 24px rgba(0, 0, 0, 0.6);
+}
+.dav9000-animating .dav9000-status-light {
+  animation: dav9000-blink 0.5s ease-in-out infinite;
+}
+.dav9000-animating .dav9000-screen::before {
+  animation: dav9000-scanlineFlicker 0.15s steps(2) 3;
+}
+
+@keyframes dav9000-scanlineFlicker {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* ---------- bouncy easing variable ---------- */
+/* Used by JS: cubic-bezier(0.34, 1.56, 0.64, 1) */
+
+/* ---------- animation: fidget ---------- */
+@keyframes dav9000-fidget {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(0.3deg); }
+  50%      { transform: rotate(-0.25deg); }
+  75%      { transform: rotate(0.15deg); }
+}
+.dav9000-anim-fidget .dav9000-terminal {
+  animation: dav9000-fidget 0.6s ease-in-out;
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: hop ---------- */
+@keyframes dav9000-hop-move {
+  0%   { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  15%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) + 4px)); }
+  40%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) - 25px)); }
+  65%  { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  75%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) - 6px)); }
+  90%  { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  100% { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+}
+@keyframes dav9000-hop-shape {
+  0%   { transform: scaleX(1) scaleY(1); }
+  15%  { transform: scaleX(1.06) scaleY(0.92); }
+  30%  { transform: scaleX(0.94) scaleY(1.08); }
+  65%  { transform: scaleX(1.04) scaleY(0.95); }
+  80%  { transform: scaleX(1) scaleY(1); }
+  100% { transform: scaleX(1) scaleY(1); }
+}
+.dav9000-anim-hop .dav9000-mover {
+  animation: dav9000-hop-move 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dav9000-anim-hop .dav9000-terminal {
+  animation: dav9000-hop-shape 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: shake ---------- */
+@keyframes dav9000-shake {
+  0%, 100% { transform: rotate(0deg); }
+  15%      { transform: rotate(-3deg); }
+  30%      { transform: rotate(3deg); }
+  45%      { transform: rotate(-2.5deg); }
+  60%      { transform: rotate(2deg); }
+  75%      { transform: rotate(-1deg); }
+  90%      { transform: rotate(0.5deg); }
+}
+.dav9000-anim-shake .dav9000-terminal {
+  animation: dav9000-shake 0.6s ease-out;
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: lean ---------- */
+@keyframes dav9000-lean {
+  0%, 100% { transform: rotate(0deg); }
+  30%      { transform: rotate(var(--dav-lean-deg, 4deg)); }
+  70%      { transform: rotate(var(--dav-lean-deg, 4deg)); }
+}
+.dav9000-anim-lean .dav9000-terminal {
+  animation: dav9000-lean 1.8s ease-in-out;
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: sink ---------- */
+@keyframes dav9000-sink-move {
+  0%   { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  100% { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) + 20px)); }
+}
+@keyframes dav9000-sink-shape {
+  0%   { transform: rotate(0deg) scaleX(1) scaleY(1); }
+  100% { transform: rotate(-1deg) scaleX(1.01) scaleY(0.99); }
+}
+.dav9000-anim-sink .dav9000-mover {
+  animation: dav9000-sink-move 2.5s ease-in-out forwards;
+}
+.dav9000-anim-sink .dav9000-terminal {
+  animation: dav9000-sink-shape 2.5s ease-in-out forwards;
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: peek ---------- */
+@keyframes dav9000-peek-move {
+  0%   { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  25%  { transform: translate(calc(var(--dav-x, 0px) + var(--dav-peek-dist, 300px)), var(--dav-y, 0px)); }
+  35%  { transform: translate(calc(var(--dav-x, 0px) + var(--dav-peek-dist, 300px)), var(--dav-y, 0px)); }
+  55%  { transform: translate(calc(var(--dav-x, 0px) + var(--dav-peek-back, 240px)), var(--dav-y, 0px)); }
+  70%  { transform: translate(calc(var(--dav-x, 0px) + var(--dav-peek-back, 240px)), var(--dav-y, 0px)); }
+  100% { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+}
+@keyframes dav9000-peek-shape {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(var(--dav-peek-tilt, -3deg)); }
+  55%      { transform: rotate(var(--dav-peek-tilt-back, 2deg)); }
+}
+.dav9000-anim-peek .dav9000-mover {
+  animation: dav9000-peek-move 3.0s ease-in-out;
+}
+.dav9000-anim-peek .dav9000-terminal {
+  animation: dav9000-peek-shape 3.0s ease-in-out;
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: nudge ---------- */
+@keyframes dav9000-nudge-move {
+  0%   { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  15%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) + 5px)); }
+  50%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) - 40px)); }
+  70%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) - 40px)); }
+  100% { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+}
+@keyframes dav9000-nudge-shape {
+  0%   { transform: scaleX(1) scaleY(1); }
+  15%  { transform: scaleX(1.02) scaleY(0.97); }
+  50%  { transform: scaleX(0.97) scaleY(1.04); }
+  100% { transform: scaleX(1) scaleY(1); }
+}
+.dav9000-anim-nudge .dav9000-mover {
+  animation: dav9000-nudge-move 2.0s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dav9000-anim-nudge .dav9000-terminal {
+  animation: dav9000-nudge-shape 2.0s ease-in-out;
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: spin ---------- */
+@keyframes dav9000-spin {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(90deg) scale(0.95); }
+  50%  { transform: rotate(180deg) scale(1); }
+  75%  { transform: rotate(270deg) scale(0.95); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.dav9000-anim-spin .dav9000-terminal {
+  animation: dav9000-spin 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center center;
+}
+
+/* ---------- animation: stretch ---------- */
+@keyframes dav9000-stretch {
+  0%   { transform: scaleX(1) scaleY(1); }
+  20%  { transform: scaleX(1.05) scaleY(0.92); }
+  50%  { transform: scaleX(0.94) scaleY(1.12); }
+  70%  { transform: scaleX(1.02) scaleY(0.97); }
+  100% { transform: scaleX(1) scaleY(1); }
+}
+.dav9000-anim-stretch .dav9000-terminal {
+  animation: dav9000-stretch 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: bounce-settle (after drag drop) ---------- */
+@keyframes dav9000-bounce-settle-move {
+  0%   { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  30%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) + 6px)); }
+  50%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) - 3px)); }
+  70%  { transform: translate(var(--dav-x, 0px), calc(var(--dav-y, 0px) + 1px)); }
+  100% { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+}
+@keyframes dav9000-bounce-settle-shape {
+  0%   { transform: scaleX(1.06) scaleY(0.92); }
+  30%  { transform: scaleX(0.97) scaleY(1.04); }
+  50%  { transform: scaleX(1.02) scaleY(0.98); }
+  100% { transform: scaleX(1) scaleY(1); }
+}
+.dav9000-anim-bounce-settle .dav9000-mover {
+  animation: dav9000-bounce-settle-move 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dav9000-anim-bounce-settle .dav9000-terminal {
+  animation: dav9000-bounce-settle-shape 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: wiggle ---------- */
+@keyframes dav9000-wiggle-move {
+  0%, 100% { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  15%      { transform: translate(calc(var(--dav-x, 0px) + 6px), var(--dav-y, 0px)); }
+  30%      { transform: translate(calc(var(--dav-x, 0px) - 6px), var(--dav-y, 0px)); }
+  45%      { transform: translate(calc(var(--dav-x, 0px) + 4px), var(--dav-y, 0px)); }
+  60%      { transform: translate(calc(var(--dav-x, 0px) - 4px), var(--dav-y, 0px)); }
+  75%      { transform: translate(calc(var(--dav-x, 0px) + 2px), var(--dav-y, 0px)); }
+  90%      { transform: translate(calc(var(--dav-x, 0px) - 1px), var(--dav-y, 0px)); }
+}
+@keyframes dav9000-wiggle-shape {
+  0%, 100% { transform: rotate(0deg); }
+  15%      { transform: rotate(2deg); }
+  30%      { transform: rotate(-2deg); }
+  45%      { transform: rotate(1.5deg); }
+  60%      { transform: rotate(-1.5deg); }
+  75%      { transform: rotate(0.5deg); }
+}
+.dav9000-anim-wiggle .dav9000-mover {
+  animation: dav9000-wiggle-move 0.7s ease-out;
+}
+.dav9000-anim-wiggle .dav9000-terminal {
+  animation: dav9000-wiggle-shape 0.7s ease-out;
+  transform-origin: center bottom;
+}
+
+/* ---------- animation: dramatic-slide ---------- */
+@keyframes dav9000-slide-move {
+  0%   { transform: translate(var(--dav-x, 0px), var(--dav-y, 0px)); }
+  100% { transform: translate(calc(var(--dav-x, 0px) + var(--dav-slide-x, 80px)), calc(var(--dav-y, 0px) + var(--dav-slide-y, 0px))); }
+}
+@keyframes dav9000-slide-shape {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(var(--dav-slide-tilt, 1.5deg)); }
+}
+.dav9000-anim-dramatic-slide .dav9000-mover {
+  animation: dav9000-slide-move 3.0s ease-in-out forwards;
+}
+.dav9000-anim-dramatic-slide .dav9000-terminal {
+  animation: dav9000-slide-shape 3.0s ease-in-out;
+  transform-origin: center bottom;
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 700px) {
-  .dav9000-terminal {
+  .dav9000-mover {
     max-width: 95vw;
   }
   .dav9000-screen {
