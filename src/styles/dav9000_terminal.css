@@ -1,0 +1,210 @@
+/* ============================================================
+   DAV-9000 TERMINAL - Living Empty State
+   CRT retro terminal with scanlines, glow, vignette
+   ============================================================ */
+
+/* ---------- wrapper (sits inside viewerContainer grid) ---------- */
+.dav9000-wrapper {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 6vh;
+  animation: dav9000-fadeIn 0.6s ease-out;
+  user-select: none;
+}
+
+@keyframes dav9000-fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- terminal window ---------- */
+.dav9000-terminal {
+  width: 100%;
+  max-width: 640px;
+  background: #0a0e0a;
+  border: 1px solid #1a3a1a;
+  border-radius: 6px;
+  box-shadow:
+    0 0 15px rgba(0, 255, 65, 0.08),
+    0 4px 24px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  font-family: 'Courier New', Courier, monospace;
+  animation: dav9000-glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes dav9000-glowPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 65, 0.08), 0 4px 24px rgba(0, 0, 0, 0.6); }
+  50%      { box-shadow: 0 0 25px rgba(0, 255, 65, 0.15), 0 4px 24px rgba(0, 0, 0, 0.6); }
+}
+
+/* ---------- title bar ---------- */
+.dav9000-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #0d120d;
+  border-bottom: 1px solid #1a3a1a;
+  font-size: 11px;
+  color: #4a7a4a;
+  letter-spacing: 0.5px;
+}
+
+.dav9000-status-light {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00ff41;
+  box-shadow: 0 0 4px #00ff41;
+  animation: dav9000-blink 3s ease-in-out infinite;
+}
+
+@keyframes dav9000-blink {
+  0%, 90%, 100% { opacity: 1; }
+  95%           { opacity: 0.3; }
+}
+
+.dav9000-titlebar-text {
+  flex: 1;
+  text-transform: uppercase;
+}
+
+.dav9000-session-id {
+  color: #2a5a2a;
+  font-size: 10px;
+}
+
+/* ---------- CRT screen ---------- */
+.dav9000-screen {
+  position: relative;
+  padding: 16px;
+  min-height: 260px;
+  max-height: 380px;
+  overflow: hidden;
+  background: #050805;
+}
+
+/* Scanlines */
+.dav9000-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Vignette */
+.dav9000-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ---------- output area ---------- */
+.dav9000-output {
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  max-height: 340px;
+  scrollbar-width: thin;
+  scrollbar-color: #1a3a1a transparent;
+}
+
+.dav9000-output::-webkit-scrollbar {
+  width: 4px;
+}
+.dav9000-output::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dav9000-output::-webkit-scrollbar-thumb {
+  background: #1a3a1a;
+  border-radius: 2px;
+}
+
+/* ---------- lines ---------- */
+.dav9000-line {
+  color: #00ff41;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 2px;
+  word-wrap: break-word;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+}
+
+.dav9000-line.dav9000-system {
+  color: #2a6a2a;
+  text-shadow: none;
+}
+
+.dav9000-line.dav9000-reaction {
+  color: #55ff88;
+  font-style: italic;
+}
+
+/* ---------- cursor ---------- */
+.dav9000-cursor {
+  display: inline;
+  color: #00ff41;
+  font-size: 13px;
+  font-family: 'Courier New', Courier, monospace;
+  animation: dav9000-cursorBlink 0.8s step-end infinite;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.5);
+}
+
+@keyframes dav9000-cursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ---------- status bar ---------- */
+.dav9000-statusbar {
+  display: flex;
+  gap: 16px;
+  padding: 4px 12px;
+  background: #0d120d;
+  border-top: 1px solid #1a3a1a;
+  font-size: 10px;
+  color: #2a5a2a;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ---------- glitch effect ---------- */
+@keyframes dav9000-glitch {
+  0%   { transform: translate(0); filter: hue-rotate(0deg); }
+  20%  { transform: translate(-2px, 1px); filter: hue-rotate(90deg); }
+  40%  { transform: translate(2px, -1px); filter: hue-rotate(-90deg); }
+  60%  { transform: translate(-1px, -1px); filter: hue-rotate(45deg); }
+  80%  { transform: translate(1px, 2px); filter: hue-rotate(-45deg); }
+  100% { transform: translate(0); filter: hue-rotate(0deg); }
+}
+
+.dav9000-glitch {
+  animation: dav9000-glitch 0.3s linear;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 700px) {
+  .dav9000-terminal {
+    max-width: 95vw;
+  }
+  .dav9000-screen {
+    min-height: 200px;
+    padding: 12px;
+  }
+  .dav9000-line {
+    font-size: 12px;
+  }
+}

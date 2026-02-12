@@ -544,6 +544,14 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '1.8.0', date: 'Feb 12, 2026', title: 'DAV-9000 Living Empty State',
+        features: [
+          'Interactive retro CRT terminal replaces static welcome message',
+          'DAV-9000 AI personality with 75+ messages across 6 escalating phases',
+          'Typewriter effect, glitch animations, hover/click reactions, tab visibility awareness',
+        ]
+      },
+      {
         version: '1.7.0', date: 'Feb 12, 2026', title: 'Matrix Theme Easter Egg',
         features: [
           'Hidden Matrix theme trigger in theme grid (find the green dot!)',
