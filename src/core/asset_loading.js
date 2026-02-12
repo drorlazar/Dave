@@ -13,7 +13,7 @@ import * as CloudStorage from '../cloud/CloudStorageProvider.js';
 import { getEditorForType, openInEditor } from '../utils/externalEditors.js';
 import { ModelInspectorPanel } from '../viewers/model_inspector.js';
 import { FBXInspectorAdapter } from '../viewers/model_inspector_fbx.js';
-import { destroyDAV9000Terminal, markHadFiles } from './dav9000_terminal.js';
+import { destroyDAV9000Terminal, markHadFiles, cancelTakeover } from './dav9000_terminal.js';
 import { GLBInspectorAdapter } from '../viewers/model_inspector_glb.js';
 import {
   getCurrentPage,
@@ -731,6 +731,7 @@ async function loadTileContent(tile) {
 }
 
 function renderPage(pageIndex) {
+  cancelTakeover();
   destroyDAV9000Terminal();
   markHadFiles();
 

@@ -542,20 +542,59 @@ class DAV9000Terminal {
 
 /** Has DAV-9000 previously shown files this session? */
 let _hadFilesPreviously = false;
+/** Has DAV-9000 terminal been shown at least once this session? */
+let _terminalShownBefore = false;
 
 export function markHadFiles() {
   _hadFilesPreviously = true;
 }
 
+export function hasTerminalBeenShown() {
+  return _terminalShownBefore;
+}
+
 export function showDAV9000Terminal(container) {
   if (_instance) return; // already active
 
+  _terminalShownBefore = true;
   _instance = new DAV9000Terminal(container);
 
   // If returning from having files, trigger returning personality
   if (_hadFilesPreviously) {
     _instance._startReturning();
   }
+}
+
+/**
+ * Takeover transition: glitch-out the welcome message, then boot DAV-9000.
+ * Called after the idle timer fires on the classic welcome screen.
+ */
+export function takeoverFromWelcome(container) {
+  if (_instance) return;
+
+  const welcome = container.querySelector('.welcome-message');
+  if (!welcome) {
+    // No welcome message found, just show terminal directly
+    showDAV9000Terminal(container);
+    return;
+  }
+
+  // Phase 1: glitch-out the welcome message
+  welcome.classList.add('dav9000-takeover-glitch');
+  welcome.addEventListener('animationend', () => {
+    welcome.remove();
+
+    // Phase 2: build terminal with takeover-enter animation
+    _terminalShownBefore = true;
+    _instance = new DAV9000Terminal(container);
+    const wrapper = container.querySelector('.dav9000-wrapper');
+    if (wrapper) {
+      // Override the default fadeIn with the takeover entrance
+      wrapper.style.animation = 'none';
+      void wrapper.offsetHeight; // force reflow
+      wrapper.classList.add('dav9000-takeover-enter');
+    }
+  }, { once: true });
 }
 
 export function destroyDAV9000Terminal() {
@@ -566,4 +605,26 @@ export function destroyDAV9000Terminal() {
 
 export function isDAV9000Active() {
   return _instance !== null;
+}
+
+/** Cancel any pending takeover timer. */
+let _takeoverTimer = null;
+
+export function scheduleTakeover(container) {
+  cancelTakeover();
+  const delay = randInt(10000, 20000);
+  _takeoverTimer = setTimeout(() => {
+    _takeoverTimer = null;
+    // Only take over if container still has the welcome message (no files loaded)
+    if (container.querySelector('.welcome-message')) {
+      takeoverFromWelcome(container);
+    }
+  }, delay);
+}
+
+export function cancelTakeover() {
+  if (_takeoverTimer) {
+    clearTimeout(_takeoverTimer);
+    _takeoverTimer = null;
+  }
 }

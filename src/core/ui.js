@@ -3,7 +3,7 @@ import { renderPage, sortFiles, modelFiles, filteredModelFiles, updateFilteredMo
 import { currentFullscreenViewer } from './asset_loading.js';
 import { debounce, throttle, throttleRAF } from '../utils/debounce.js';
 import { activeFilters } from '../shared/filters.js';
-import { showDAV9000Terminal, destroyDAV9000Terminal, isDAV9000Active, markHadFiles } from './dav9000_terminal.js';
+import { showDAV9000Terminal, destroyDAV9000Terminal, isDAV9000Active, markHadFiles, scheduleTakeover, cancelTakeover, hasTerminalBeenShown } from './dav9000_terminal.js';
 
 
 // Private state
@@ -1321,11 +1321,85 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+// Classic welcome messages - shown first, then DAV-9000 takes over
+const welcomeMessages = [
+  { icon: "fa-hand-sparkles", text: "Drop some files here. I promise I won't judge your folder names." },
+  { icon: "fa-folder-open", text: "Drag a folder in and let's see what treasures you've been hoarding." },
+  { icon: "fa-wand-magic-stars", text: "This empty canvas awaits your assets. No pressure." },
+  { icon: "fa-fire", text: "Your 3D models called. They want to be viewed." },
+  { icon: "fa-ghost", text: "It's eerily empty in here. Drop something before the ghosts move in." },
+  { icon: "fa-mug-hot", text: "Grab a coffee, drag some files, enjoy the show." },
+  { icon: "fa-rocket", text: "Houston, we have no assets. Drag a folder to launch." },
+  { icon: "fa-face-grin-beam", text: "I'm Dave. I view assets. Feed me folders." },
+  { icon: "fa-puzzle-piece", text: "Missing: your files. Last seen: on your desktop. Drag them here." },
+  { icon: "fa-hat-wizard", text: "A wizard is never late, but your files might be. Drop them here." },
+  { icon: "fa-box-open", text: "Unbox your creativity. Drag images, models, videos \u2014 anything goes." },
+  { icon: "fa-couch", text: "Make yourself at home. Explore the settings, pick a theme, then load some files." },
+  { icon: "fa-cloud-arrow-up", text: "Got files in S3 or Google Drive? Click the gear icon to connect." },
+  { icon: "fa-gamepad", text: "Achievement unlocked: opened Dave. Next quest: drop some files." },
+  { icon: "fa-cat", text: "If you were a cat, you'd knock files off the desktop and into here." },
+  { icon: "fa-palette", text: "Try the themes in Settings \u2014 find your vibe, then load your assets." },
+  { icon: "fa-eye", text: "I see nothing. Literally. Please drop a folder so I have a purpose." },
+  { icon: "fa-tree", text: "Click the tree icon on the left to browse folders like a file explorer pro." },
+  { icon: "fa-bolt", text: "Psst... you can paste S3 or Google Drive URLs in the search bar." },
+  { icon: "fa-music", text: "I handle audio too. Yes, really. Try me." },
+  { icon: "fa-skull-crossbones", text: "Psst... click the D.A.V.E. logo. Trust me. It's not a trap. Okay, it's a little bit of a trap." },
+  { icon: "fa-floppy-disk", text: "Back in my day, we fit an entire game on a floppy. Now your PNGs are 47MB each." },
+  { icon: "fa-dragon", text: "Here be dragons. And also GLBs, FBXs, and the occasional suspicious .obj file." },
+  { icon: "fa-dice", text: "Fun fact: this message was chosen randomly from a pool of many. You're special. Kinda." },
+  { icon: "fa-poo", text: "Even your worst assets deserve to be seen. I don't judge. Much." },
+  { icon: "fa-terminal", text: "No terminal needed. No npm install. No build step. Just drag and drop like a civilized person." },
+  { icon: "fa-brain", text: "I can view 3D models, images, videos, audio, fonts, PDFs, and text files. I'm basically overqualified." },
+  { icon: "fa-user-secret", text: "Everything stays in your browser. Your files never leave your machine. I'm not that kind of app." },
+  { icon: "fa-trophy", text: "You've stared at this empty screen for a while now. That's dedication. Now drop some files." },
+  { icon: "fa-martini-glass", text: "Shaken, not stirred. The name's Dave. Just Dave." },
+  { icon: "fa-cookie-bite", text: "No cookies, no tracking, no analytics. Just vibes and vertices." },
+  { icon: "fa-face-dizzy", text: "Roses are red, this viewer is empty. Drag a folder in, don't leave me feeling contempt-y." },
+  { icon: "fa-helicopter", text: "Get to the dropper! Drag files into the zone! NOW!" },
+  { icon: "fa-dungeon", text: "You found a secret: the D.A.V.E. title is clickable. What happens next may surprise you." },
+  { icon: "fa-person-running", text: "Speaking of running \u2014 try clicking the D.A.V.E. logo up top. You might find a classic game hiding in there." },
+  { icon: "fa-explosion", text: "This page is so empty it echoes. HELLO... hello... hello..." },
+  { icon: "fa-glasses", text: "I support dark mode, light mode, and 14 themes. I'm basically a fashion icon." },
+  { icon: "fa-satellite-dish", text: "Connecting to the cloud? I speak S3 and Google Drive fluently. Check the gear icon." },
+  { icon: "fa-chess-knight", text: "Your move. Drop a folder. I dare you." },
+  { icon: "fa-anchor", text: "Anchored and ready. Waiting for your payload, captain." },
+  { icon: "fa-masks-theater", text: "Comedy: this empty screen. Tragedy: you haven't dropped files yet." },
+  { icon: "fa-spa", text: "Take a deep breath. Now drag a folder. Namaste." },
+  { icon: "fa-dumpster-fire", text: "Even if your project folder is a dumpster fire, I'll display it beautifully." },
+  { icon: "fa-binoculars", text: "I've been looking everywhere for your files. Have you checked your Downloads folder?" },
+  { icon: "fa-gem", text: "Every asset is a gem. Even that placeholder cube you made in Blender at 3am." },
+  { icon: "fa-fish", text: "There are plenty of files in the sea. Drag some into this net." },
+  { icon: "fa-scroll", text: "Ancient proverb: a viewer without files is like a fish without a bicycle. Wait, that's not right." },
+  { icon: "fa-ghost", text: "Boo! Still empty. The only thing haunting this page is unused potential." },
+  { icon: "fa-pizza-slice", text: "Files are like pizza toppings. More is almost always better. Load 'em up." },
+];
+
+let _currentWelcomeMsg = null;
+
 export function showWelcomeMessage() {
   const container = document.getElementById('viewerContainer');
   if (!container || container.children.length > 0) return;
   if (isDAV9000Active()) return;
-  showDAV9000Terminal(container);
+
+  // If user already saw DAV-9000 this session (returning after clearing files),
+  // skip the welcome joke and go straight to terminal with returning personality
+  if (hasTerminalBeenShown()) {
+    showDAV9000Terminal(container);
+    return;
+  }
+
+  // First visit: show classic welcome joke
+  if (!_currentWelcomeMsg) {
+    _currentWelcomeMsg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+  }
+  container.innerHTML = `
+    <div class="welcome-message">
+      <i class="fa-solid ${_currentWelcomeMsg.icon}"></i>
+      <p>${_currentWelcomeMsg.text}</p>
+    </div>`;
+
+  // Schedule DAV-9000 takeover after 10-20s idle
+  scheduleTakeover(container);
 }
 
 // Selection helper functions for keyboard shortcuts
