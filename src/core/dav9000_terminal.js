@@ -555,6 +555,9 @@ class AliveEngine {
     this._onMouseDown = this._handleMouseDown.bind(this);
     this._onMouseMove = this._handleMouseMove.bind(this);
     this._onMouseUp = this._handleMouseUp.bind(this);
+
+    // Draggable from the start
+    this._enableDrag();
   }
 
   // ---- Position Management ----
@@ -639,7 +642,6 @@ class AliveEngine {
     // Awakening first move: always hop
     if (this._alivePhase === 'awakening' && !this._firstMoveFired) {
       this._firstMoveFired = true;
-      this._enableDrag();
       return 'hop';
     }
 
@@ -802,10 +804,6 @@ class AliveEngine {
 
   async showFirstMoveReaction() {
     await this._term._typeMessageFromPool('first_move');
-    // Enable drag after first move text
-    if (this._alivePhase === 'awakening') {
-      this._enableDrag();
-    }
   }
 
   // ---- Cleanup ----

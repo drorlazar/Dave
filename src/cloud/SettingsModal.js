@@ -544,11 +544,12 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
-        version: '1.8.0', date: 'Feb 12, 2026', title: 'DAV-9000 Living Empty State',
+        version: '1.8.0', date: 'Feb 12, 2026', title: 'DAV-9000 Living Terminal',
         features: [
-          'Interactive retro CRT terminal replaces static welcome message',
-          'DAV-9000 AI personality with 75+ messages across 6 escalating phases',
-          'Typewriter effect, glitch animations, hover/click reactions, tab visibility awareness',
+          'Self-aware CRT terminal with 120+ messages, ASCII art, and 6 escalating personality phases',
+          'Fourth wall break: welcome joke first, then glitch-transition to DAV-9000 takeover',
+          'Terminal comes alive: 12 physical animations (hop, shake, peek, spin, sink, etc.)',
+          'Draggable terminal window with bounce-settle, comedic reactions to drag and drop',
         ]
       },
       {
