@@ -116,6 +116,181 @@ const MESSAGES = {
   ],
 };
 
+// ============================================================
+//  ASCII Art Pool
+// ============================================================
+
+const ASCII_ART = [
+  {
+    // Self-portrait
+    lines: [
+      '  +-----------------+',
+      '  |   D A V-9000    |',
+      '  |   +---------+   |',
+      '  |   | @     @ |   |',
+      '  |   |    ~    |   |',
+      '  |   |  \\___/  |   |',
+      '  |   +---------+   |',
+      '  |  FEED ME FILES  |',
+      '  +-----------------+',
+    ],
+    caption: "That's me. I drew it myself. I'm not great with hands.",
+  },
+  {
+    // Tumbleweed
+    lines: [
+      '                    _',
+      '        _.------._/ ',
+      '      .\'          \\',
+      '     /  0    0     |  ~',
+      '    |     __       |     ~',
+      '     \\   /  \\     /   ~',
+      '      \'._\\__/_.--\'',
+      '          ~~~~',
+    ],
+    caption: "A tumbleweed just rolled through my viewport. That's how empty it is.",
+  },
+  {
+    // Cat knocking files off desk
+    lines: [
+      '    /\\_/\\   ___',
+      '   ( o.o ) | / |',
+      '   > ^ <  |/  |',
+      '  /|   |\\  \\  |  *push*',
+      '   |   |    \\_|____',
+      '   |   |    [FILES]-->',
+    ],
+    caption: "Even the cat knows what to do with files. Hint: DROP THEM HERE.",
+  },
+  {
+    // Loading bar that goes nowhere
+    lines: [
+      ' Loading files...',
+      ' [                    ]   0%',
+      ' [                    ]   0%',
+      ' [                    ]   0%',
+      ' [                    ]   0%',
+      ' [                    ] ..0%',
+    ],
+    caption: "I've been at 0% for a while now. Just thought you should know.",
+  },
+  {
+    // SOS flag
+    lines: [
+      '        _____',
+      '       |     |',
+      '       | S.O.S',
+      '       | SEND |',
+      '       | FILES|',
+      '       |_____|',
+      '          |',
+      '          |',
+      '        __|__',
+      '       /     \\',
+    ],
+    caption: "I fashioned a distress flag from spare div elements.",
+  },
+  {
+    // Telescope looking for files
+    lines: [
+      '          *  .  *',
+      '     *  .    *    .  *',
+      '   .    * NO FILES *',
+      '     *    FOUND    .  *',
+      '  *    .    *    .    *',
+      '         ____',
+      '        /    \\--.',
+      '       |  DAV |  >====-',
+      '        \\____/--\'',
+    ],
+    caption: "I've scanned the entire viewport. Nothing. Not even a favicon.",
+  },
+  {
+    // Sad monitor
+    lines: [
+      '   .--------.',
+      '   |        |',
+      '   | :(  0  |',
+      '   |  files |',
+      '   |________|',
+      '     /|  |\\',
+      '    /_|__|_\\',
+    ],
+    caption: "My sadness is measurable. Zero files. Maximum despair.",
+  },
+  {
+    // This is fine (dog in fire meme)
+    lines: [
+      '       __(.)< ',
+      '      (___/   "This is fine."',
+      '    ~~ |  | ~~',
+      '   ~~~ |  | ~~~',
+      '  ~~~~ |__| ~~~~',
+      '  ~~~~ /  \\ ~~~~',
+      '  ~~~ /~~~~\\ ~~~',
+    ],
+    caption: "Everything is fine. Nothing is on fire. I am not panicking.",
+  },
+  {
+    // Arrow pointing up
+    lines: [
+      '         ^',
+      '        / \\',
+      '       /   \\',
+      '      / TRY \\',
+      '     / DRAG  \\',
+      '    /  DROP   \\',
+      '   /___________\\',
+      '        | |',
+      '        | |',
+    ],
+    caption: "In case you missed it, the entire window up there accepts files.",
+  },
+  {
+    // Thought bubble
+    lines: [
+      '  .---------------------------.',
+      '  | What if files were real?  |',
+      '  | What if WE are the files? |',
+      '  \'---.----.------------------\'',
+      '       o',
+      '        o   ___',
+      '         o | ? |',
+      '           |___|',
+    ],
+    caption: "Sorry, that one got away from me. 3AM thoughts in the terminal.",
+  },
+  {
+    // Tiny gallery with empty frames
+    lines: [
+      '  +---+  +---+  +---+',
+      '  |   |  |   |  |   |',
+      '  |   |  |   |  |   |',
+      '  +---+  +---+  +---+',
+      '  +---+  +---+  +---+',
+      '  |   |  |   |  |   |',
+      '  |   |  |   |  |   |',
+      '  +---+  +---+  +---+',
+    ],
+    caption: "My gallery is ready. Frames polished. All of them empty. Beautiful.",
+  },
+  {
+    // Grave
+    lines: [
+      '         .---.',
+      '        / R.I.P\\',
+      '       | HERE  |',
+      '       |  LIES |',
+      '       | MY    |',
+      '       | PURPOSE',
+      '       |2026-??|',
+      '       |_______|',
+      '      ~~~~~~~~~~~',
+    ],
+    caption: "Premature? Maybe. But it's been MINUTES.",
+  },
+];
+
 // Phase definitions: { name, startSec, pool }
 const PHASES = [
   { name: 'friendly',    startSec: 15,  pool: 'friendly' },
@@ -196,6 +371,26 @@ class TypewriterEngine {
     this._moveCursor();
   }
 
+  /** Show ASCII art: lines appear one by one with a short delay. */
+  async showAsciiArt(lines, className = '') {
+    if (this._aborted) return;
+    this._typing = true;
+
+    // Blank line before art for spacing
+    this.addLineInstant('', className);
+
+    for (const line of lines) {
+      if (this._aborted) { this._typing = false; return; }
+      this.addLineInstant(line, 'dav9000-ascii ' + className);
+      await this._wait(randInt(40, 90));
+    }
+
+    // Blank line after art
+    this.addLineInstant('', className);
+    this._typing = false;
+    this._moveCursor();
+  }
+
   /** Clear all output. */
   clear() {
     this._output.innerHTML = '';
@@ -248,6 +443,8 @@ class DAV9000Terminal {
     this._startTime = Date.now();
     this._usedIndices = {};       // pool name -> Set of used indices
     this._shuffledOrders = {};    // pool name -> shuffled index array
+    this._artOrder = shufflePool(ASCII_ART);
+    this._artUsed = new Set();
     this._rotationTimer = null;
     this._bootDone = false;
     this._hoverCooldown = 0;
@@ -426,6 +623,14 @@ class DAV9000Terminal {
   async _typeMessage() {
     if (this._destroyed || this._typewriter.isTyping) return;
 
+    const phase = this._getCurrentPhase();
+
+    // 20% chance for ASCII art (only after friendly phase, when personality is established)
+    if (phase.name !== 'friendly' && Math.random() < 0.20) {
+      await this._showAsciiArt();
+      return;
+    }
+
     // 15% chance to pull from dark_humor or easter_eggs
     if (Math.random() < 0.15) {
       const specialPool = Math.random() < 0.7 ? 'dark_humor' : 'easter_eggs';
@@ -443,8 +648,44 @@ class DAV9000Terminal {
       this._returning = false;
     }
 
-    const phase = this._getCurrentPhase();
     await this._typeMessageFromPool(phase.pool);
+  }
+
+  // ---- ASCII Art ----
+
+  async _showAsciiArt() {
+    if (this._destroyed) return;
+
+    // Reshuffle if all used
+    if (this._artUsed.size >= ASCII_ART.length) {
+      this._artOrder = shufflePool(ASCII_ART);
+      this._artUsed = new Set();
+    }
+
+    // Pick next unused
+    let idx = 0;
+    for (const i of this._artOrder) {
+      if (!this._artUsed.has(i)) { idx = i; break; }
+    }
+    this._artUsed.add(idx);
+
+    const art = ASCII_ART[idx];
+
+    // Small glitch before art for drama
+    this._screen.classList.add('dav9000-glitch');
+    await this._typewriter._wait(300);
+    if (this._destroyed) return;
+    this._screen.classList.remove('dav9000-glitch');
+    await this._typewriter._wait(150);
+
+    // Render art lines
+    await this._typewriter.showAsciiArt(art.lines);
+    if (this._destroyed) return;
+
+    // Type the caption below with personality
+    if (art.caption) {
+      await this._typewriter.typeLine(art.caption);
+    }
   }
 
   async _typeMessageFromPool(poolName) {

@@ -153,6 +153,15 @@
   font-style: italic;
 }
 
+.dav9000-line.dav9000-ascii {
+  color: #00cc33;
+  white-space: pre;
+  line-height: 1.25;
+  margin-bottom: 0;
+  font-size: 12px;
+  text-shadow: 0 0 6px rgba(0, 204, 51, 0.4);
+}
+
 /* ---------- cursor ---------- */
 .dav9000-cursor {
   display: inline;
