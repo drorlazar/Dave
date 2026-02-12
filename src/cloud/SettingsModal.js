@@ -544,6 +544,14 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '1.9.0', date: 'Feb 12, 2026', title: 'Talk to Dave',
+        features: [
+          'Revised About section: Dave speaks in his own voice now',
+          '"Talk to Dave" feedback section with mini terminal, typewriter responses, and GitHub Issues integration',
+          'Dave personality/tone guide for contributors (docs/tone.md)',
+        ]
+      },
+      {
         version: '1.8.0', date: 'Feb 12, 2026', title: 'DAV-9000 Living Terminal',
         features: [
           'Self-aware CRT terminal with 120+ messages, ASCII art, and 6 escalating personality phases',

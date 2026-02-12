@@ -818,6 +818,7 @@ function renderPage(pageIndex) {
 async function showFullscreen(model) {
   const fullscreenOverlay = document.getElementById('fullscreenOverlay');
   const fullscreenViewer = document.getElementById('fullscreenViewer');
+  const fullscreenViewerWrap = document.getElementById('fullscreenViewerWrap');
   const fullscreenVideo = document.getElementById('fullscreenVideo');
   const fullscreenInfo = document.getElementById('fullscreenInfo');
   const fullscreenFilename = document.querySelector('.fullscreen-filename');
@@ -836,6 +837,7 @@ async function showFullscreen(model) {
   document.body.style.overflow = 'hidden';
   fullscreenViewer.innerHTML = '';
   fullscreenVideo.style.display = 'none';
+  fullscreenViewerWrap.style.display = '';
 
   // Edit button in fullscreen
   const oldEditBtn = document.getElementById('fullscreenEditBtn');
@@ -976,6 +978,7 @@ async function showFullscreen(model) {
       };
 
     } else if (model.type === "video") {
+      fullscreenViewerWrap.style.display = 'none';
       fullscreenViewer.style.display = 'none';
       fullscreenVideo.style.display = 'block';
       fullscreenVideo.src = fileUrl;

@@ -3614,6 +3614,12 @@ body:not(.dark-mode) .fullscreen-error small {
   margin: 8px 0;
 }
 
+.about-tagline {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+}
+
 .shortcuts-grid {
   display: grid;
   gap: 16px;
@@ -3874,6 +3880,236 @@ body:not(.dark-mode) .tooltip-content::-webkit-scrollbar-thumb {
 
 body:not(.dark-mode) .tooltip-content::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Talk to Dave - Feedback Section
+   ============================================ */
+
+.talk-to-dave {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dave-mini-terminal {
+  position: relative;
+  background: #0a0e0a;
+  border: 1px solid rgba(0, 255, 65, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.dave-feedback-textarea {
+  width: 100%;
+  min-height: 80px;
+  max-height: 120px;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #00ff41;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.dave-feedback-textarea::placeholder {
+  color: rgba(0, 255, 65, 0.35);
+  font-style: italic;
+}
+
+.dave-feedback-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dave-feedback-counter {
+  text-align: right;
+  padding: 2px 12px 6px;
+  font-size: 0.75rem;
+  color: rgba(0, 255, 65, 0.3);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.dave-feedback-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  border-radius: 6px;
+  color: #00ff41;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dave-feedback-send:hover {
+  background: rgba(0, 255, 65, 0.2);
+  border-color: rgba(0, 255, 65, 0.5);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.15);
+}
+
+.dave-feedback-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dave-response-terminal {
+  background: #050805;
+  border: 1px solid rgba(0, 255, 65, 0.15);
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 60px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.dave-response-output {
+  color: #00ff41;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.dave-system-line {
+  color: #2a6a2a;
+  text-shadow: none;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.dave-response-cursor {
+  display: inline;
+  color: #00ff41;
+  font-family: 'Courier New', Courier, monospace;
+  animation: dav9000-cursorBlink 0.8s step-end infinite;
+}
+
+.dave-feedback-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  animation: daveFeedbackFadeIn 0.4s ease-out;
+}
+
+@keyframes daveFeedbackFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dave-feedback-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: none;
+  font-family: inherit;
+}
+
+.dave-action-github {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dave-action-github:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.dave-action-reset {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+}
+
+.dave-action-reset:hover {
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes daveShake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  50%      { transform: translateX(4px); }
+  75%      { transform: translateX(-2px); }
+}
+
+.dave-mini-terminal.shake {
+  animation: daveShake 0.4s ease-out;
+}
+
+/* Talk to Dave - Light mode */
+body:not(.dark-mode) .dave-mini-terminal {
+  background: #f0f4f0;
+  border-color: rgba(0, 128, 40, 0.2);
+}
+
+body:not(.dark-mode) .dave-feedback-textarea {
+  color: #006620;
+}
+
+body:not(.dark-mode) .dave-feedback-textarea::placeholder {
+  color: rgba(0, 102, 32, 0.4);
+}
+
+body:not(.dark-mode) .dave-feedback-counter {
+  color: rgba(0, 102, 32, 0.3);
+}
+
+body:not(.dark-mode) .dave-feedback-send {
+  background: rgba(0, 128, 40, 0.08);
+  border-color: rgba(0, 128, 40, 0.25);
+  color: #006620;
+}
+
+body:not(.dark-mode) .dave-feedback-send:hover {
+  background: rgba(0, 128, 40, 0.15);
+}
+
+body:not(.dark-mode) .dave-response-terminal {
+  background: #f5f8f5;
+  border-color: rgba(0, 128, 40, 0.15);
+}
+
+body:not(.dark-mode) .dave-response-output {
+  color: #006620;
+  text-shadow: none;
+}
+
+body:not(.dark-mode) .dave-system-line {
+  color: #88aa88;
+}
+
+body:not(.dark-mode) .dave-action-github {
+  color: rgba(0, 0, 0, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode) .dave-action-reset {
+  color: rgba(0, 0, 0, 0.4);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body:not(.dark-mode) .about-tagline {
+  color: rgba(0, 0, 0, 0.45);
 }
 
 /* Mobile responsive adjustments */

@@ -80,8 +80,10 @@ export class VideoHandler extends BaseAssetHandler {
 
     // Use the fullscreen video element
     const fullscreenVideo = document.getElementById('fullscreenVideo');
+    const fullscreenViewerWrap = document.getElementById('fullscreenViewerWrap');
     if (fullscreenVideo) {
       container.style.display = 'none';
+      if (fullscreenViewerWrap) fullscreenViewerWrap.style.display = 'none';
       fullscreenVideo.style.display = 'block';
       fullscreenVideo.src = fileUrl;
       fullscreenVideo.play();
