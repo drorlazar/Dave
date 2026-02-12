@@ -5,22 +5,49 @@ import { CredentialStore } from './CredentialStore.js';
 import { S3Client } from './S3Client.js';
 import { GDriveClient } from './GDriveClient.js';
 
-// ── Singleton client instances (lazy-initialized) ──
+// ── Client instances (lazy-initialized) ──
 
-let s3Client = null;
-let s3ClientKeyId = null; // track which key we initialized with
+/** Cache of S3 clients keyed by profile ID */
+const s3ClientCache = new Map();
 
 let gdriveClient = null;
 
-function getS3Client() {
-  const creds = CredentialStore.getS3Credentials();
-  if (!creds) throw new Error('S3 credentials not configured. Open Settings (gear icon) to add them.');
-  // Reinitialize if credentials changed
-  if (!s3Client || s3ClientKeyId !== creds.accessKeyId) {
-    s3Client = new S3Client(creds);
-    s3ClientKeyId = creds.accessKeyId;
+/**
+ * Get an S3 client for a specific profile.
+ * @param {string} [profileId] - Profile ID. If omitted, uses the default profile.
+ */
+function getS3Client(profileId) {
+  const profiles = CredentialStore.getS3Profiles();
+  if (profiles.length === 0) {
+    throw new Error('S3 credentials not configured. Open Settings (gear icon) to add them.');
   }
-  return s3Client;
+
+  let profile;
+  if (profileId) {
+    profile = profiles.find(p => p.id === profileId);
+    if (!profile) throw new Error(`S3 profile "${profileId}" not found.`);
+  } else {
+    const defaultId = CredentialStore.getDefaultS3ProfileId();
+    profile = profiles.find(p => p.id === defaultId) || profiles[0];
+  }
+
+  const cached = s3ClientCache.get(profile.id);
+  if (cached && cached.accessKeyId === profile.accessKeyId) {
+    return cached.client;
+  }
+
+  const client = new S3Client(profile);
+  s3ClientCache.set(profile.id, { client, accessKeyId: profile.accessKeyId });
+  return client;
+}
+
+/** Clear cached S3 client for a profile (call after credential changes) */
+export function clearS3ClientCache(profileId) {
+  if (profileId) {
+    s3ClientCache.delete(profileId);
+  } else {
+    s3ClientCache.clear();
+  }
 }
 
 export function getGDriveClient() {
@@ -119,8 +146,8 @@ export async function listFiles(source, params = {}) {
   throw new Error(`Unknown cloud source: ${source}`);
 }
 
-async function listS3Files({ bucket, prefix = '' }) {
-  const client = getS3Client();
+async function listS3Files({ bucket, prefix = '', profileId }) {
+  const client = getS3Client(profileId);
   bucket = bucket || client.bucket;
 
   const result = await client.listObjects(prefix, '/', bucket);
@@ -147,7 +174,8 @@ async function listS3Files({ bucket, prefix = '' }) {
         lastModified: new Date(obj.lastModified).getTime(),
         source: 's3',
         cloudKey: obj.key,
-        cloudBucket: bucket
+        cloudBucket: bucket,
+        cloudProfileId: profileId || CredentialStore.getDefaultS3ProfileId()
       };
     })
     .filter(Boolean);
@@ -157,6 +185,8 @@ async function listS3Files({ bucket, prefix = '' }) {
 
 async function listGDriveFiles({ folderId = 'root' }) {
   const client = getGDriveClient();
+  const activeAccount = client.getActiveAccount();
+  const accountEmail = activeAccount?.email || null;
   const data = await client.listFiles(folderId);
 
   const folders = data.items
@@ -178,7 +208,8 @@ async function listGDriveFiles({ folderId = 'root' }) {
         size: f.size,
         lastModified: new Date(f.modifiedTime).getTime(),
         source: 'gdrive',
-        cloudFileId: f.id
+        cloudFileId: f.id,
+        cloudGDriveAccount: accountEmail
       };
     })
     .filter(Boolean);
@@ -197,8 +228,8 @@ export async function listFilesRecursive(source, params = {}) {
   throw new Error(`Unknown cloud source: ${source}`);
 }
 
-async function listS3FilesRecursive({ bucket, prefix = '', maxDepth = 'all' }) {
-  const client = getS3Client();
+async function listS3FilesRecursive({ bucket, prefix = '', maxDepth = 'all', profileId }) {
+  const client = getS3Client(profileId);
   bucket = bucket || client.bucket;
 
   const result = await client.listObjectsRecursive(prefix, maxDepth, bucket);
@@ -218,13 +249,16 @@ async function listS3FilesRecursive({ bucket, prefix = '', maxDepth = 'all' }) {
       lastModified: new Date(obj.lastModified).getTime(),
       source: 's3',
       cloudKey: obj.key,
-      cloudBucket: bucket
+      cloudBucket: bucket,
+      cloudProfileId: profileId || CredentialStore.getDefaultS3ProfileId()
     };
   }).filter(Boolean);
 }
 
 async function listGDriveFilesRecursive({ folderId = 'root', maxDepth = 'all' }) {
   const client = getGDriveClient();
+  const activeAccount = client.getActiveAccount();
+  const accountEmail = activeAccount?.email || null;
   const result = await client.listFilesRecursive(folderId, maxDepth);
 
   return result.files.map(f => {
@@ -240,7 +274,8 @@ async function listGDriveFilesRecursive({ folderId = 'root', maxDepth = 'all' })
       size: f.size,
       lastModified: new Date(f.modifiedTime).getTime(),
       source: 'gdrive',
-      cloudFileId: f.id
+      cloudFileId: f.id,
+      cloudGDriveAccount: accountEmail
     };
   }).filter(Boolean);
 }
@@ -249,6 +284,8 @@ async function listGDriveFilesRecursive({ folderId = 'root', maxDepth = 'all' })
 
 export async function listGDriveSpecial(section) {
   const client = getGDriveClient();
+  const activeAccount = client.getActiveAccount();
+  const accountEmail = activeAccount?.email || null;
   let data;
 
   switch (section) {
@@ -284,7 +321,8 @@ export async function listGDriveSpecial(section) {
         size: f.size,
         lastModified: new Date(f.modifiedTime).getTime(),
         source: 'gdrive',
-        cloudFileId: f.id
+        cloudFileId: f.id,
+        cloudGDriveAccount: accountEmail
       };
     })
     .filter(Boolean);
@@ -296,10 +334,14 @@ export async function listGDriveSpecial(section) {
 
 export async function getFileUrl(model) {
   if (model.source === 's3') {
-    const client = getS3Client();
+    const client = getS3Client(model.cloudProfileId);
     return client.generatePresignedUrl(model.cloudKey, 3600, model.cloudBucket);
   } else if (model.source === 'gdrive') {
     const client = getGDriveClient();
+    // Switch to the account that listed this file
+    if (model.cloudGDriveAccount) {
+      client.setActiveAccount(model.cloudGDriveAccount);
+    }
     return client.getFileObjectUrl(model.cloudFileId);
   }
   throw new Error(`Unknown cloud source: ${model.source}`);

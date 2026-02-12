@@ -118,6 +118,15 @@ export class SettingsModal {
             Credentials are stored in your browser's local storage. Use scoped, read-only credentials.
           </div>
 
+          <a href="docs/cloud-setup.html" target="_blank" class="settings-guide-card">
+            <div class="guide-card-icon"><i class="fa fa-book"></i></div>
+            <div class="guide-card-text">
+              <div class="guide-card-title">Need help setting up?</div>
+              <div class="guide-card-sub">Step-by-step guide for S3 and Google Drive</div>
+            </div>
+            <i class="fa fa-arrow-right guide-card-arrow"></i>
+          </a>
+
           <!-- S3 Section -->
           <div class="settings-section collapsed">
             <div class="settings-section-header settings-collapsible-header">
@@ -126,38 +135,49 @@ export class SettingsModal {
               <span class="settings-collapse-icon">&#9656;</span>
             </div>
             <div class="settings-form settings-collapsible-body" id="s3Form">
-              <div class="settings-field">
-                <label for="s3AccessKey">Access Key ID</label>
-                <input type="text" id="s3AccessKey" placeholder="AKIA..." autocomplete="off">
-              </div>
-              <div class="settings-field">
-                <label for="s3SecretKey">Secret Access Key</label>
-                <input type="password" id="s3SecretKey" placeholder="Enter secret key" autocomplete="off">
-                <button class="settings-toggle-vis" title="Show/hide" tabindex="-1"><i class="fa fa-eye"></i></button>
-              </div>
-              <div class="settings-field-row">
+              <div class="s3-profile-list" id="s3ProfileList"></div>
+              <button class="btn s3-add-profile-btn" id="s3AddProfile">
+                <i class="fa fa-plus"></i> Add S3 Profile
+              </button>
+              <div class="s3-profile-form" id="s3ProfileForm" style="display:none">
+                <input type="hidden" id="s3EditProfileId" value="">
                 <div class="settings-field">
-                  <label for="s3Region">Region</label>
-                  <input type="text" id="s3Region" placeholder="eu-central-1" value="eu-central-1">
+                  <label for="s3ProfileLabel">Profile Name</label>
+                  <input type="text" id="s3ProfileLabel" placeholder="e.g. Work Assets, Personal" autocomplete="off">
                 </div>
                 <div class="settings-field">
-                  <label for="s3Bucket">Default Bucket</label>
-                  <input type="text" id="s3Bucket" placeholder="my-bucket">
+                  <label for="s3AccessKey">Access Key ID</label>
+                  <input type="text" id="s3AccessKey" placeholder="AKIA..." autocomplete="off">
                 </div>
-              </div>
-              <p class="settings-description">
-                Your S3 bucket must have
-                <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/cors.html" target="_blank" rel="noopener">CORS configured</a>
-                to allow requests from this site.
-              </p>
-              <div class="settings-hint" id="s3Hint"></div>
-              <div class="settings-btn-row">
-                <button class="btn settings-save-btn" id="s3Save">
-                  <i class="fa fa-save"></i> Save
-                </button>
-                <button class="btn settings-clear-btn" id="s3Clear" title="Remove saved S3 credentials">
-                  <i class="fa fa-trash"></i>
-                </button>
+                <div class="settings-field">
+                  <label for="s3SecretKey">Secret Access Key</label>
+                  <input type="password" id="s3SecretKey" placeholder="Enter secret key" autocomplete="off">
+                  <button class="settings-toggle-vis" title="Show/hide" tabindex="-1"><i class="fa fa-eye"></i></button>
+                </div>
+                <div class="settings-field-row">
+                  <div class="settings-field">
+                    <label for="s3Region">Region</label>
+                    <input type="text" id="s3Region" placeholder="eu-central-1" value="eu-central-1">
+                  </div>
+                  <div class="settings-field">
+                    <label for="s3Bucket">Bucket</label>
+                    <input type="text" id="s3Bucket" placeholder="my-bucket">
+                  </div>
+                </div>
+                <p class="settings-description">
+                  Your S3 bucket must have
+                  <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/cors.html" target="_blank" rel="noopener">CORS configured</a>
+                  to allow requests from this site.
+                </p>
+                <div class="settings-hint" id="s3Hint"></div>
+                <div class="settings-btn-row">
+                  <button class="btn settings-save-btn" id="s3Save">
+                    <i class="fa fa-save"></i> Save Profile
+                  </button>
+                  <button class="btn settings-clear-btn" id="s3CancelEdit" title="Cancel">
+                    <i class="fa fa-times"></i> Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -192,12 +212,6 @@ export class SettingsModal {
             </div>
           </div>
 
-          <!-- Help Link -->
-          <div class="settings-help">
-            <i class="fa fa-circle-info"></i>
-            For setup instructions, see the
-            <a href="docs/cloud-setup.html" target="_blank">Cloud Storage Guide</a>.
-          </div>
         </div>
       </div>
     `;
@@ -230,9 +244,12 @@ export class SettingsModal {
       }
     });
 
-    // Save/clear buttons
+    // S3 profile buttons
+    this.modal.querySelector('#s3AddProfile').addEventListener('click', () => this.showS3ProfileForm());
     this.modal.querySelector('#s3Save').addEventListener('click', () => this.saveS3());
-    this.modal.querySelector('#s3Clear').addEventListener('click', () => this.clearS3());
+    this.modal.querySelector('#s3CancelEdit').addEventListener('click', () => this.hideS3ProfileForm());
+
+    // GDrive buttons
     this.modal.querySelector('#gdriveSave').addEventListener('click', () => this.saveGDrive());
     this.modal.querySelector('#gdriveClear').addEventListener('click', () => this.clearGDrive());
 
@@ -275,16 +292,14 @@ export class SettingsModal {
     const gdriveStatus = this.modal.querySelector('#gdriveConfigStatus');
 
     if (data.s3.configured) {
-      s3Status.textContent = 'Configured';
+      const count = data.s3.profileCount;
+      s3Status.textContent = `${count} profile${count !== 1 ? 's' : ''}`;
       s3Status.className = 'settings-status configured';
-      const hint = this.modal.querySelector('#s3Hint');
-      hint.textContent = `Key: ${data.s3.accessKeyHint} | Region: ${data.s3.region} | Bucket: ${data.s3.bucket}`;
-      this.modal.querySelector('#s3Region').value = data.s3.region || 'eu-central-1';
-      this.modal.querySelector('#s3Bucket').value = data.s3.bucket || '';
     } else {
       s3Status.textContent = 'Not configured';
       s3Status.className = 'settings-status';
     }
+    this.renderS3Profiles();
 
     if (data.gdrive.credentialsConfigured) {
       gdriveStatus.textContent = 'Configured';
@@ -299,8 +314,115 @@ export class SettingsModal {
     }
   }
 
+  renderS3Profiles() {
+    const listEl = this.modal.querySelector('#s3ProfileList');
+    const profiles = CredentialStore.getS3Profiles();
+    const defaultId = CredentialStore.getDefaultS3ProfileId();
+    listEl.innerHTML = '';
+
+    if (profiles.length === 0) {
+      listEl.innerHTML = '<div class="s3-no-profiles">No S3 profiles configured yet.</div>';
+      return;
+    }
+
+    profiles.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 's3-profile-card' + (p.id === defaultId ? ' default' : '');
+      const keyHint = p.accessKeyId ? p.accessKeyId.substring(0, 4) + '****' : '****';
+      card.innerHTML = `
+        <div class="s3-profile-info">
+          <div class="s3-profile-label">${p.label || p.bucket || 'Untitled'}${p.id === defaultId ? ' <span class="s3-default-badge">Default</span>' : ''}</div>
+          <div class="s3-profile-details">${p.region} &middot; ${p.bucket} &middot; ${keyHint}</div>
+        </div>
+        <div class="s3-profile-actions">
+          ${p.id !== defaultId ? '<button class="s3-profile-action" data-action="default" title="Set as default"><i class="fa fa-star"></i></button>' : ''}
+          <button class="s3-profile-action" data-action="edit" title="Edit"><i class="fa fa-pen"></i></button>
+          <button class="s3-profile-action" data-action="delete" title="Delete"><i class="fa fa-trash"></i></button>
+        </div>
+      `;
+
+      card.querySelector('[data-action="edit"]').addEventListener('click', () => this.editS3Profile(p.id));
+      card.querySelector('[data-action="delete"]').addEventListener('click', () => this.deleteS3Profile(p.id));
+      const defaultBtn = card.querySelector('[data-action="default"]');
+      if (defaultBtn) {
+        defaultBtn.addEventListener('click', () => {
+          CredentialStore.setDefaultS3ProfileId(p.id);
+          this.renderS3Profiles();
+        });
+      }
+
+      listEl.appendChild(card);
+    });
+  }
+
+  showS3ProfileForm(profileId) {
+    const form = this.modal.querySelector('#s3ProfileForm');
+    const addBtn = this.modal.querySelector('#s3AddProfile');
+    form.style.display = '';
+    addBtn.style.display = 'none';
+
+    // Clear or fill form
+    if (profileId) {
+      const p = CredentialStore.getS3Profile(profileId);
+      if (p) {
+        this.modal.querySelector('#s3EditProfileId').value = p.id;
+        this.modal.querySelector('#s3ProfileLabel').value = p.label || '';
+        this.modal.querySelector('#s3AccessKey').value = p.accessKeyId || '';
+        this.modal.querySelector('#s3SecretKey').value = p.secretAccessKey || '';
+        this.modal.querySelector('#s3Region').value = p.region || 'eu-central-1';
+        this.modal.querySelector('#s3Bucket').value = p.bucket || '';
+        return;
+      }
+    }
+
+    this.modal.querySelector('#s3EditProfileId').value = '';
+    this.modal.querySelector('#s3ProfileLabel').value = '';
+    this.modal.querySelector('#s3AccessKey').value = '';
+    this.modal.querySelector('#s3SecretKey').value = '';
+    this.modal.querySelector('#s3Region').value = 'eu-central-1';
+    this.modal.querySelector('#s3Bucket').value = '';
+  }
+
+  hideS3ProfileForm() {
+    const form = this.modal.querySelector('#s3ProfileForm');
+    const addBtn = this.modal.querySelector('#s3AddProfile');
+    form.style.display = 'none';
+    addBtn.style.display = '';
+    this.modal.querySelector('#s3Hint').textContent = '';
+    this.modal.querySelector('#s3Hint').className = 'settings-hint';
+  }
+
+  editS3Profile(profileId) {
+    this.showS3ProfileForm(profileId);
+  }
+
+  deleteS3Profile(profileId) {
+    const profile = CredentialStore.getS3Profile(profileId);
+    const label = profile?.label || 'this profile';
+    if (!confirm(`Delete S3 profile "${label}"?`)) return;
+
+    CredentialStore.deleteS3Profile(profileId);
+    const { clearS3ClientCache } = window.__cloudStorageProvider || {};
+    // Dynamic import to clear cache
+    import('./CloudStorageProvider.js').then(m => m.clearS3ClientCache?.(profileId)).catch(() => {});
+
+    this.renderS3Profiles();
+    // Update status badge
+    const profiles = CredentialStore.getS3Profiles();
+    const s3Status = this.modal.querySelector('#s3Status');
+    if (profiles.length > 0) {
+      s3Status.textContent = `${profiles.length} profile${profiles.length !== 1 ? 's' : ''}`;
+      s3Status.className = 'settings-status configured';
+    } else {
+      s3Status.textContent = 'Not configured';
+      s3Status.className = 'settings-status';
+    }
+  }
+
   saveS3() {
     const hint = this.modal.querySelector('#s3Hint');
+    const editId = this.modal.querySelector('#s3EditProfileId').value;
+    const label = this.modal.querySelector('#s3ProfileLabel').value.trim();
     const accessKeyId = this.modal.querySelector('#s3AccessKey').value.trim();
     const secretAccessKey = this.modal.querySelector('#s3SecretKey').value.trim();
     const region = this.modal.querySelector('#s3Region').value.trim();
@@ -313,27 +435,30 @@ export class SettingsModal {
     }
 
     try {
-      CredentialStore.saveS3Credentials({ accessKeyId, secretAccessKey, region, bucket });
-      hint.textContent = 'S3 credentials saved!';
+      CredentialStore.saveS3Profile({
+        id: editId || undefined,
+        label: label || bucket || 'Untitled',
+        accessKeyId,
+        secretAccessKey,
+        region,
+        bucket
+      });
+      // Clear S3 client cache for this profile
+      import('./CloudStorageProvider.js').then(m => m.clearS3ClientCache?.(editId || undefined)).catch(() => {});
+
+      hint.textContent = editId ? 'Profile updated!' : 'Profile saved!';
       hint.className = 'settings-hint success';
-      this.modal.querySelector('#s3Status').textContent = 'Configured';
-      this.modal.querySelector('#s3Status').className = 'settings-status configured';
-      this.modal.querySelector('#s3AccessKey').value = '';
-      this.modal.querySelector('#s3SecretKey').value = '';
+      setTimeout(() => this.hideS3ProfileForm(), 800);
+      this.renderS3Profiles();
+
+      const profiles = CredentialStore.getS3Profiles();
+      const s3Status = this.modal.querySelector('#s3Status');
+      s3Status.textContent = `${profiles.length} profile${profiles.length !== 1 ? 's' : ''}`;
+      s3Status.className = 'settings-status configured';
     } catch (e) {
       hint.textContent = e.message;
       hint.className = 'settings-hint error';
     }
-  }
-
-  clearS3() {
-    CredentialStore.clearS3Credentials();
-    this.modal.querySelector('#s3Status').textContent = 'Not configured';
-    this.modal.querySelector('#s3Status').className = 'settings-status';
-    this.modal.querySelector('#s3Hint').textContent = 'S3 credentials removed.';
-    this.modal.querySelector('#s3Hint').className = 'settings-hint';
-    this.modal.querySelector('#s3AccessKey').value = '';
-    this.modal.querySelector('#s3SecretKey').value = '';
   }
 
   async saveGDrive() {
@@ -543,6 +668,16 @@ export class SettingsModal {
 
   static _releaseLogEntriesHTML() {
     const releases = [
+      {
+        version: '2.0.0', date: 'Feb 12, 2026', title: 'Cloud Storage Refinements',
+        features: [
+          'Multi-bucket S3: save multiple profiles with different credentials per bucket',
+          'Multi-account Google Drive: sign into multiple accounts simultaneously and switch between them',
+          'Prominent setup guide card in Cloud Storage Settings modal',
+          'Collapsible guide sections in cloud-setup.html (start compacted, expand on click)',
+          'Dave-tone alternative guides: peeking cards reveal funnier step-by-step instructions',
+        ]
+      },
       {
         version: '1.9.0', date: 'Feb 12, 2026', title: 'Talk to Dave',
         features: [

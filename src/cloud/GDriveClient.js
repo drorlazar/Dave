@@ -1,12 +1,15 @@
 // GDriveClient.js - Browser-based Google Drive client using Google Identity Services (GIS)
+// Supports multiple simultaneous Google accounts
 
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
+const USERINFO_API = 'https://www.googleapis.com/oauth2/v3/userinfo';
 const SCOPE = 'https://www.googleapis.com/auth/drive.readonly';
 
 export class GDriveClient {
   constructor() {
-    this.accessToken = null;
-    this.tokenExpiresAt = 0;
+    /** @type {Map<string, {accessToken: string, tokenExpiresAt: number, email: string, name: string, picture: string}>} */
+    this.accounts = new Map();
+    this.activeEmail = null;
     this.tokenClient = null;
     this.clientId = null;
   }
@@ -14,7 +17,7 @@ export class GDriveClient {
   // Initialize with a Google OAuth Client ID
   init(clientId) {
     this.clientId = clientId;
-    // GIS library may not be loaded yet (async script). We initialize lazily in _ensureTokenClient.
+    this.tokenClient = null; // force re-init on next use
   }
 
   _ensureTokenClient() {
@@ -28,15 +31,18 @@ export class GDriveClient {
         'Try disabling ad blockers for this site.'
       );
     }
-    // We don't set callback here; requestToken creates a Promise-based wrapper
     this.tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: this.clientId,
       scope: SCOPE,
+      prompt: '',   // overridden per-request
       callback: () => {} // overridden in requestToken
     });
   }
 
-  // Request an access token (opens consent popup). Must be called from a user gesture.
+  /**
+   * Request an access token (opens consent popup).
+   * Uses prompt: 'select_account' to allow choosing a different account.
+   */
   requestToken() {
     return new Promise((resolve) => {
       try {
@@ -47,12 +53,37 @@ export class GDriveClient {
         return;
       }
 
-      this.tokenClient.callback = (tokenResponse) => {
+      this.tokenClient.callback = async (tokenResponse) => {
         if (tokenResponse && tokenResponse.access_token) {
-          this.accessToken = tokenResponse.access_token;
-          // Tokens typically expire in 3600 seconds; use expires_in if available
+          const token = tokenResponse.access_token;
           const expiresIn = tokenResponse.expires_in ? parseInt(tokenResponse.expires_in, 10) : 3600;
-          this.tokenExpiresAt = Date.now() + (expiresIn * 1000) - 60000; // 1 min buffer
+          const tokenExpiresAt = Date.now() + (expiresIn * 1000) - 60000;
+
+          // Fetch user info to identify which account this token belongs to
+          try {
+            const userInfo = await this._fetchUserInfo(token);
+            const account = {
+              accessToken: token,
+              tokenExpiresAt,
+              email: userInfo.email,
+              name: userInfo.name || userInfo.email,
+              picture: userInfo.picture || ''
+            };
+            this.accounts.set(userInfo.email, account);
+            this.activeEmail = userInfo.email;
+          } catch {
+            // Fallback: store with generic key if userinfo fails
+            const fallbackKey = 'account-' + this.accounts.size;
+            this.accounts.set(fallbackKey, {
+              accessToken: token,
+              tokenExpiresAt,
+              email: fallbackKey,
+              name: 'Google Account',
+              picture: ''
+            });
+            this.activeEmail = fallbackKey;
+          }
+
           resolve(true);
         } else {
           resolve(false);
@@ -64,39 +95,88 @@ export class GDriveClient {
         resolve(false);
       };
 
-      this.tokenClient.requestAccessToken();
+      // Force account picker when adding accounts
+      this.tokenClient.requestAccessToken({
+        prompt: this.accounts.size > 0 ? 'select_account' : ''
+      });
     });
   }
 
-  isAuthenticated() {
-    return !!(this.accessToken && Date.now() < this.tokenExpiresAt);
+  async _fetchUserInfo(token) {
+    const response = await fetch(USERINFO_API, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch user info');
+    return response.json();
   }
 
-  revokeToken() {
-    if (this.accessToken) {
-      try {
-        google.accounts.oauth2.revoke(this.accessToken);
-      } catch (e) {
-        // ignore
+  /** Get the active account info (or null) */
+  getActiveAccount() {
+    if (!this.activeEmail) return null;
+    const account = this.accounts.get(this.activeEmail);
+    if (!account || Date.now() >= account.tokenExpiresAt) return null;
+    return account;
+  }
+
+  /** Get all connected accounts */
+  getAccounts() {
+    return Array.from(this.accounts.values()).filter(a => Date.now() < a.tokenExpiresAt);
+  }
+
+  /** Switch active account by email */
+  setActiveAccount(email) {
+    if (this.accounts.has(email)) {
+      this.activeEmail = email;
+      return true;
+    }
+    return false;
+  }
+
+  /** Remove a specific account (or all if no email given) */
+  removeAccount(email) {
+    if (email) {
+      const account = this.accounts.get(email);
+      if (account) {
+        try { google.accounts.oauth2.revoke(account.accessToken); } catch {}
+        this.accounts.delete(email);
+        if (this.activeEmail === email) {
+          const remaining = this.getAccounts();
+          this.activeEmail = remaining.length > 0 ? remaining[0].email : null;
+        }
       }
-      this.accessToken = null;
-      this.tokenExpiresAt = 0;
+    } else {
+      // Remove all
+      for (const account of this.accounts.values()) {
+        try { google.accounts.oauth2.revoke(account.accessToken); } catch {}
+      }
+      this.accounts.clear();
+      this.activeEmail = null;
     }
   }
 
-  // Make an authenticated fetch to Google APIs
+  isAuthenticated() {
+    return !!this.getActiveAccount();
+  }
+
+  // Legacy compat
+  revokeToken() {
+    this.removeAccount();
+  }
+
+  // Make an authenticated fetch to Google APIs (uses active account's token)
   async _fetch(url) {
-    if (!this.accessToken) {
+    const account = this.getActiveAccount();
+    if (!account) {
       throw new Error('Not authenticated with Google Drive. Please sign in first.');
     }
 
     const response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${this.accessToken}` }
+      headers: { 'Authorization': `Bearer ${account.accessToken}` }
     });
 
     if (response.status === 401) {
-      this.accessToken = null;
-      this.tokenExpiresAt = 0;
+      // Mark this account's token as expired
+      account.tokenExpiresAt = 0;
       throw new Error('Google Drive session expired. Please sign in again.');
     }
 

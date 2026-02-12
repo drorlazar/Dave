@@ -12,12 +12,12 @@
 
 :root {
   --bg: #0f1117;
-  --bg-card: #1a1d27;
-  --bg-card-hover: #222633;
-  --bg-code: #151821;
-  --border: #2a2e3a;
-  --text: #e0e0e0;
-  --text-dim: #8a8fa0;
+  --bg-card: #1e2230;
+  --bg-card-hover: #272d3e;
+  --bg-code: #181c28;
+  --border: #323848;
+  --text: #eaedf2;
+  --text-dim: #9da3b8;
   --accent-blue: #4e9af5;
   --accent-green: #3dd68c;
   --accent-orange: #f5a623;
@@ -89,6 +89,10 @@ a:hover { text-decoration: underline; }
   margin-bottom: 48px;
 }
 
+.pick-card-wrap {
+  position: relative;
+}
+
 .pick-card {
   display: flex;
   flex-direction: column;
@@ -102,6 +106,8 @@ a:hover { text-decoration: underline; }
   transition: all 0.2s;
   text-decoration: none !important;
   color: var(--text);
+  position: relative;
+  z-index: 2;
 }
 
 .pick-card:hover {
@@ -128,9 +134,93 @@ a:hover { text-decoration: underline; }
   text-align: center;
 }
 
+/* ── Dave Peek Tab (file-cabinet tab behind pick-card) ── */
+.dave-peek-tab {
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  z-index: 1;
+  background: rgba(61,214,140,0.12);
+  border: 1px solid rgba(61,214,140,0.25);
+  border-radius: 8px 8px 0 0;
+  padding: 4px 14px 12px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.pick-card-wrap:hover .dave-peek-tab {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dave-peek-tab:hover {
+  background: rgba(61,214,140,0.22);
+  border-color: var(--accent-green);
+}
+
+.dave-peek-tab .peek-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--accent-green);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+/* Tooltip on hover */
+.dave-peek-tab .peek-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-green);
+  border-radius: 8px;
+  padding: 8px 14px;
+  width: 220px;
+  font-size: 0.76rem;
+  color: var(--accent-green);
+  font-style: italic;
+  line-height: 1.4;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.dave-peek-tab .peek-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 20px;
+  border: 6px solid transparent;
+  border-top-color: var(--accent-green);
+}
+
+.dave-peek-tab:hover .peek-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Active state when Dave guide is shown */
+.dave-peek-tab.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  background: rgba(61,214,140,0.25);
+  border-color: var(--accent-green);
+}
+
+.dave-peek-tab.active .peek-label {
+  color: #fff;
+}
+
 /* ── Section ── */
 .guide-section {
-  margin-bottom: 56px;
+  margin-bottom: 36px;
   scroll-margin-top: 24px;
 }
 
@@ -138,17 +228,61 @@ a:hover { text-decoration: underline; }
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 24px;
-  padding-bottom: 14px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s;
 }
+
+.section-header:hover { opacity: 0.85; }
 
 .section-header i {
   font-size: 1.6rem;
 }
 
-.section-header.s3 i { color: var(--s3-color); }
-.section-header.gdrive i { color: var(--gdrive-color); }
+.section-header .section-chevron {
+  margin-left: auto;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  transition: transform 0.25s ease;
+}
+
+.guide-section.collapsed .section-chevron {
+  transform: rotate(-90deg);
+}
+
+.guide-section.collapsed .section-body {
+  display: none;
+}
+
+.section-header.s3 i:first-child { color: var(--s3-color); }
+.section-header.gdrive i:first-child { color: var(--gdrive-color); }
+
+/* ── Expand/Collapse All ── */
+.expand-collapse-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.expand-collapse-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expand-collapse-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text);
+}
 
 .section-header h2 {
   font-size: 1.5rem;
@@ -160,8 +294,8 @@ a:hover { text-decoration: underline; }
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 24px 28px;
-  margin-bottom: 20px;
+  padding: 22px 26px;
+  margin-bottom: 14px;
   position: relative;
 }
 
@@ -348,7 +482,7 @@ details .details-body {
 .divider {
   border: none;
   border-top: 1px solid var(--border);
-  margin: 48px 0;
+  margin: 32px 0;
 }
 
 /* ── Back link ── */
@@ -403,6 +537,68 @@ details .details-body {
 
 /* ── Smooth scroll ── */
 html { scroll-behavior: smooth; }
+
+/* (peek tabs are styled in the Picker Cards section above) */
+
+/* Dave guide content */
+.guide-dave {
+  display: none;
+}
+
+.guide-dave.visible {
+  display: block;
+}
+
+.guide-official.hidden {
+  display: none;
+}
+
+.guide-dave .step {
+  border-left: 3px solid var(--accent-green);
+}
+
+.guide-dave .step-title {
+  color: var(--accent-green);
+}
+
+.guide-dave .dave-voice {
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  line-height: 1.75;
+  font-style: italic;
+}
+
+.guide-dave .dave-voice strong {
+  color: var(--accent-green);
+  font-style: normal;
+}
+
+.guide-dave .dave-aside {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  opacity: 0.7;
+  margin-top: 6px;
+}
+
+.back-to-boring {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-to-boring:hover {
+  background: rgba(255,255,255,0.10);
+  color: var(--text);
+}
 </style>
 </head>
 <body>
@@ -419,27 +615,47 @@ html { scroll-behavior: smooth; }
 
   <!-- ════════ Picker ════════ -->
   <div class="picker">
-    <a href="#s3-section" class="pick-card s3">
-      <i class="fab fa-aws"></i>
-      <span class="pick-title">Amazon S3</span>
-      <span class="pick-desc">Best for large asset libraries already on AWS</span>
-    </a>
-    <a href="#gdrive-section" class="pick-card gdrive">
-      <i class="fab fa-google-drive"></i>
-      <span class="pick-title">Google Drive</span>
-      <span class="pick-desc">Easiest option &mdash; just link your Google account</span>
-    </a>
+    <div class="pick-card-wrap">
+      <div class="dave-peek-tab" id="s3PeekTab" onclick="toggleDaveGuide('s3')">
+        <span class="peek-label">Dave's version</span>
+        <div class="peek-tooltip">Psst... want the version that doesn't put you to sleep? &#128521;</div>
+      </div>
+      <a href="#s3-section" class="pick-card s3" onclick="expandAndScroll(event, 's3-section')">
+        <i class="fab fa-aws"></i>
+        <span class="pick-title">Amazon S3</span>
+        <span class="pick-desc">Best for large asset libraries already on AWS</span>
+      </a>
+    </div>
+    <div class="pick-card-wrap">
+      <div class="dave-peek-tab" id="gdrivePeekTab" onclick="toggleDaveGuide('gdrive')">
+        <span class="peek-label">Dave's version</span>
+        <div class="peek-tooltip">The boring version has 6 steps. Mine has 6 steps too, but they're funnier. &#128526;</div>
+      </div>
+      <a href="#gdrive-section" class="pick-card gdrive" onclick="expandAndScroll(event, 'gdrive-section')">
+        <i class="fab fa-google-drive"></i>
+        <span class="pick-title">Google Drive</span>
+        <span class="pick-desc">Easiest option &mdash; just link your Google account</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="expand-collapse-bar">
+    <button class="expand-collapse-btn" onclick="toggleAllSections(false)"><i class="fa fa-angles-down"></i> Expand All</button>
+    <button class="expand-collapse-btn" onclick="toggleAllSections(true)"><i class="fa fa-angles-up"></i> Collapse All</button>
   </div>
 
   <!-- ══════════════════════════════════════════════ -->
   <!--                  AWS S3                        -->
   <!-- ══════════════════════════════════════════════ -->
-  <div class="guide-section" id="s3-section">
-    <div class="section-header s3">
+  <div class="guide-section collapsed" id="s3-section">
+    <div class="section-header s3" onclick="toggleSection(this)">
       <i class="fab fa-aws"></i>
       <h2>Amazon S3 Setup</h2>
+      <i class="fa fa-chevron-down section-chevron"></i>
     </div>
+    <div class="section-body">
 
+    <div class="guide-official" id="s3-official">
     <div class="time-badge"><i class="fa fa-clock"></i> About 10 minutes</div>
 
     <!-- Step 1 -->
@@ -538,6 +754,76 @@ html { scroll-behavior: smooth; }
         <li><strong>s3:// links</strong> &mdash; type <code>s3://bucket-name/folder/</code> into the search bar</li>
       </ul>
     </div>
+    </div><!-- /#s3-official -->
+
+    <!-- ── Dave's S3 Guide ── -->
+    <div class="guide-dave" id="s3-dave">
+      <div class="step s3-step">
+        <div class="step-title"><span class="step-number">1</span> Tell AWS I'm cool (CORS)</div>
+        <p class="dave-voice">OK so here's the thing. Browsers are paranoid. They think every website is trying to steal data. Which... fair. But I'm not that kind of app. I just want to <strong>look</strong> at your files.</p>
+        <p class="dave-voice">You need to tell AWS: "Hey, Dave's with me. Let him in."</p>
+        <ol>
+          <li>Open the <a href="https://s3.console.aws.amazon.com/" target="_blank">AWS S3 Console</a></li>
+          <li>Click your <strong>bucket name</strong></li>
+          <li>Go to <strong>Permissions</strong> tab</li>
+          <li>Find <strong>Cross-origin resource sharing (CORS)</strong> and click <strong>Edit</strong></li>
+          <li>Nuke whatever's there and paste this:</li>
+        </ol>
+        <pre><code>[
+  {
+    "AllowedHeaders": [
+      "Authorization",
+      "x-amz-date",
+      "x-amz-content-sha256",
+      "content-type"
+    ],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedOrigins": ["*"],
+    "ExposeHeaders": [],
+    "MaxAgeSeconds": 3600
+  }
+]</code></pre>
+        <ol start="6"><li>Click <strong>Save changes</strong>. Done. We're past the worst part.</li></ol>
+        <p class="dave-aside">The "*" means "let anyone in." Fine for now. You can lock it down later if you're the careful type.</p>
+      </div>
+
+      <div class="step s3-step">
+        <div class="step-title"><span class="step-number">2</span> Get me a badge (Access Keys)</div>
+        <p class="dave-voice">I need credentials. Think of it like a backstage pass &mdash; a username and password that lets me into your bucket.</p>
+        <p class="dave-voice"><strong>Pro tip:</strong> Don't give me the keys to the whole castle. Make a separate user with <strong>read-only</strong> access. If the keys leak, the worst anyone can do is... look at your files. Which is literally all I do anyway.</p>
+        <ol>
+          <li>Open <a href="https://console.aws.amazon.com/iam/" target="_blank">AWS IAM Console</a></li>
+          <li><strong>Users</strong> &rarr; <strong>Create user</strong></li>
+          <li>Name it <code>dave-viewer</code> because I deserve that</li>
+          <li><strong>Attach policies directly</strong> &rarr; search <code>AmazonS3ReadOnlyAccess</code> &rarr; check it</li>
+          <li>After creating: <strong>Security credentials</strong> &rarr; <strong>Create access key</strong></li>
+          <li>Choose <strong>"Application running outside AWS"</strong></li>
+          <li>Copy the <strong>Access Key ID</strong> and <strong>Secret Access Key</strong></li>
+        </ol>
+        <p class="dave-aside">Write that Secret Key down NOW. AWS shows it once and then it's gone forever. Like my hopes of being a full-stack application.</p>
+      </div>
+
+      <div class="step s3-step">
+        <div class="step-title"><span class="step-number">3</span> Hand me the keys</div>
+        <p class="dave-voice">Almost there. Now you just need to tell me who I am.</p>
+        <ol>
+          <li>Open me (hi!) and click the <span class="ui-ref"><i class="fa fa-gear"></i> Settings</span> gear icon</li>
+          <li>In the <strong>AWS S3</strong> section, fill in your keys, region, and bucket name</li>
+          <li>Click <strong>Save</strong></li>
+        </ol>
+        <p class="dave-aside">Your credentials live in localStorage &mdash; basically the sock drawer of web browsers. They never leave your machine. I promise.</p>
+      </div>
+
+      <div class="step s3-step">
+        <div class="step-title"><span class="step-number">4</span> Let's go exploring!</div>
+        <p class="dave-voice">Click <span class="ui-ref"><i class="fa fa-cloud"></i> Source</span> &rarr; <strong>AWS S3</strong> and watch me do my thing. I'll show you your bucket's folders and files. Navigate around. Load stuff. Let me be useful.</p>
+        <p class="dave-voice">You can also paste S3 URLs into my search bar, drag them onto me, or type <code>s3://bucket-name/folder/</code>. I'm flexible like that.</p>
+      </div>
+
+      <button class="back-to-boring" onclick="toggleDaveGuide('s3')"><i class="fa fa-arrow-left"></i> Back to the official version</button>
+    </div>
+
+    </div><!-- /.section-body -->
   </div>
 
   <hr class="divider">
@@ -545,12 +831,15 @@ html { scroll-behavior: smooth; }
   <!-- ══════════════════════════════════════════════ -->
   <!--              Google Drive                      -->
   <!-- ══════════════════════════════════════════════ -->
-  <div class="guide-section" id="gdrive-section">
-    <div class="section-header gdrive">
+  <div class="guide-section collapsed" id="gdrive-section">
+    <div class="section-header gdrive" onclick="toggleSection(this)">
       <i class="fab fa-google-drive"></i>
       <h2>Google Drive Setup</h2>
+      <i class="fa fa-chevron-down section-chevron"></i>
     </div>
+    <div class="section-body">
 
+    <div class="guide-official" id="gdrive-official">
     <div class="time-badge"><i class="fa fa-clock"></i> About 5&ndash;10 minutes</div>
 
     <!-- Step 1 -->
@@ -648,6 +937,79 @@ html { scroll-behavior: smooth; }
         <p>Your Google session lasts about 1 hour. When it expires, just click Source &rarr; Google Drive again to sign back in.</p>
       </div>
     </div>
+    </div><!-- /#gdrive-official -->
+
+    <!-- ── Dave's Google Drive Guide ── -->
+    <div class="guide-dave" id="gdrive-dave">
+      <div class="step gdrive-step">
+        <div class="step-title"><span class="step-number">1</span> Create a Google Cloud project</div>
+        <p class="dave-voice">Google makes you jump through 6 hoops to let me see your files. I'd apologize, but it's not my fault. Blame OAuth.</p>
+        <p class="dave-voice">First, you need a "project." It sounds like you're launching a startup but it's just a container for your settings. It's free. It takes a minute.</p>
+        <ol>
+          <li>Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+          <li>Agree to the terms (Google's version of "are you 18?")</li>
+          <li>Click the project dropdown at the top &rarr; <strong>New Project</strong></li>
+          <li>Name it <code>DAVE Viewer</code> and click <strong>Create</strong></li>
+        </ol>
+        <p class="dave-aside">If you already have a project from some other experiment, you can reuse it. I'm not picky.</p>
+      </div>
+
+      <div class="step gdrive-step">
+        <div class="step-title"><span class="step-number">2</span> Wake up the Drive API</div>
+        <p class="dave-voice">Google has this API sitting there doing nothing until you explicitly turn it on. Classic Google.</p>
+        <ol>
+          <li>Go to <strong>APIs &amp; Services</strong> &rarr; <strong>Library</strong></li>
+          <li>Search for <strong>Google Drive API</strong></li>
+          <li>Click it. Hit the big blue <strong>Enable</strong> button. Feel the power.</li>
+        </ol>
+      </div>
+
+      <div class="step gdrive-step">
+        <div class="step-title"><span class="step-number">3</span> The consent screen (AKA the hoop)</div>
+        <p class="dave-voice">This is the thing that makes you look like you're launching a startup when you just want to look at some FBX files.</p>
+        <ol>
+          <li>Go to <strong>APIs &amp; Services</strong> &rarr; <strong>OAuth consent screen</strong></li>
+          <li>Choose <strong>External</strong>, click <strong>Create</strong></li>
+          <li>Fill in: app name (<code>DAVE Viewer</code>), your email twice, that's it</li>
+          <li>Click <strong>Save and Continue</strong> through everything else. Skip scopes, skip test users.</li>
+        </ol>
+        <p class="dave-aside">"Testing" mode means only you can sign in. Perfect. I'm not going viral anytime soon.</p>
+      </div>
+
+      <div class="step gdrive-step">
+        <div class="step-title"><span class="step-number">4</span> The actual key (Client ID)</div>
+        <p class="dave-voice">This is the one piece I actually need. Everything else was setup for this moment.</p>
+        <ol>
+          <li>Go to <strong>APIs &amp; Services</strong> &rarr; <strong>Credentials</strong></li>
+          <li><strong>+ Create Credentials</strong> &rarr; <strong>OAuth client ID</strong></li>
+          <li>Application type: <strong>Web application</strong> &mdash; NOT "Desktop app." Desktop app will NOT work and you'll be mad at me for no reason.</li>
+          <li>Name it <code>DAVE</code></li>
+          <li>Under <strong>Authorized JavaScript origins</strong>, add:
+            <ul>
+              <li><code>https://drorlazar-sett.github.io</code></li>
+              <li><code>http://localhost:7777</code></li>
+            </ul>
+          </li>
+          <li>Click <strong>Create</strong>. Copy the Client ID.</li>
+        </ol>
+        <p class="dave-aside">It looks like <code>123456789-xxxxx.apps.googleusercontent.com</code>. If it doesn't end with that, something went wrong.</p>
+      </div>
+
+      <div class="step gdrive-step">
+        <div class="step-title"><span class="step-number">5</span> Tell me about it</div>
+        <p class="dave-voice">Open me, click <span class="ui-ref"><i class="fa fa-gear"></i> Settings</span>, paste the Client ID in the Google Drive section, click <strong>Save</strong>. That's it. We're connected. We're a thing now.</p>
+      </div>
+
+      <div class="step gdrive-step">
+        <div class="step-title"><span class="step-number">6</span> The moment of truth</div>
+        <p class="dave-voice">Click <span class="ui-ref"><i class="fa fa-cloud"></i> Source</span> &rarr; <strong>Google Drive</strong>. Google will pop up a sign-in window. Pick your account. Click Allow. And then... your files. In my grid. Where they belong.</p>
+        <p class="dave-voice">Sessions last about an hour. When it expires, just do Source &rarr; Google Drive again. I'll still be here. I'm always here.</p>
+      </div>
+
+      <button class="back-to-boring" onclick="toggleDaveGuide('gdrive')"><i class="fa fa-arrow-left"></i> Back to the official version</button>
+    </div>
+
+    </div><!-- /.section-body -->
   </div>
 
   <hr class="divider">
@@ -655,11 +1017,13 @@ html { scroll-behavior: smooth; }
   <!-- ══════════════════════════════════════════════ -->
   <!--              Using Cloud Sources               -->
   <!-- ══════════════════════════════════════════════ -->
-  <div class="guide-section" id="usage-section">
-    <div class="section-header" style="border-bottom-color: var(--accent-purple);">
+  <div class="guide-section collapsed" id="usage-section">
+    <div class="section-header" style="border-bottom-color: var(--accent-purple);" onclick="toggleSection(this)">
       <i class="fa fa-folder-open" style="color: var(--accent-purple);"></i>
       <h2>Once You're Connected</h2>
+      <i class="fa fa-chevron-down section-chevron"></i>
     </div>
+    <div class="section-body">
 
     <div class="step">
       <div class="step-title" style="margin-bottom: 10px;"><i class="fa fa-compass" style="color: var(--accent-purple); margin-right: 8px;"></i> Browsing folders</div>
@@ -695,6 +1059,7 @@ html { scroll-behavior: smooth; }
         <span><i class="fa fa-file-lines" style="width: 18px; color: var(--text-dim);"></i> Text &mdash; TXT, JSON, XML, MD...</span>
       </div>
     </div>
+    </div><!-- /.section-body -->
   </div>
 
   <hr class="divider">
@@ -702,11 +1067,13 @@ html { scroll-behavior: smooth; }
   <!-- ══════════════════════════════════════════════ -->
   <!--              Security                          -->
   <!-- ══════════════════════════════════════════════ -->
-  <div class="guide-section" id="security-section">
-    <div class="section-header" style="border-bottom-color: var(--accent-green);">
+  <div class="guide-section collapsed" id="security-section">
+    <div class="section-header" style="border-bottom-color: var(--accent-green);" onclick="toggleSection(this)">
       <i class="fa fa-shield-halved" style="color: var(--accent-green);"></i>
       <h2>Your Data is Safe</h2>
+      <i class="fa fa-chevron-down section-chevron"></i>
     </div>
+    <div class="section-body">
 
     <p style="color: var(--text-dim); margin-bottom: 16px;">DAVE runs 100% in your browser. Your credentials never leave your machine.</p>
 
@@ -728,6 +1095,7 @@ html { scroll-behavior: smooth; }
         <span><strong>Google tokens expire</strong> &mdash; Drive sessions auto-expire after 1 hour</span>
       </div>
     </div>
+    </div><!-- /.section-body -->
   </div>
 
   <hr class="divider">
@@ -735,11 +1103,13 @@ html { scroll-behavior: smooth; }
   <!-- ══════════════════════════════════════════════ -->
   <!--              Troubleshooting                   -->
   <!-- ══════════════════════════════════════════════ -->
-  <div class="guide-section" id="troubleshooting-section">
-    <div class="section-header" style="border-bottom-color: var(--accent-orange);">
+  <div class="guide-section collapsed" id="troubleshooting-section">
+    <div class="section-header" style="border-bottom-color: var(--accent-orange);" onclick="toggleSection(this)">
       <i class="fa fa-wrench" style="color: var(--accent-orange);"></i>
       <h2>Troubleshooting</h2>
+      <i class="fa fa-chevron-down section-chevron"></i>
     </div>
+    <div class="section-body">
 
     <h3 style="color: var(--s3-color); font-size: 1rem; margin-bottom: 12px;"><i class="fab fa-aws"></i> AWS S3 Issues</h3>
 
@@ -845,6 +1215,7 @@ html { scroll-behavior: smooth; }
         </ul>
       </div>
     </details>
+    </div><!-- /.section-body -->
   </div>
 
 </div>
@@ -860,6 +1231,64 @@ function copyCode(id, btn) {
       btn.classList.remove('copied');
     }, 2000);
   });
+}
+
+function toggleSection(headerEl) {
+  headerEl.closest('.guide-section').classList.toggle('collapsed');
+}
+
+function toggleAllSections(collapse) {
+  document.querySelectorAll('.guide-section').forEach(s => {
+    s.classList.toggle('collapsed', collapse);
+  });
+}
+
+function expandAndScroll(e, sectionId) {
+  e.preventDefault();
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+
+  // If Dave guide is active for this section, switch back to official
+  const guideId = sectionId.replace('-section', '');
+  const dave = document.getElementById(guideId + '-dave');
+  if (dave && dave.classList.contains('visible')) {
+    toggleDaveGuide(guideId);
+  }
+
+  section.classList.remove('collapsed');
+  section.scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleDaveGuide(guideId) {
+  const official = document.getElementById(guideId + '-official');
+  const dave = document.getElementById(guideId + '-dave');
+  const section = document.getElementById(guideId + '-section');
+  const peekTab = document.getElementById(guideId === 's3' ? 's3PeekTab' : 'gdrivePeekTab');
+  if (!official || !dave) return;
+
+  // Expand the section if collapsed
+  if (section) section.classList.remove('collapsed');
+
+  const showingDave = dave.classList.contains('visible');
+  if (showingDave) {
+    // Switch back to official
+    dave.classList.remove('visible');
+    official.classList.remove('hidden');
+    if (peekTab) {
+      peekTab.classList.remove('active');
+      peekTab.querySelector('.peek-label').textContent = "Dave's version";
+    }
+  } else {
+    // Switch to Dave
+    official.classList.add('hidden');
+    dave.classList.add('visible');
+    if (peekTab) {
+      peekTab.classList.add('active');
+      peekTab.querySelector('.peek-label').textContent = 'Reading: fun version';
+    }
+    // Scroll to the section
+    if (section) section.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 </script>
 </body>

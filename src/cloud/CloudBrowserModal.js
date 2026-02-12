@@ -1,6 +1,7 @@
 // CloudBrowserModal.js - Modal dialog for browsing cloud storage folders
 
-import { listFiles, listFilesRecursive, listGDriveSpecial } from './CloudStorageProvider.js';
+import { listFiles, listFilesRecursive, listGDriveSpecial, getGDriveClient } from './CloudStorageProvider.js';
+import { CredentialStore } from './CredentialStore.js';
 
 // Map file extensions to Font Awesome icons
 const FILE_TYPE_ICONS = {
@@ -59,6 +60,7 @@ export class CloudBrowserModal {
     this.currentPath = '';
     this.currentFolderId = 'root';
     this.currentBucket = '';
+    this.currentProfileId = null;
     this.breadcrumbs = [];
     this.lastLoadedFiles = [];
     this.lastLoadedFolders = [];
@@ -67,12 +69,40 @@ export class CloudBrowserModal {
     this._specialSection = null; // 'shared', 'starred', 'recent', or null
   }
 
-  open(source, { bucket, prefix, folderId } = {}) {
+  open(source, { bucket, prefix, folderId, profileId } = {}) {
     this.currentSource = source;
     this._specialSection = null;
+    this.currentProfileId = profileId || null;
 
     if (source === 's3') {
-      this.currentBucket = bucket || 'apollo-tasks';
+      // If no explicit profile and multiple profiles exist, show picker
+      const profiles = CredentialStore.getS3Profiles();
+      if (!profileId && !bucket && profiles.length > 1) {
+        this.createModal();
+        this.showS3ProfilePicker(profiles);
+        return;
+      }
+
+      // Resolve profile to get bucket
+      if (profileId) {
+        const profile = CredentialStore.getS3Profile(profileId);
+        if (profile) {
+          this.currentProfileId = profileId;
+          this.currentBucket = bucket || profile.bucket;
+        }
+      } else if (profiles.length === 1) {
+        this.currentProfileId = profiles[0].id;
+        this.currentBucket = bucket || profiles[0].bucket;
+      } else {
+        const defaultId = CredentialStore.getDefaultS3ProfileId();
+        const profile = profiles.find(p => p.id === defaultId) || profiles[0];
+        if (profile) {
+          this.currentProfileId = profile.id;
+          this.currentBucket = bucket || profile.bucket;
+        }
+      }
+
+      this.currentBucket = this.currentBucket || 'my-bucket';
       this.currentPath = prefix || '';
       this.breadcrumbs = [{ name: this.currentBucket, path: '' }];
 
@@ -84,7 +114,7 @@ export class CloudBrowserModal {
           this.breadcrumbs.push({ name: part, path: accumulated });
         }
       }
-      this.createModal();
+      if (!this.modal) this.createModal();
       this.loadFolder();
     } else {
       this.currentFolderId = folderId || 'root';
@@ -206,6 +236,9 @@ export class CloudBrowserModal {
     countEl.textContent = 'Select a section to browse';
     loadBtn.disabled = true;
 
+    // Account selector bar
+    this._renderAccountBar(listEl);
+
     const sections = [
       { icon: 'fa-hard-drive', label: 'My Drive', action: () => this._enterMyDrive() },
       { icon: 'fa-users', label: 'Shared with me', action: () => this._enterSpecialSection('shared', 'Shared with me') },
@@ -226,6 +259,52 @@ export class CloudBrowserModal {
     });
 
     this.updateBreadcrumb();
+  }
+
+  _renderAccountBar(listEl) {
+    try {
+      const client = getGDriveClient();
+      const accounts = client.getAccounts();
+      if (accounts.length === 0) return;
+
+      const bar = document.createElement('div');
+      bar.className = 'gdrive-account-bar';
+
+      accounts.forEach(account => {
+        const pill = document.createElement('button');
+        pill.className = 'gdrive-account-pill' + (account.email === client.activeEmail ? ' active' : '');
+        const initial = (account.name || account.email || '?')[0].toUpperCase();
+        pill.innerHTML = `
+          ${account.picture
+            ? `<img class="gdrive-account-avatar" src="${account.picture}" alt="" referrerpolicy="no-referrer">`
+            : `<span class="gdrive-account-avatar gdrive-account-initial">${initial}</span>`
+          }
+          <span class="gdrive-account-name">${account.name || account.email}</span>
+        `;
+        pill.addEventListener('click', () => {
+          client.setActiveAccount(account.email);
+          // Re-render home to update active state
+          this.showGDriveHome();
+        });
+        bar.appendChild(pill);
+      });
+
+      // Add account button
+      const addBtn = document.createElement('button');
+      addBtn.className = 'gdrive-add-account-btn';
+      addBtn.innerHTML = '<i class="fa fa-plus"></i> Add account';
+      addBtn.addEventListener('click', async () => {
+        const success = await client.requestToken();
+        if (success) {
+          this.showGDriveHome();
+        }
+      });
+      bar.appendChild(addBtn);
+
+      listEl.appendChild(bar);
+    } catch {
+      // Silently skip if client not available
+    }
   }
 
   _enterMyDrive() {
@@ -374,7 +453,7 @@ export class CloudBrowserModal {
 
     try {
       const params = this.currentSource === 's3'
-        ? { bucket: this.currentBucket, prefix: this.currentPath }
+        ? { bucket: this.currentBucket, prefix: this.currentPath, profileId: this.currentProfileId }
         : { folderId: this.currentFolderId };
 
       const { folders, files } = await listFiles(this.currentSource, params);
@@ -442,6 +521,43 @@ export class CloudBrowserModal {
     this.loadFolder();
   }
 
+  showS3ProfilePicker(profiles) {
+    const listEl = this.modal.querySelector('#cloudFileList');
+    const countEl = this.modal.querySelector('#cloudFileCount');
+    const loadBtn = this.modal.querySelector('#cloudLoadFolder');
+    listEl.innerHTML = '';
+    countEl.textContent = 'Select an S3 profile to browse';
+    loadBtn.disabled = true;
+
+    const defaultId = CredentialStore.getDefaultS3ProfileId();
+
+    profiles.forEach(profile => {
+      const item = document.createElement('div');
+      item.className = 'cloud-item cloud-section-item';
+      const keyHint = profile.accessKeyId ? profile.accessKeyId.substring(0, 4) + '****' : '';
+      const isDefault = profile.id === defaultId;
+      item.innerHTML = `
+        <i class="fab fa-aws cloud-section-icon" style="color:#ff9900"></i>
+        <span class="cloud-item-name">
+          ${profile.label || profile.bucket}
+          ${isDefault ? '<span style="font-size:0.7rem;color:#ff9900;margin-left:6px">Default</span>' : ''}
+        </span>
+        <span class="cloud-item-size">${profile.region} &middot; ${profile.bucket}</span>
+        <i class="fa fa-chevron-right cloud-item-arrow"></i>
+      `;
+      item.addEventListener('click', () => {
+        this.currentProfileId = profile.id;
+        this.currentBucket = profile.bucket;
+        this.currentPath = '';
+        this.breadcrumbs = [{ name: profile.bucket || profile.label, path: '' }];
+        this.loadFolder();
+      });
+      listEl.appendChild(item);
+    });
+
+    this.updateBreadcrumb();
+  }
+
   async loadSelectedFolder() {
     const loadBtn = this.modal.querySelector('#cloudLoadFolder');
     const countEl = this.modal.querySelector('#cloudFileCount');
@@ -455,7 +571,7 @@ export class CloudBrowserModal {
         // Recursive load including subfolders
         countEl.textContent = 'Scanning subfolders...';
         const params = this.currentSource === 's3'
-          ? { bucket: this.currentBucket, prefix: this.currentPath, maxDepth: this.subfolderDepth }
+          ? { bucket: this.currentBucket, prefix: this.currentPath, maxDepth: this.subfolderDepth, profileId: this.currentProfileId }
           : { folderId: this.currentFolderId, maxDepth: this.subfolderDepth };
         files = await listFilesRecursive(this.currentSource, params);
       } else {
@@ -479,6 +595,7 @@ export class CloudBrowserModal {
             path: this.currentPath,
             folderId: this.currentFolderId,
             bucket: this.currentBucket,
+            profileId: this.currentProfileId,
             specialSection: this._specialSection
           }
         }

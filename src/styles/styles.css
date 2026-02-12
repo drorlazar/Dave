@@ -4696,6 +4696,97 @@ body:not(.dark-mode) .source-option:hover {
   color: var(--theme-accent);
 }
 
+/* ── Google Drive Account Bar ── */
+.gdrive-account-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--theme-border, #333);
+  flex-wrap: wrap;
+}
+
+.gdrive-account-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid #444;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: #aaa;
+  transition: all 0.15s;
+}
+
+.gdrive-account-pill:hover {
+  background: rgba(255,255,255,0.10);
+  border-color: #666;
+  color: #ddd;
+}
+
+.gdrive-account-pill.active {
+  background: rgba(66,133,244,0.12);
+  border-color: rgba(66,133,244,0.4);
+  color: #e0e0e0;
+}
+
+.gdrive-account-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.gdrive-account-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(66,133,244,0.25);
+  color: #4285f4;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.gdrive-account-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gdrive-add-account-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px dashed #555;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #777;
+  transition: all 0.15s;
+}
+
+.gdrive-add-account-btn:hover {
+  border-color: #4285f4;
+  color: #4285f4;
+}
+
+/* Light mode */
+body:not(.dark-mode) .gdrive-account-pill {
+  background: rgba(0,0,0,0.03);
+  border-color: #ddd;
+  color: #666;
+}
+body:not(.dark-mode) .gdrive-account-pill:hover { background: rgba(0,0,0,0.06); border-color: #bbb; color: #333; }
+body:not(.dark-mode) .gdrive-account-pill.active { background: rgba(66,133,244,0.08); border-color: rgba(66,133,244,0.3); color: #333; }
+body:not(.dark-mode) .gdrive-add-account-btn { border-color: #ccc; color: #999; }
+body:not(.dark-mode) .gdrive-add-account-btn:hover { border-color: #4285f4; color: #3367d6; }
+
 /* File type icons in cloud browser */
 .cloud-file-icon {
   width: 20px;
@@ -5169,6 +5260,154 @@ body:not(.dark-mode) .cloud-path-btn:hover { color: #333; background: rgba(0,0,0
   gap: 8px;
 }
 
+/* ── S3 Profile Cards ── */
+.s3-profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.s3-no-profiles {
+  font-size: 0.82rem;
+  color: #666;
+  text-align: center;
+  padding: 12px;
+}
+
+.s3-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid #333;
+  border-radius: 8px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.s3-profile-card.default {
+  border-color: rgba(255,153,0,0.35);
+  background: rgba(255,153,0,0.06);
+}
+
+.s3-profile-card:hover {
+  border-color: #555;
+}
+
+.s3-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.s3-profile-label {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s3-default-badge {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #ff9900;
+  background: rgba(255,153,0,0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.s3-profile-details {
+  font-size: 0.75rem;
+  color: #777;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s3-profile-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.s3-profile-action {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #666;
+  padding: 4px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s;
+}
+
+.s3-profile-action:hover {
+  color: #ccc;
+  background: rgba(255,255,255,0.08);
+  border-color: #444;
+}
+
+.s3-profile-action[data-action="delete"]:hover {
+  color: #ef5350;
+  border-color: rgba(239,83,80,0.3);
+  background: rgba(239,83,80,0.08);
+}
+
+.s3-profile-action[data-action="default"]:hover {
+  color: #ff9900;
+  border-color: rgba(255,153,0,0.3);
+  background: rgba(255,153,0,0.08);
+}
+
+.s3-add-profile-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed #444;
+  color: #888;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.s3-add-profile-btn:hover {
+  border-color: #ff9900;
+  color: #ff9900;
+  background: rgba(255,153,0,0.05);
+}
+
+.s3-profile-form {
+  border-top: 1px solid #333;
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+/* Light mode */
+body:not(.dark-mode) .s3-profile-card {
+  background: rgba(0,0,0,0.02);
+  border-color: #ddd;
+}
+body:not(.dark-mode) .s3-profile-card.default {
+  border-color: rgba(255,153,0,0.3);
+  background: rgba(255,153,0,0.04);
+}
+body:not(.dark-mode) .s3-profile-card:hover { border-color: #bbb; }
+body:not(.dark-mode) .s3-profile-label { color: #333; }
+body:not(.dark-mode) .s3-profile-details { color: #888; }
+body:not(.dark-mode) .s3-no-profiles { color: #999; }
+body:not(.dark-mode) .s3-profile-action { color: #999; }
+body:not(.dark-mode) .s3-profile-action:hover { color: #333; background: rgba(0,0,0,0.05); border-color: #ccc; }
+body:not(.dark-mode) .s3-add-profile-btn { border-color: #ccc; color: #888; }
+body:not(.dark-mode) .s3-add-profile-btn:hover { border-color: #ff9900; color: #e68a00; }
+body:not(.dark-mode) .s3-profile-form { border-top-color: #ddd; }
+
 .settings-help {
   font-size: 0.8rem;
   color: #888;
@@ -5179,6 +5418,88 @@ body:not(.dark-mode) .cloud-path-btn:hover { color: #333; background: rgba(0,0,0
 .settings-help a {
   color: #64b5f6;
   text-decoration: underline;
+}
+
+/* Settings - Prominent guide card */
+.settings-guide-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, rgba(78,154,245,0.10) 0%, rgba(155,119,255,0.10) 100%);
+  border: 1px solid rgba(78,154,245,0.25);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.settings-guide-card:hover {
+  background: linear-gradient(135deg, rgba(78,154,245,0.18) 0%, rgba(155,119,255,0.18) 100%);
+  border-color: rgba(78,154,245,0.4);
+  transform: translateY(-1px);
+}
+
+.settings-guide-card .guide-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(78,154,245,0.15);
+  color: #4e9af5;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.settings-guide-card .guide-card-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-guide-card .guide-card-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #e0e0e0;
+}
+
+.settings-guide-card .guide-card-sub {
+  font-size: 0.78rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.settings-guide-card .guide-card-arrow {
+  color: #666;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.settings-guide-card:hover .guide-card-arrow {
+  transform: translateX(3px);
+  color: #4e9af5;
+}
+
+/* Light mode */
+body:not(.dark-mode) .settings-guide-card {
+  background: linear-gradient(135deg, rgba(78,154,245,0.06) 0%, rgba(155,119,255,0.06) 100%);
+  border-color: rgba(78,154,245,0.2);
+}
+body:not(.dark-mode) .settings-guide-card:hover {
+  background: linear-gradient(135deg, rgba(78,154,245,0.12) 0%, rgba(155,119,255,0.12) 100%);
+}
+body:not(.dark-mode) .settings-guide-card .guide-card-icon {
+  background: rgba(78,154,245,0.10);
+}
+body:not(.dark-mode) .settings-guide-card .guide-card-title {
+  color: #333;
+}
+body:not(.dark-mode) .settings-guide-card .guide-card-sub {
+  color: #666;
 }
 
 /* Settings - section label (non-collapsible heading) */
