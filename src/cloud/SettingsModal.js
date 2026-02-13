@@ -539,6 +539,7 @@ export class SettingsModal {
       root.style.setProperty('--theme-accent', t.accent);
 
       startMatrixBackground(matrixModeIndex);
+      document.dispatchEvent(new CustomEvent('dave:themeChange', { detail: { theme: 'matrix' } }));
       return;
     }
 
@@ -581,6 +582,7 @@ export class SettingsModal {
     root.style.setProperty('--theme-text', theme.text);
     root.style.setProperty('--theme-border', theme.border);
     root.style.setProperty('--theme-accent', theme.accent);
+    document.dispatchEvent(new CustomEvent('dave:themeChange', { detail: { theme: themeId } }));
   }
 
   static initTheme() {
@@ -668,6 +670,19 @@ export class SettingsModal {
 
   static _releaseLogEntriesHTML() {
     const releases = [
+      {
+        version: '2.1.0', date: 'Feb 13, 2026', title: 'Full Dave Mode',
+        features: [
+          'Toggleable Full Dave Mode: Dave\'s personality on every interaction (settings gear > Full Dave Mode)',
+          'Dave Presence: glowing green eye indicator watches from the bottom-right when active',
+          'CRT-styled speech bubbles with typewriter text, scanlines, and blinking cursor',
+          'Dave comments on search, sort, filter, theme changes, file loading, errors, and more',
+          'Mood system: Dave\'s tone shifts between neutral, impressed, bored, busy, and snarky',
+          '150+ unique context-aware messages with rarity weighting',
+          'Session memory and idle detection: Dave knows what you\'ve been doing',
+          'Persistent toggle: Dave remembers you across visits',
+        ]
+      },
       {
         version: '2.0.0', date: 'Feb 12, 2026', title: 'Cloud Storage Refinements',
         features: [

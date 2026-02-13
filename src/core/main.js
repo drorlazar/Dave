@@ -9,6 +9,7 @@ import { memoryManager } from '../utils/memoryManager.js';
 import { initHelpTooltip } from '../utils/helpTooltip.js';
 import { initEasterEgg } from '../easter_egg.js';
 import { SettingsModal } from '../cloud/SettingsModal.js';
+import { DaveMode } from './dave_mode.js';
 
 // Global debugging configuration
 window.APP_DEBUG = {
@@ -59,6 +60,9 @@ UI.initializeUI().then(() => {
   // Initialize saved theme + dropdown sections (themes, release log)
   SettingsModal.initTheme();
   SettingsModal.initDropdownSections();
+
+  // Initialize Full Dave Mode personality layer
+  try { DaveMode.init(); } catch (e) { console.error('[Main] Dave Mode init error:', e); }
 
   // Initial render
   AssetLoading.renderPage(UI.getCurrentPage());

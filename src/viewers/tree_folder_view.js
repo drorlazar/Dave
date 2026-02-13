@@ -1010,8 +1010,6 @@ async function loadFilesFromSelectedFolder(folder) {
             // First, load the files with the original handleFolderPick
             // Pass full path so file paths are always rooted from the top-level folder
             await handleFolderPick(folder.handle, folder.path + '/');
-            // Record in folder history with full tree path
-            addToHistory(folder.handle, folder.path);
 
             // Then ensure a proper render with an animation frame delay
             // This helps ensure all DOM updates are processed before re-rendering
