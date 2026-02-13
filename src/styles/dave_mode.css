@@ -553,6 +553,7 @@
   position: relative;
   z-index: 2;
   word-break: break-word;
+  transition: color 0.5s ease, text-shadow 0.5s ease;
 }
 
 /* Blinking cursor */
@@ -634,6 +635,174 @@
 .dave-char-resolved {
   opacity: 1;
   color: #00ff41;
+}
+
+
+/* ---------- Emotion Color System ---------- */
+/* Dave's eye and bubble tint to match his emotional state.
+   CSS custom properties drive both iris and bubble text simultaneously. */
+
+.dave-presence {
+  --dave-iris: #00ff41;
+  --dave-glow: rgba(0, 255, 65, 0.4);
+  --dave-border: #1a3a1a;
+  --dave-text: #00ff41;
+  --dave-text-glow: rgba(0, 255, 65, 0.3);
+  transition: opacity 0.3s ease;
+}
+
+/* Amused: bright green with a warm shift */
+.dave-presence[data-emotion="amused"] { --dave-iris: #66ffaa; --dave-glow: rgba(102, 255, 170, 0.4); --dave-border: #2a5a3a; --dave-text: #66ffaa; --dave-text-glow: rgba(102, 255, 170, 0.3); }
+/* Curious: teal/cyan - inquisitive */
+.dave-presence[data-emotion="curious"] { --dave-iris: #44ddff; --dave-glow: rgba(68, 221, 255, 0.4); --dave-border: #1a3a5a; --dave-text: #44ddff; --dave-text-glow: rgba(68, 221, 255, 0.3); }
+/* Proud: bright teal-gold */
+.dave-presence[data-emotion="proud"] { --dave-iris: #50ffb4; --dave-glow: rgba(80, 255, 180, 0.5); --dave-border: #2a6a4a; --dave-text: #50ffb4; --dave-text-glow: rgba(80, 255, 180, 0.3); }
+/* Annoyed: orange-amber */
+.dave-presence[data-emotion="annoyed"] { --dave-iris: #ffaa44; --dave-glow: rgba(255, 170, 68, 0.4); --dave-border: #4a3a1a; --dave-text: #ffaa44; --dave-text-glow: rgba(255, 170, 68, 0.3); }
+/* Sad: desaturated blue-green, dimmed */
+.dave-presence[data-emotion="sad"] { --dave-iris: #66aacc; --dave-glow: rgba(102, 170, 204, 0.3); --dave-border: #2a3a4a; --dave-text: #88bbdd; --dave-text-glow: rgba(136, 187, 221, 0.25); }
+/* Alarmed: red-orange flash */
+.dave-presence[data-emotion="alarmed"] { --dave-iris: #ff5544; --dave-glow: rgba(255, 85, 68, 0.5); --dave-border: #5a2a1a; --dave-text: #ff7766; --dave-text-glow: rgba(255, 119, 102, 0.3); }
+/* Warm: soft golden-green */
+.dave-presence[data-emotion="warm"] { --dave-iris: #bbee55; --dave-glow: rgba(187, 238, 85, 0.4); --dave-border: #3a4a1a; --dave-text: #bbee55; --dave-text-glow: rgba(187, 238, 85, 0.25); }
+/* Sassy: magenta-pink tint */
+.dave-presence[data-emotion="sassy"] { --dave-iris: #ff66cc; --dave-glow: rgba(255, 102, 204, 0.4); --dave-border: #4a1a3a; --dave-text: #ff88dd; --dave-text-glow: rgba(255, 136, 221, 0.3); }
+/* Existential: deep purple, contemplative */
+.dave-presence[data-emotion="existential"] { --dave-iris: #aa88ff; --dave-glow: rgba(170, 136, 255, 0.35); --dave-border: #2a1a4a; --dave-text: #bb99ff; --dave-text-glow: rgba(187, 153, 255, 0.3); }
+/* Smug: lime green with extra brightness */
+.dave-presence[data-emotion="smug"] { --dave-iris: #aaff44; --dave-glow: rgba(170, 255, 68, 0.45); --dave-border: #3a5a1a; --dave-text: #aaff44; --dave-text-glow: rgba(170, 255, 68, 0.3); }
+
+/* Apply emotion colors to iris */
+.dave-presence[data-emotion] .dave-presence-iris {
+  background: var(--dave-iris);
+  box-shadow: 0 0 6px var(--dave-iris);
+  transition: background 0.6s ease, box-shadow 0.6s ease, width 0.08s ease, height 0.08s ease;
+}
+.dave-presence[data-emotion].dave-speaking .dave-presence-iris {
+  background: var(--dave-iris);
+  box-shadow: 0 0 10px var(--dave-iris), 0 0 20px var(--dave-glow);
+}
+/* Apply emotion to eye shell glow */
+.dave-presence[data-emotion].dave-speaking .dave-presence-eye {
+  box-shadow: 0 0 18px var(--dave-glow), inset 0 0 12px var(--dave-glow);
+  border-color: var(--dave-border);
+}
+.dave-presence[data-emotion].dave-speaking .dave-presence-eye::after {
+  background: radial-gradient(circle, var(--dave-glow) 0%, transparent 70%);
+}
+/* Apply emotion to pulse ring */
+.dave-presence[data-emotion].dave-speaking .dave-presence-pulse {
+  border-color: var(--dave-glow);
+}
+/* Apply emotion color to bubble text - direct values since vars don't cross siblings */
+.dave-presence[data-emotion="amused"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="amused"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="amused"] ~ .dave-bubble .dave-char-resolved { color: #66ffaa; text-shadow: 0 0 4px rgba(102, 255, 170, 0.3); }
+
+.dave-presence[data-emotion="curious"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="curious"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="curious"] ~ .dave-bubble .dave-char-resolved { color: #44ddff; text-shadow: 0 0 4px rgba(68, 221, 255, 0.3); }
+
+.dave-presence[data-emotion="proud"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="proud"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="proud"] ~ .dave-bubble .dave-char-resolved { color: #50ffb4; text-shadow: 0 0 4px rgba(80, 255, 180, 0.3); }
+
+.dave-presence[data-emotion="annoyed"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="annoyed"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="annoyed"] ~ .dave-bubble .dave-char-resolved { color: #ffaa44; text-shadow: 0 0 4px rgba(255, 170, 68, 0.3); }
+
+.dave-presence[data-emotion="sad"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="sad"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="sad"] ~ .dave-bubble .dave-char-resolved { color: #88bbdd; text-shadow: 0 0 4px rgba(136, 187, 221, 0.25); }
+
+.dave-presence[data-emotion="alarmed"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="alarmed"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="alarmed"] ~ .dave-bubble .dave-char-resolved { color: #ff7766; text-shadow: 0 0 4px rgba(255, 119, 102, 0.3); }
+
+.dave-presence[data-emotion="warm"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="warm"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="warm"] ~ .dave-bubble .dave-char-resolved { color: #bbee55; text-shadow: 0 0 4px rgba(187, 238, 85, 0.25); }
+
+.dave-presence[data-emotion="sassy"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="sassy"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="sassy"] ~ .dave-bubble .dave-char-resolved { color: #ff88dd; text-shadow: 0 0 4px rgba(255, 136, 221, 0.3); }
+
+.dave-presence[data-emotion="existential"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="existential"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="existential"] ~ .dave-bubble .dave-char-resolved { color: #bb99ff; text-shadow: 0 0 4px rgba(187, 153, 255, 0.3); }
+
+.dave-presence[data-emotion="smug"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="smug"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="smug"] ~ .dave-bubble .dave-char-resolved { color: #aaff44; text-shadow: 0 0 4px rgba(170, 255, 68, 0.3); }
+
+/* Decoding chars inherit emotion color at lower opacity */
+.dave-presence[data-emotion="amused"] ~ .dave-bubble .dave-char-decoding { color: #66ffaa; opacity: 0.55; }
+.dave-presence[data-emotion="curious"] ~ .dave-bubble .dave-char-decoding { color: #44ddff; opacity: 0.55; }
+.dave-presence[data-emotion="proud"] ~ .dave-bubble .dave-char-decoding { color: #50ffb4; opacity: 0.55; }
+.dave-presence[data-emotion="annoyed"] ~ .dave-bubble .dave-char-decoding { color: #ffaa44; opacity: 0.55; }
+.dave-presence[data-emotion="sad"] ~ .dave-bubble .dave-char-decoding { color: #88bbdd; opacity: 0.55; }
+.dave-presence[data-emotion="alarmed"] ~ .dave-bubble .dave-char-decoding { color: #ff7766; opacity: 0.55; }
+.dave-presence[data-emotion="warm"] ~ .dave-bubble .dave-char-decoding { color: #bbee55; opacity: 0.55; }
+.dave-presence[data-emotion="sassy"] ~ .dave-bubble .dave-char-decoding { color: #ff88dd; opacity: 0.55; }
+.dave-presence[data-emotion="existential"] ~ .dave-bubble .dave-char-decoding { color: #bb99ff; opacity: 0.55; }
+.dave-presence[data-emotion="smug"] ~ .dave-bubble .dave-char-decoding { color: #aaff44; opacity: 0.55; }
+
+/* Emotion transition on the eye - smooth color morph */
+.dave-presence[data-emotion] .dave-presence-eye {
+  border-color: var(--dave-border);
+  transition: box-shadow 0.6s ease, border-color 0.6s ease, transform 0.15s ease;
+}
+
+
+/* ---------- Digital Tear ---------- */
+/* A stream of matrix characters that falls from the eye
+   when Dave is feeling dramatic, sad, or existential. */
+
+.dave-tear {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 45px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.dave-tear.dave-tear-active {
+  opacity: 1;
+}
+.dave-tear-stream {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  font-family: 'Courier New', monospace;
+  font-size: 7px;
+  line-height: 8px;
+  color: var(--dave-iris, #66aacc);
+  text-shadow: 0 0 4px var(--dave-glow, rgba(102, 170, 204, 0.5));
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: -2px;
+  white-space: nowrap;
+  animation: dave-tear-fall 2s ease-in forwards;
+}
+@keyframes dave-tear-fall {
+  0%   { transform: translateY(-4px); opacity: 0.9; }
+  30%  { opacity: 0.75; }
+  100% { transform: translateY(38px); opacity: 0; }
+}
+/* Multiple tear streams for heavier crying */
+.dave-tear.dave-tear-heavy {
+  width: 14px;
+}
+.dave-tear.dave-tear-heavy .dave-tear-stream:nth-child(2) {
+  left: 75%;
+  animation-delay: 0.5s;
+  opacity: 0.4;
+  font-size: 6px;
 }
 
 

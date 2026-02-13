@@ -320,6 +320,75 @@ const SPAM_REACTIONS = [
 
 
 // ============================================================
+//  Emotion System
+// ============================================================
+// Each emotion drives eye color, bubble text color, and optional tear
+const EMOTION = {
+  NEUTRAL:     'neutral',
+  AMUSED:      'amused',
+  CURIOUS:     'curious',
+  PROUD:       'proud',
+  ANNOYED:     'annoyed',
+  SAD:         'sad',
+  ALARMED:     'alarmed',
+  WARM:        'warm',
+  SASSY:       'sassy',
+  EXISTENTIAL: 'existential',
+  SMUG:        'smug',
+};
+
+// Map message contexts to emotions (used by event handlers)
+const EMOTION_MAP = {
+  'search.active':     EMOTION.CURIOUS,
+  'search.cleared':    EMOTION.NEUTRAL,
+  'sort.name':         EMOTION.NEUTRAL,
+  'sort.size':         EMOTION.CURIOUS,
+  'sort.type':         EMOTION.NEUTRAL,
+  'sort.date':         EMOTION.NEUTRAL,
+  'sort.repeated':     EMOTION.ANNOYED,
+  'filter.on':         EMOTION.SMUG,
+  'filter.off':        EMOTION.NEUTRAL,
+  'filter.empty':      EMOTION.SAD,
+  'theme.darkMode':    EMOTION.SMUG,
+  'theme.lightMode':   EMOTION.ANNOYED,
+  'theme.generic':     EMOTION.CURIOUS,
+  'theme.repeated':    EMOTION.SASSY,
+  'filesLoaded.small': EMOTION.WARM,
+  'filesLoaded.medium':EMOTION.AMUSED,
+  'filesLoaded.large': EMOTION.PROUD,
+  'filesLoaded.massive':EMOTION.PROUD,
+  'fullscreen.glb':    EMOTION.CURIOUS,
+  'fullscreen.fbx':    EMOTION.CURIOUS,
+  'fullscreen.image':  EMOTION.WARM,
+  'fullscreen.video':  EMOTION.AMUSED,
+  'fullscreen.audio':  EMOTION.WARM,
+  'fullscreen.font':   EMOTION.CURIOUS,
+  'fullscreen.generic':EMOTION.NEUTRAL,
+  'pagination.forward': EMOTION.NEUTRAL,
+  'pagination.backward':EMOTION.CURIOUS,
+  'selection.first':   EMOTION.CURIOUS,
+  'selection.growing': EMOTION.AMUSED,
+  'selection.large':   EMOTION.ANNOYED,
+  'selection.cleared': EMOTION.NEUTRAL,
+  'error':             EMOTION.ALARMED,
+  'idle':              EMOTION.EXISTENTIAL,
+  'presenceClick':     EMOTION.AMUSED,
+  'drag.drop':         EMOTION.AMUSED,
+  'drag.corner':       EMOTION.SAD,
+  'toggle.off':        EMOTION.SAD,
+  'toggle.on':         EMOTION.PROUD,
+};
+
+// Emotions that can trigger tears (digital matrix stream from eye)
+const TEAR_EMOTIONS = new Set([EMOTION.SAD, EMOTION.EXISTENTIAL]);
+// Emotions with a chance of a single subtle tear
+const SUBTLE_TEAR_EMOTIONS = new Set([EMOTION.ANNOYED, EMOTION.ALARMED]);
+
+const TEAR_CHARS = 'ABCDEFGHKMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01'; // pragma: allowlist secret
+const TEAR_DURATION_MS = 2200;
+
+
+// ============================================================
 //  DaveMode Controller
 // ============================================================
 
@@ -384,6 +453,12 @@ class _DaveMode {
     this._spamCleanupTimer = null;
     this._matrixRainInterval = null;
 
+    // Emotion + tear
+    this._currentEmotion = EMOTION.NEUTRAL;
+    this._tearEl = null;
+    this._tearTimer = null;
+    this._tearStreamInterval = null;
+
     this._session = {
       startTime: Date.now(),
       filesLoaded: 0,
@@ -436,7 +511,7 @@ class _DaveMode {
         this._isFirstEver = false;
         localStorage.setItem(FIRST_ENABLED_KEY, Date.now().toString());
       }
-      this._showBubble(this._pickFromArray(pool), { force: true });
+      this._showBubble(this._pickFromArray(pool), { force: true, emotion: EMOTION.PROUD });
     }
   }
 
@@ -444,6 +519,8 @@ class _DaveMode {
     if (!this._enabled) return;
 
     if (showReaction) {
+      this._setEmotion(EMOTION.SAD);
+      this._triggerTear(EMOTION.SAD);
       this._showBubbleImmediate(this._pickFromArray(MSG.toggle.off));
       setTimeout(() => this._teardownActive(), 2000);
     } else {
@@ -461,6 +538,7 @@ class _DaveMode {
     this._stopAttentionSeeking();
     this._stopCursorFollow();
     this._stopTerminalCheck();
+    this._stopTear();
     this._hideBubble();
     this._removeDOM();
   }
@@ -538,11 +616,13 @@ class _DaveMode {
       <div class="dave-presence-eye">
         <div class="dave-presence-iris"></div>
       </div>
+      <div class="dave-tear"></div>
       <div class="dave-presence-pulse"></div>
     `;
     document.body.appendChild(p);
     this._presenceEl = p;
     this._irisEl = p.querySelector('.dave-presence-iris');
+    this._tearEl = p.querySelector('.dave-tear');
 
     // Restore saved position
     if (this._savedPosition) {
@@ -641,6 +721,8 @@ class _DaveMode {
       this._bubbleEl.style.display = 'none';
     }
     this._presenceEl.classList.remove('dave-speaking', 'dave-thinking');
+    this._clearEmotion();
+    this._stopTear();
 
     document.addEventListener('mousemove', this._boundDragMove);
     document.addEventListener('mouseup', this._boundDragEnd);
@@ -702,9 +784,9 @@ class _DaveMode {
                          (cy < 60 || cy > window.innerHeight - 60);
         setTimeout(() => {
           if (inCorner && Math.random() < 0.6) {
-            this._comment(MSG.drag.corner, {}, { force: true });
+            this._comment(MSG.drag.corner, {}, { force: true, emotion: EMOTION.SAD });
           } else {
-            this._comment(MSG.drag.drop, {}, { force: true });
+            this._comment(MSG.drag.drop, {}, { force: true, emotion: EMOTION.AMUSED });
           }
         }, 400);
       } else {
@@ -989,6 +1071,15 @@ class _DaveMode {
 
     const doGlitch = opts.glitch || (this._mood === MOOD.SNARKY && Math.random() < 0.1);
 
+    // Apply emotion color
+    const emotion = opts.emotion || EMOTION.NEUTRAL;
+    this._setEmotion(emotion);
+
+    // Trigger tear if appropriate
+    if (TEAR_EMOTIONS.has(emotion) || SUBTLE_TEAR_EMOTIONS.has(emotion)) {
+      this._triggerTear(emotion);
+    }
+
     // Position bubble
     this._updateBubblePosition();
 
@@ -1046,6 +1137,7 @@ class _DaveMode {
     this._bubbleEl.classList.add('dave-bubble-exiting');
     this._bubbleEl.classList.remove('dave-bubble-visible');
     this._presenceEl?.classList.remove('dave-speaking', 'dave-thinking');
+    this._clearEmotion();
 
     setTimeout(() => {
       this._bubbleEl?.classList.remove('dave-bubble-exiting', 'dave-bubble-glitch');
@@ -1324,8 +1416,8 @@ class _DaveMode {
     this._trackAction('search');
     this._resetIdleTimer();
     this._reactJitter();
-    if (!term) this._comment(MSG.search.cleared);
-    else this._comment(MSG.search.active, { term });
+    if (!term) this._comment(MSG.search.cleared, {}, { emotion: EMOTION.NEUTRAL });
+    else this._comment(MSG.search.active, { term }, { emotion: EMOTION.CURIOUS });
   }
 
   _onSort({ field, direction }) {
@@ -1333,9 +1425,9 @@ class _DaveMode {
     this._resetIdleTimer();
     this._reactJitter();
     if (this._session.sortChanges > 3 && Math.random() < 0.4) {
-      this._comment(MSG.sort.repeated, { repeatCount: this._session.sortChanges });
+      this._comment(MSG.sort.repeated, { repeatCount: this._session.sortChanges }, { emotion: EMOTION.ANNOYED });
     } else {
-      this._comment(MSG.sort[field] || MSG.sort.name, { field, direction });
+      this._comment(MSG.sort[field] || MSG.sort.name, { field, direction }, { emotion: EMOTION.NEUTRAL });
     }
   }
 
@@ -1343,9 +1435,9 @@ class _DaveMode {
     this._trackAction('filter');
     this._resetIdleTimer();
     this._reactJitter();
-    if (count === 0) this._comment(MSG.filter.empty);
-    else if (count === total) this._comment(MSG.filter.off);
-    else this._comment(MSG.filter.on, { count, total });
+    if (count === 0) this._comment(MSG.filter.empty, {}, { emotion: EMOTION.SAD });
+    else if (count === total) this._comment(MSG.filter.off, {}, { emotion: EMOTION.NEUTRAL });
+    else this._comment(MSG.filter.on, { count, total }, { emotion: EMOTION.SMUG });
   }
 
   _onThemeChange({ theme }) {
@@ -1353,13 +1445,13 @@ class _DaveMode {
     this._resetIdleTimer();
     this._reactJitter();
     if (this._session.themeChanges > 3 && Math.random() < 0.4) {
-      this._comment(MSG.theme.repeated, { themeChanges: this._session.themeChanges });
+      this._comment(MSG.theme.repeated, { themeChanges: this._session.themeChanges }, { emotion: EMOTION.SASSY });
       return;
     }
-    if (theme === 'dark') { this._comment(MSG.theme.darkMode); return; }
-    if (theme === 'light') { this._comment(MSG.theme.lightMode); return; }
+    if (theme === 'dark') { this._comment(MSG.theme.darkMode, {}, { emotion: EMOTION.SMUG }); return; }
+    if (theme === 'light') { this._comment(MSG.theme.lightMode, {}, { emotion: EMOTION.ANNOYED }); return; }
     const specific = MSG.theme.specific[theme];
-    this._comment(specific || MSG.theme.generic, { themeId: theme });
+    this._comment(specific || MSG.theme.generic, { themeId: theme }, { emotion: EMOTION.CURIOUS });
   }
 
   _onPageRender({ page, total }) {
@@ -1376,7 +1468,7 @@ class _DaveMode {
     this._reactJitter();
     const dir = page > this._lastPage ? 'forward' : 'backward';
     this._lastPage = page;
-    this._comment(MSG.pagination[dir] || MSG.pagination.forward, { page: page + 1, total });
+    this._comment(MSG.pagination[dir] || MSG.pagination.forward, { page: page + 1, total }, { emotion: EMOTION.NEUTRAL });
   }
 
   _onFilesLoaded({ count }) {
@@ -1384,12 +1476,12 @@ class _DaveMode {
     this._resetIdleTimer();
     this._reactJitter();
     this._updateMood(MOOD.IMPRESSED);
-    let pool;
-    if (count >= 500) pool = MSG.filesLoaded.massive;
-    else if (count >= 100) pool = MSG.filesLoaded.large;
-    else if (count >= 20) pool = MSG.filesLoaded.medium;
-    else pool = MSG.filesLoaded.small;
-    this._comment(pool, { count }, { force: true });
+    let pool, emo;
+    if (count >= 500) { pool = MSG.filesLoaded.massive; emo = EMOTION.PROUD; }
+    else if (count >= 100) { pool = MSG.filesLoaded.large; emo = EMOTION.PROUD; }
+    else if (count >= 20) { pool = MSG.filesLoaded.medium; emo = EMOTION.AMUSED; }
+    else { pool = MSG.filesLoaded.small; emo = EMOTION.WARM; }
+    this._comment(pool, { count }, { force: true, emotion: emo });
   }
 
   _onFullscreen({ name, type }) {
@@ -1398,24 +1490,26 @@ class _DaveMode {
     this._reactJitter();
     const map = { glb: 'glb', fbx: 'fbx', video: 'video', image: 'image',
       mp3: 'audio', wav: 'audio', ogg: 'audio', font: 'font' };
-    this._comment(MSG.fullscreen[map[type] || 'generic'] || MSG.fullscreen.generic, { name, type });
+    const key = map[type] || 'generic';
+    const emoMap = { glb: EMOTION.CURIOUS, fbx: EMOTION.CURIOUS, image: EMOTION.WARM, video: EMOTION.AMUSED, audio: EMOTION.WARM, font: EMOTION.CURIOUS };
+    this._comment(MSG.fullscreen[key] || MSG.fullscreen.generic, { name, type }, { emotion: emoMap[key] || EMOTION.NEUTRAL });
   }
 
   _onSelection({ count }) {
     this._trackAction('selection');
     this._resetIdleTimer();
     this._reactJitter();
-    if (count === 0) this._comment(MSG.selection.cleared);
-    else if (count === 1) this._comment(MSG.selection.first);
-    else if (count >= 20) this._comment(MSG.selection.large, { count });
-    else this._comment(MSG.selection.growing, { count });
+    if (count === 0) this._comment(MSG.selection.cleared, {}, { emotion: EMOTION.NEUTRAL });
+    else if (count === 1) this._comment(MSG.selection.first, {}, { emotion: EMOTION.CURIOUS });
+    else if (count >= 20) this._comment(MSG.selection.large, { count }, { emotion: EMOTION.ANNOYED });
+    else this._comment(MSG.selection.growing, { count }, { emotion: EMOTION.AMUSED });
   }
 
   _onError({ name, type }) {
     this._session.errorsHit++;
     this._resetIdleTimer();
     this._reactJitter();
-    this._comment(MSG.error, { name, type });
+    this._comment(MSG.error, { name, type }, { emotion: EMOTION.ALARMED });
   }
 
 
@@ -1429,7 +1523,7 @@ class _DaveMode {
       this._updateTerminalLink();
       this._pokeTerminal('click');
       if (Math.random() < 0.3) {
-        this._showBubble(this._pickMessage(MSG.terminalRelay, {}), { force: true, terminalRelay: true });
+        this._showBubble(this._pickMessage(MSG.terminalRelay, {}), { force: true, terminalRelay: true, emotion: EMOTION.AMUSED });
       }
       return;
     }
@@ -1449,7 +1543,7 @@ class _DaveMode {
     if (this._bubbleEl?.classList.contains('dave-bubble-visible')) {
       this._hideBubble();
     } else {
-      this._showBubble(this._pickMessage(MSG.presenceClick, {}), { force: true });
+      this._showBubble(this._pickMessage(MSG.presenceClick, {}), { force: true, emotion: EMOTION.AMUSED });
     }
   }
 
@@ -1477,9 +1571,10 @@ class _DaveMode {
       }, 80);
     }
 
-    // Show message
+    // Show message with matching emotion
+    const spamEmotions = { hal: EMOTION.ALARMED, matrix: EMOTION.EXISTENTIAL, hurt: EMOTION.ALARMED, shuteye: EMOTION.SAD, glare: EMOTION.ANNOYED, dizzy: EMOTION.SASSY };
     const msg = this._pickFromArray(reaction.pool);
-    this._showBubble(msg, { force: true });
+    this._showBubble(msg, { force: true, emotion: spamEmotions[reaction.id] || EMOTION.NEUTRAL });
 
     // Cleanup after duration
     this._spamCleanupTimer = setTimeout(() => {
@@ -1504,7 +1599,89 @@ class _DaveMode {
 
   _comment(pool, context = {}, opts = {}) {
     const text = this._pickMessage(pool, context);
-    if (text) this._showBubble(text, opts);
+    if (text) this._showBubble(text, { emotion: opts.emotion, ...opts });
+  }
+
+  // ============================================================
+  //  Emotion + Tear System
+  // ============================================================
+
+  _setEmotion(emotion) {
+    this._currentEmotion = emotion || EMOTION.NEUTRAL;
+    if (this._presenceEl) {
+      if (emotion && emotion !== EMOTION.NEUTRAL) {
+        this._presenceEl.setAttribute('data-emotion', emotion);
+      } else {
+        this._presenceEl.removeAttribute('data-emotion');
+      }
+    }
+  }
+
+  _clearEmotion() {
+    this._currentEmotion = EMOTION.NEUTRAL;
+    // Fade emotion back to neutral after bubble hides (delayed for smooth transition)
+    setTimeout(() => {
+      if (this._currentEmotion === EMOTION.NEUTRAL) {
+        this._presenceEl?.removeAttribute('data-emotion');
+      }
+    }, 600);
+  }
+
+  _triggerTear(emotion) {
+    if (!this._tearEl || !this._presenceEl) return;
+    const heavy = TEAR_EMOTIONS.has(emotion);
+    const subtle = SUBTLE_TEAR_EMOTIONS.has(emotion);
+
+    // Subtle tears only fire 30% of the time
+    if (subtle && Math.random() > 0.3) return;
+
+    // Clear any existing tear
+    this._stopTear();
+
+    this._tearEl.innerHTML = '';
+    this._tearEl.className = heavy ? 'dave-tear dave-tear-heavy' : 'dave-tear';
+
+    // Create tear streams (each is a falling column of characters)
+    const streamCount = heavy ? 2 : 1;
+    for (let s = 0; s < streamCount; s++) {
+      const stream = document.createElement('span');
+      stream.className = 'dave-tear-stream';
+      stream.dataset.idx = s;
+      const len = 5 + Math.floor(Math.random() * 4);
+      let chars = '';
+      for (let i = 0; i < len; i++) chars += TEAR_CHARS[Math.floor(Math.random() * TEAR_CHARS.length)];
+      stream.textContent = chars;
+      this._tearEl.appendChild(stream);
+    }
+
+    // Activate
+    requestAnimationFrame(() => this._tearEl?.classList.add('dave-tear-active'));
+
+    // Scramble the stream chars while falling
+    this._tearStreamInterval = setInterval(() => {
+      this._tearEl?.querySelectorAll('.dave-tear-stream').forEach(s => {
+        let chars = '';
+        const len = s.textContent.length;
+        for (let i = 0; i < len; i++) chars += TEAR_CHARS[Math.floor(Math.random() * TEAR_CHARS.length)];
+        s.textContent = chars;
+      });
+    }, 100);
+
+    // Auto-stop after duration
+    this._tearTimer = setTimeout(() => this._stopTear(), TEAR_DURATION_MS);
+  }
+
+  _stopTear() {
+    if (this._tearStreamInterval) {
+      clearInterval(this._tearStreamInterval);
+      this._tearStreamInterval = null;
+    }
+    clearTimeout(this._tearTimer);
+    this._tearTimer = null;
+    if (this._tearEl) {
+      this._tearEl.classList.remove('dave-tear-active');
+      setTimeout(() => { if (this._tearEl) this._tearEl.innerHTML = ''; }, 300);
+    }
   }
 
   _pickMessage(pool, context) {
@@ -1615,7 +1792,7 @@ class _DaveMode {
     if (!this._isTerminalActive()) {
       this._showBubble(
         this._pickMessage(MSG.idle, { sessionMinutes, visits: this._visits }),
-        { force: true }
+        { force: true, emotion: EMOTION.EXISTENTIAL }
       );
     }
 
