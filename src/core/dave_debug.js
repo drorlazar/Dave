@@ -93,6 +93,7 @@ class _DaveDebug {
         ${this._sectionHTML('State Inspector', 'state', true)}
         ${this._sectionHTML('Presets', 'presets', false)}
         ${this._sectionHTML('Dave Routine', 'routine', true)}
+        ${this._sectionHTML('Commands', 'commands', true)}
       </div>
     `;
     document.body.appendChild(panel);
@@ -126,6 +127,7 @@ class _DaveDebug {
     this._buildStateSection(panel.querySelector('[data-section="state"]'));
     this._buildPresetSection(panel.querySelector('[data-section="presets"]'));
     this._buildRoutineSection(panel.querySelector('[data-section="routine"]'));
+    this._buildCommandsSection(panel.querySelector('[data-section="commands"]'));
   }
 
   // ---- Header drag (floating) ----
@@ -678,6 +680,28 @@ class _DaveDebug {
     btn.classList.remove('running');
     statusEl.textContent = 'Routine complete.';
     setTimeout(() => { if (statusEl.textContent === 'Routine complete.') statusEl.textContent = ''; }, 3000);
+  }
+
+  // ---- Commands Section (quick-trigger all dave commands) ----
+
+  _buildCommandsSection(section) {
+    const body = section.querySelector('.dave-debug-section-body');
+    this._wireCollapse(section);
+
+    const cmds = ['joke', 'flip', 'rave', 'fortune', 'dance', 'story', 'sleep', 'sing', 'snake', 'breakout', 'help'];
+    const row = document.createElement('div');
+    row.className = 'dave-debug-trigger-row';
+
+    for (const cmd of cmds) {
+      const btn = document.createElement('button');
+      btn.className = 'dave-debug-btn';
+      btn.textContent = cmd;
+      btn.addEventListener('click', () => {
+        document.dispatchEvent(new CustomEvent('dave:command', { detail: { command: cmd } }));
+      });
+      row.appendChild(btn);
+    }
+    body.appendChild(row);
   }
 
   // ---- Helpers ----

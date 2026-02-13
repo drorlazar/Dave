@@ -132,11 +132,16 @@ function initializeElements() {
       // Initialize event listeners
       if (searchInput) {
         const debouncedSearch = debounce((value) => {
-          // Secret phrase: Dave debug dashboard
-          if (value.trim().toLowerCase() === 'dave let me in') {
+          // Dave command system: "dave <command>" — suppress normal search for dave prefix
+          const trimmed = value.trim().toLowerCase();
+          if (trimmed === 'dave let me in') {
             searchInput.value = '';
             _searchTerm = '';
             document.dispatchEvent(new CustomEvent('dave:debugPanel'));
+            return;
+          }
+          // If user is typing a dave command, don't search files — the dropdown handles it
+          if (trimmed === 'dave' || (trimmed.startsWith('dave ') && trimmed !== 'dave let me in')) {
             return;
           }
           // Check if the value is a cloud storage URL
@@ -155,6 +160,22 @@ function initializeElements() {
 
         searchInput.addEventListener('input', (e) => {
           debouncedSearch(e.target.value);
+        });
+
+        // Enter key: dispatch typed dave command (dropdown stays open for browsing)
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const val = searchInput.value.trim().toLowerCase();
+            if (val.startsWith('dave ') && val !== 'dave let me in') {
+              const cmd = val.slice(5).trim();
+              if (cmd) {
+                e.preventDefault();
+                // Don't clear input — dropdown stays open for further commands
+                document.dispatchEvent(new CustomEvent('dave:command', { detail: { command: cmd } }));
+                return;
+              }
+            }
+          }
         });
 
         // Also handle paste events for instant cloud URL detection

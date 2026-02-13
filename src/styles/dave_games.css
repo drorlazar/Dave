@@ -1,0 +1,588 @@
+/* dave_games.css — Styles for Dave Games, Commands & Music Mode */
+
+/* ============================================================
+   Command Dropdown (autocomplete)
+   Matches the app's native .dropdown-content styling exactly.
+   ============================================================ */
+
+.dave-cmd-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 9950;
+  background-color: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  padding: 4px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dave-cmd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: var(--theme-text);
+}
+
+.dave-cmd-item:hover,
+.dave-cmd-item.selected {
+  background-color: #444;
+}
+
+body:not(.dark-mode) .dave-cmd-item:hover,
+body:not(.dark-mode) .dave-cmd-item.selected {
+  background-color: #f0f0f0;
+}
+
+.dave-cmd-icon {
+  font-size: 13px;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: var(--theme-accent);
+  text-shadow: 0 0 6px currentColor;
+}
+
+.dave-cmd-name {
+  color: var(--theme-accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+
+/* ============================================================
+   Game Overlay
+   ============================================================ */
+
+.dave-game-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9900;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.dave-game-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dave-game-container {
+  background: #0a0a0a;
+  border: 2px solid #00ff41;
+  border-radius: 12px;
+  padding: 0;
+  max-width: 520px;
+  width: 95vw;
+  box-shadow:
+    0 0 30px rgba(0, 255, 65, 0.15),
+    0 0 60px rgba(0, 255, 65, 0.05),
+    inset 0 0 30px rgba(0, 255, 65, 0.02);
+  overflow: hidden;
+  position: relative;
+}
+
+/* CRT scanlines */
+.dave-game-container::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.08) 0px,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dave-game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(0, 255, 65, 0.05);
+  border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+.dave-game-title {
+  color: #00ff41;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+.dave-game-close {
+  background: none;
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  color: #00ff41;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 2px 10px;
+  border-radius: 4px;
+  transition: background 0.2s, border-color 0.2s;
+  line-height: 1;
+}
+
+.dave-game-close:hover {
+  background: rgba(0, 255, 65, 0.15);
+  border-color: #00ff41;
+}
+
+.dave-game-canvas {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.dave-game-hud {
+  padding: 8px 16px;
+  color: #00ff41;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  text-align: center;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
+  min-height: 30px;
+}
+
+
+/* ============================================================
+   Rave Mode
+   ============================================================ */
+
+/* Rave overlay — hue-rotate lives HERE, not on body.
+   Putting filter on body creates a new containing block for position:fixed
+   elements, which snaps Dave to a new position. */
+.dave-rave-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9800;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dave-rave-overlay.dave-rave-active {
+  animation: daveRaveHue 0.5s linear infinite;
+}
+
+@keyframes daveRaveHue {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+/* Rave particles — text symbols, not colored emoji */
+.dave-rave-particle {
+  position: absolute;
+  top: -40px;
+  font-size: 20px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #00ff41;
+  text-shadow: 0 0 10px #00ff41;
+  animation: daveRaveParticleFall linear forwards;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes daveRaveParticleFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* dave-rave-iris CSS animation removed — color cycling is now done via JS
+   setInterval on p.style.setProperty('--dave-iris', ...) to avoid overriding
+   the dave-ambient bounce animation on .dave-presence. */
+
+/* Rave headbang — applied to .dave-presence-eye so presence keeps its ambient bounce */
+.dave-rave-headbang {
+  animation: daveRaveHeadbang 0.25s ease-in-out infinite !important;
+}
+
+@keyframes daveRaveHeadbang {
+  0%   { transform: translateY(0) rotate(0deg); }
+  30%  { transform: translateY(4px) rotate(10deg); }
+  50%  { transform: translateY(6px) rotate(-8deg); }
+  70%  { transform: translateY(2px) rotate(8deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* Rave wild bounce — applied to .dave-presence-eye */
+.dave-rave-bounce {
+  animation: daveRaveBounce 0.4s ease-in-out infinite !important;
+}
+
+@keyframes daveRaveBounce {
+  0%   { transform: translateX(0) scale(1); }
+  25%  { transform: translateX(-4px) scale(1.08) rotate(-8deg); }
+  50%  { transform: translateX(0) scale(0.92); }
+  75%  { transform: translateX(4px) scale(1.08) rotate(8deg); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+
+/* ============================================================
+   Flip Animation
+   ============================================================ */
+
+.dave-flip-anim {
+  animation: daveFlip 0.8s ease-in-out !important;
+}
+
+@keyframes daveFlip {
+  0%   { transform: perspective(400px) rotateY(0deg); }
+  50%  { transform: perspective(400px) rotateY(180deg) scale(1.2); }
+  100% { transform: perspective(400px) rotateY(360deg) scale(1); }
+}
+
+
+/* ============================================================
+   Joke — Clap Emojis, Bow & Punchline Fade
+   ============================================================ */
+
+/* Clap icons — same pattern as fortune icons. Text symbols, Dave's color, monospace + glow. */
+.dave-clap-icon {
+  position: fixed;
+  font-size: 16px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 9999;
+  text-shadow: 0 0 10px currentColor;
+  animation: daveClapRise 1.5s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes daveClapRise {
+  0%   { transform: translateY(0) scale(0.5); opacity: 1; }
+  40%  { transform: translateY(-40px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-90px) scale(0.8); opacity: 0; }
+}
+
+.dave-joke-bow {
+  animation: daveJokeBow 1.2s ease-in-out !important;
+}
+
+@keyframes daveJokeBow {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(0deg) scale(1.05); }
+  40%  { transform: rotate(15deg) scaleY(0.7) translateY(8px); }
+  60%  { transform: rotate(15deg) scaleY(0.7) translateY(8px); }
+  80%  { transform: rotate(0deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* Punchline fade-in */
+.dave-punchline {
+  display: block;
+  margin-top: 8px;
+  opacity: 0;
+  animation: davePunchlineFade 0.6s ease-out forwards;
+}
+
+@keyframes davePunchlineFade {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ============================================================
+   Dance Animations — expanded repertoire
+   ============================================================ */
+
+.dave-dance-spin {
+  animation: daveDanceSpin 0.6s ease-in-out !important;
+}
+
+@keyframes daveDanceSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dave-dance-double-spin {
+  animation: daveDanceDoubleSpin 0.9s ease-in-out !important;
+}
+
+@keyframes daveDanceDoubleSpin {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(180deg) scale(1.15); }
+  50%  { transform: rotate(360deg) scale(1); }
+  75%  { transform: rotate(540deg) scale(1.15); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+
+.dave-dance-lean-left {
+  animation: daveDanceLeanLeft 0.35s ease-in-out !important;
+}
+
+@keyframes daveDanceLeanLeft {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(-20deg) translateX(-6px); }
+}
+
+.dave-dance-lean-right {
+  animation: daveDanceLeanRight 0.35s ease-in-out !important;
+}
+
+@keyframes daveDanceLeanRight {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(20deg) translateX(6px); }
+}
+
+.dave-dance-stretch {
+  animation: daveDanceStretch 0.4s ease-in-out !important;
+}
+
+@keyframes daveDanceStretch {
+  0%, 100% { transform: scaleY(1); }
+  50%      { transform: scaleY(1.4) scaleX(0.8); }
+}
+
+.dave-dance-slide-left {
+  animation: daveDanceSlideLeft 0.5s ease-in-out !important;
+}
+
+@keyframes daveDanceSlideLeft {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(-15px) rotate(-8deg); }
+}
+
+.dave-dance-slide-right {
+  animation: daveDanceSlideRight 0.5s ease-in-out !important;
+}
+
+@keyframes daveDanceSlideRight {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(15px) rotate(8deg); }
+}
+
+.dave-dance-bounce-twist {
+  animation: daveDanceBounceTwist 0.5s ease-in-out !important;
+}
+
+@keyframes daveDanceBounceTwist {
+  0%   { transform: translateY(0) rotate(0deg); }
+  25%  { transform: translateY(-10px) rotate(15deg); }
+  50%  { transform: translateY(0) rotate(-15deg); }
+  75%  { transform: translateY(-8px) rotate(10deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+.dave-dance-pop {
+  animation: daveDancePop 0.35s ease-in-out !important;
+}
+
+@keyframes daveDancePop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+
+.dave-dance-shimmy {
+  animation: daveDanceShimmy 0.4s ease-in-out !important;
+}
+
+@keyframes daveDanceShimmy {
+  0%   { transform: translateX(0) scaleX(1); }
+  20%  { transform: translateX(-5px) scaleX(0.9); }
+  40%  { transform: translateX(5px) scaleX(1.1); }
+  60%  { transform: translateX(-4px) scaleX(0.95); }
+  80%  { transform: translateX(4px) scaleX(1.05); }
+  100% { transform: translateX(0) scaleX(1); }
+}
+
+
+/* ============================================================
+   Fortune — Floating Mystic Icons
+   ============================================================ */
+
+.dave-fortune-icon {
+  position: fixed;
+  font-size: 20px;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform, opacity;
+  animation: daveFortuneOrbit var(--fortune-dur, 3s) ease-in-out forwards;
+  text-shadow: 0 0 10px currentColor;
+}
+
+@keyframes daveFortuneOrbit {
+  0%   { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 0; }
+  20%  { transform: translate(var(--fx, 20px), var(--fy, -20px)) scale(1.2) rotate(90deg); opacity: 1; }
+  80%  { transform: translate(var(--fx2, -15px), var(--fy2, -30px)) scale(1) rotate(270deg); opacity: 0.8; }
+  100% { transform: translate(0, -40px) scale(0.5) rotate(360deg); opacity: 0; }
+}
+
+/* Fortune eye glow pulse */
+.dave-fortune-glow .dave-presence-eye {
+  animation: daveFortuneEyeGlow 1.5s ease-in-out infinite !important;
+}
+
+@keyframes daveFortuneEyeGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 65, 0.3); }
+  50%      { box-shadow: 0 0 25px rgba(0, 255, 65, 0.7), 0 0 50px rgba(0, 255, 65, 0.3); }
+}
+
+
+/* ============================================================
+   Sleep Mode
+   ============================================================ */
+
+.dave-sleep-mode .dave-presence-iris {
+  transform: scaleY(0.15) !important;
+  animation: none !important;
+  transition: transform 1.2s ease;
+  box-shadow: none !important;
+  opacity: 0.3 !important;
+}
+
+/* Also dim the eye glow pseudo-element so it doesn't look like a second pupil */
+.dave-sleep-mode .dave-presence-eye::after {
+  animation: none !important;
+  opacity: 0.05 !important;
+}
+
+.dave-sleep-mode .dave-presence-eye {
+  box-shadow: 0 0 4px rgba(0, 255, 65, 0.05) !important;
+}
+
+.dave-sleep-mode {
+  animation: none !important;
+}
+
+/* Yawn stretch before sleeping */
+.dave-yawn-stretch {
+  animation: daveYawnStretch 1.5s ease-in-out !important;
+}
+
+@keyframes daveYawnStretch {
+  0%   { transform: scaleX(1) scaleY(1); }
+  15%  { transform: scaleX(1.1) scaleY(0.9); }
+  35%  { transform: scaleX(0.85) scaleY(1.25); }
+  55%  { transform: scaleX(1.05) scaleY(0.95); }
+  75%  { transform: scaleX(0.95) scaleY(1.08); }
+  100% { transform: scaleX(1) scaleY(1); }
+}
+
+.dave-sleep-zzz {
+  position: fixed;
+  color: rgba(0, 255, 65, 0.6);
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 9999;
+  animation: daveSleepZzz 2.5s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes daveSleepZzz {
+  0%   { transform: translate(0, 0) scale(0.5); opacity: 0.8; }
+  50%  { transform: translate(15px, -30px) scale(1); opacity: 0.6; }
+  100% { transform: translate(25px, -60px) scale(1.3); opacity: 0; }
+}
+
+
+/* ============================================================
+   Wake Startle
+   ============================================================ */
+
+.dave-wake-startle .dave-presence-iris {
+  transform: scale(1.4) !important;
+  transition: transform 0.1s ease;
+}
+
+.dave-wake-startle {
+  animation: daveWakeStartle 0.3s ease-out !important;
+}
+
+@keyframes daveWakeStartle {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.3); }
+  60%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+
+/* ============================================================
+   Music Mode
+   ============================================================ */
+
+.dave-music-mode {
+  animation: daveMusicRock 2s ease-in-out infinite !important;
+}
+
+@keyframes daveMusicRock {
+  0%, 100% { transform: rotate(-4deg); }
+  50%      { transform: rotate(4deg); }
+}
+
+.dave-music-note {
+  position: fixed;
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform, opacity;
+  text-shadow: 0 0 8px currentColor;
+}
+
+@keyframes daveMusicNoteRise {
+  0%   { transform: translateY(0) translateX(0); opacity: 1; }
+  100% { transform: translateY(-80px) translateX(15px); opacity: 0; }
+}
+
+/* Sing mode: hide iris/pupil so note characters are visible */
+.dave-sing-mode .dave-presence-iris {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Sing iris note — note character replaces iris content */
+.dave-sing-note {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+  color: inherit;
+  text-shadow: 0 0 4px currentColor;
+  animation: daveSingNotePulse 0.4s ease-in-out;
+}
+
+@keyframes daveSingNotePulse {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  50%  { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+
+/* ============================================================
+   Story — Word Fade
+   ============================================================ */
+
+.dave-story-word {
+  opacity: 0;
+  display: inline;
+  transition: opacity 0.4s ease-in;
+}
+
+.dave-story-word.visible {
+  opacity: 1;
+}
