@@ -1,0 +1,403 @@
+/* ============================================================
+   DAVE DEBUG DASHBOARD
+   Secret diagnostic console for fine-tuning Dave's behavior.
+   Floating, draggable, resizable panel — like the material editor.
+   Triggered by typing "dave let me in" in the search field.
+   ============================================================ */
+
+.dave-debug-panel {
+  position: fixed;
+  top: 60px;
+  right: 40px;
+  width: 520px;
+  max-height: 80vh;
+  background: #0a0e0a;
+  border: 1px solid #1a3a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 0 30px rgba(0, 255, 65, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.6);
+  font-family: 'Courier New', Courier, monospace;
+  color: #00ff41;
+  z-index: 2000;
+  resize: both;
+  min-width: 360px;
+  min-height: 250px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.96) translateY(-8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.dave-debug-panel.dave-debug-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1) translateY(0);
+}
+
+/* Header — draggable */
+.dave-debug-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #0d120d;
+  border-bottom: 1px solid #1a3a1a;
+  user-select: none;
+  cursor: grab;
+  flex-shrink: 0;
+}
+.dave-debug-header.dragging {
+  cursor: grabbing;
+}
+.dave-debug-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.3);
+}
+.dave-debug-close {
+  background: none;
+  border: 1px solid #2a5a2a;
+  color: #00ff41;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 2px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.dave-debug-close:hover {
+  background: #1a3a1a;
+  color: #66ffaa;
+}
+
+/* Scanlines overlay */
+.dave-debug-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+  pointer-events: none;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+/* Scrollable body */
+.dave-debug-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  padding: 10px 14px 14px;
+  position: relative;
+  z-index: 2;
+}
+.dave-debug-body::-webkit-scrollbar { width: 6px; }
+.dave-debug-body::-webkit-scrollbar-track { background: #0a0e0a; }
+.dave-debug-body::-webkit-scrollbar-thumb { background: #1a3a1a; border-radius: 3px; }
+.dave-debug-body::-webkit-scrollbar-thumb:hover { background: #2a5a2a; }
+
+/* Sections */
+.dave-debug-section {
+  margin-bottom: 8px;
+  border: 1px solid #1a3a1a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dave-debug-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: #0d120d;
+  cursor: pointer;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+.dave-debug-section-header:hover {
+  background: #111811;
+}
+.dave-debug-section-chevron {
+  font-size: 8px;
+  transition: transform 0.2s ease;
+}
+.dave-debug-section.collapsed .dave-debug-section-chevron {
+  transform: rotate(-90deg);
+}
+.dave-debug-section-body {
+  padding: 10px 10px;
+  display: block;
+}
+.dave-debug-section.collapsed .dave-debug-section-body {
+  display: none;
+}
+
+/* Emotion buttons grid */
+.dave-debug-emotion-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.dave-debug-emo-btn {
+  background: #0d120d;
+  border: 1px solid #1a3a1a;
+  color: #00ff41;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 4px 9px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.dave-debug-emo-btn:hover {
+  background: #1a3a1a;
+}
+.dave-debug-emo-btn.active {
+  background: #1a3a1a;
+  border-color: #00ff41;
+}
+
+/* Tear buttons row */
+.dave-debug-tear-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* Slider rows */
+.dave-debug-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.dave-debug-slider-label {
+  font-size: 9px;
+  min-width: 110px;
+  color: #88bb88;
+}
+.dave-debug-slider-value {
+  font-size: 9px;
+  min-width: 50px;
+  text-align: right;
+  color: #66ffaa;
+}
+.dave-debug-slider-row input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #1a3a1a;
+  border-radius: 2px;
+  outline: none;
+}
+.dave-debug-slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #00ff41;
+  border: 1px solid #0a0e0a;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+}
+.dave-debug-slider-row input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #00ff41;
+  border: 1px solid #0a0e0a;
+  cursor: pointer;
+}
+
+/* Toggle buttons */
+.dave-debug-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.dave-debug-toggle-btn {
+  background: #0d120d;
+  border: 1px solid #2a3a2a;
+  color: #88bb88;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.dave-debug-toggle-btn.on {
+  border-color: #00ff41;
+  color: #00ff41;
+  background: #0d1a0d;
+}
+.dave-debug-toggle-btn:hover {
+  background: #1a3a1a;
+}
+
+/* Trigger buttons */
+.dave-debug-trigger-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Generic small button */
+.dave-debug-btn {
+  background: #0d120d;
+  border: 1px solid #1a3a1a;
+  color: #00ff41;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.dave-debug-btn:hover {
+  background: #1a3a1a;
+}
+.dave-debug-btn.running {
+  border-color: #ff8800;
+  color: #ff8800;
+  cursor: default;
+}
+
+/* Bubble tester */
+.dave-debug-bubble-input {
+  width: 100%;
+  background: #0d120d;
+  border: 1px solid #1a3a1a;
+  color: #00ff41;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 6px 8px;
+  border-radius: 3px;
+  margin-bottom: 6px;
+  outline: none;
+  box-sizing: border-box;
+}
+.dave-debug-bubble-input:focus {
+  border-color: #00ff41;
+}
+.dave-debug-bubble-input::placeholder {
+  color: #2a5a2a;
+}
+.dave-debug-bubble-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.dave-debug-bubble-row select {
+  background: #0d120d;
+  border: 1px solid #1a3a1a;
+  color: #00ff41;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* State inspector */
+.dave-debug-state-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 12px;
+}
+.dave-debug-state-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  padding: 2px 0;
+  border-bottom: 1px solid #0d1a0d;
+}
+.dave-debug-state-key {
+  color: #88bb88;
+}
+.dave-debug-state-val {
+  color: #66ffaa;
+}
+
+/* Named preset list */
+.dave-debug-preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.dave-debug-preset-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #0d120d;
+  border: 1px solid #2a3a2a;
+  border-radius: 3px;
+  padding: 3px 4px 3px 8px;
+  font-size: 9px;
+  color: #88bb88;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.dave-debug-preset-chip:hover {
+  border-color: #00ff41;
+  color: #00ff41;
+}
+.dave-debug-preset-chip .dave-debug-preset-x {
+  font-size: 8px;
+  color: #553333;
+  padding: 1px 4px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.dave-debug-preset-chip .dave-debug-preset-x:hover {
+  color: #ff4444;
+}
+
+/* Preset name input */
+.dave-debug-preset-name {
+  background: #0d120d;
+  border: 1px solid #1a3a1a;
+  color: #00ff41;
+  font-family: inherit;
+  font-size: 9px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  outline: none;
+  width: 100px;
+}
+.dave-debug-preset-name:focus {
+  border-color: #00ff41;
+}
+.dave-debug-preset-name::placeholder {
+  color: #2a5a2a;
+}
+
+/* Routine progress */
+.dave-debug-routine-status {
+  font-size: 9px;
+  color: #88bb88;
+  margin-top: 6px;
+  min-height: 14px;
+}
+
+/* Resize handle indicator (bottom-right corner) */
+.dave-debug-panel::-webkit-resizer {
+  background: linear-gradient(135deg, transparent 60%, #1a3a1a 60%, #1a3a1a 65%, transparent 65%, transparent 75%, #1a3a1a 75%, #1a3a1a 80%, transparent 80%);
+}

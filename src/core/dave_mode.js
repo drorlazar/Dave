@@ -11,24 +11,42 @@ const VISITS_KEY = 'dave_fullmode_visits';
 const FIRST_ENABLED_KEY = 'dave_fullmode_first';
 const POSITION_KEY = 'dave_fullmode_pos';
 
-const COOLDOWN_DEFAULT_MS = 7000;
-const COOLDOWN_BUSY_MS = 12000;
-const BUBBLE_DISPLAY_MS = 5500;
-const BUBBLE_FADE_MS = 250;
-const IDLE_TIMEOUT_MS = 35000;
-const REACT_JITTER_MS = 300;
-const RAPID_ACTION_WINDOW_MS = 2000;
-const BLINK_MIN_MS = 2500;
-const BLINK_MAX_MS = 6000;
-const BLINK_DURATION_MS = 120;
-const ATTENTION_FIRST_MS = 50000;
-const ATTENTION_REPEAT_MS = 25000;
-const CURSOR_FOLLOW_RADIUS = 150;
-const CURSOR_FOLLOW_MAX_DISP = 3.5;
-const CURSOR_IDLE_MS = 2000;
-const SPAM_WINDOW_MS = 2500;
-const SPAM_THRESHOLD = 4;
-const TERMINAL_CHECK_MS = 2000;
+// Mutable config — debug dashboard can override at runtime
+const DAVE_CONFIG = {
+  COOLDOWN_DEFAULT_MS: 7000,
+  COOLDOWN_BUSY_MS: 12000,
+  BUBBLE_DISPLAY_MS: 5500,
+  BUBBLE_FADE_MS: 250,
+  IDLE_TIMEOUT_MS: 35000,
+  REACT_JITTER_MS: 300,
+  RAPID_ACTION_WINDOW_MS: 2000,
+  BLINK_MIN_MS: 2500,
+  BLINK_MAX_MS: 6000,
+  BLINK_DURATION_MS: 120,
+  ATTENTION_FIRST_MS: 50000,
+  ATTENTION_REPEAT_MS: 25000,
+  CURSOR_FOLLOW_RADIUS: 150,
+  CURSOR_FOLLOW_MAX_DISP: 3.5,
+  CURSOR_IDLE_MS: 2000,
+  SPAM_WINDOW_MS: 2500,
+  SPAM_THRESHOLD: 4,
+  TERMINAL_CHECK_MS: 2000,
+  TEAR_DURATION_MS: 5000,
+  TEAR_TRAIL_MAX: 7,
+  TEAR_STEP_MS: 80,
+  TEAR_LEAD_SCRAMBLE_MS: 50,
+  DRAG_TRAIL_INTERVAL_MS: 50,
+  DRAG_TRAIL_LIFETIME_MS: 750,
+  TEAR_LEAD_LIFE_MS: 2000,
+  TEAR_TRAIL_LIFE_MS: 750,
+  TEAR_FALL_DISTANCE: 120,
+  TEAR_SHED_MS: 120,
+  DRAG_TRAIL_LIFE_MS: 600,
+  TEAR_BURST_SPEED: 120,
+  FIREWORK_COOLDOWN_MS: 180000,
+  TYPEWRITER_WORD_PAUSE_MIN: 40,
+  TYPEWRITER_WORD_PAUSE_MAX: 120,
+};
 
 const MATRIX_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?<>[]{}|/~';
 
@@ -383,9 +401,10 @@ const EMOTION_MAP = {
 const TEAR_EMOTIONS = new Set([EMOTION.SAD, EMOTION.EXISTENTIAL]);
 // Emotions with a chance of a single subtle tear
 const SUBTLE_TEAR_EMOTIONS = new Set([EMOTION.ANNOYED, EMOTION.ALARMED]);
+// Emotions that can trigger fireworks (excited reactions)
+const FIREWORK_EMOTIONS = new Set([EMOTION.PROUD, EMOTION.AMUSED, EMOTION.SMUG]);
 
 const TEAR_CHARS = 'ABCDEFGHKMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01'; // pragma: allowlist secret
-const TEAR_DURATION_MS = 2200;
 
 
 // ============================================================
@@ -457,7 +476,11 @@ class _DaveMode {
     this._currentEmotion = EMOTION.NEUTRAL;
     this._tearEl = null;
     this._tearTimer = null;
-    this._tearStreamInterval = null;
+    this._tearDropIntervals = [];   // one per drop column
+
+    // Drag trail
+    this._dragTrailInterval = null;
+    this._dragTrailEnabled = true;
 
     this._session = {
       startTime: Date.now(),
@@ -520,7 +543,7 @@ class _DaveMode {
 
     if (showReaction) {
       this._setEmotion(EMOTION.SAD);
-      this._triggerTear(EMOTION.SAD);
+      this._triggerTear(EMOTION.SAD, { burst: true });
       this._showBubbleImmediate(this._pickFromArray(MSG.toggle.off));
       setTimeout(() => this._teardownActive(), 2000);
     } else {
@@ -710,6 +733,7 @@ class _DaveMode {
 
     this._presenceEl.classList.add('dave-dragging');
     this._presenceEl.classList.remove('dave-ambient');
+    this._startDragTrail();
 
     // Force-kill bubble instantly (no fade animation - it must vanish NOW)
     this._twGen++;
@@ -751,6 +775,7 @@ class _DaveMode {
   }
 
   _onDragEnd() {
+    this._stopDragTrail();
     document.removeEventListener('mousemove', this._boundDragMove);
     document.removeEventListener('mouseup', this._boundDragEnd);
     document.removeEventListener('touchmove', this._boundDragMove);
@@ -784,6 +809,7 @@ class _DaveMode {
                          (cy < 60 || cy > window.innerHeight - 60);
         setTimeout(() => {
           if (inCorner && Math.random() < 0.6) {
+            this._triggerTear(EMOTION.SAD, { heavy: true });
             this._comment(MSG.drag.corner, {}, { force: true, emotion: EMOTION.SAD });
           } else {
             this._comment(MSG.drag.drop, {}, { force: true, emotion: EMOTION.AMUSED });
@@ -830,7 +856,7 @@ class _DaveMode {
   _stopBlinking() { clearTimeout(this._blinkTimer); }
 
   _scheduleBlink() {
-    const delay = BLINK_MIN_MS + Math.random() * (BLINK_MAX_MS - BLINK_MIN_MS);
+    const delay = DAVE_CONFIG.BLINK_MIN_MS + Math.random() * (DAVE_CONFIG.BLINK_MAX_MS - DAVE_CONFIG.BLINK_MIN_MS);
     this._blinkTimer = setTimeout(() => this._doBlink(), delay);
   }
 
@@ -853,12 +879,12 @@ class _DaveMode {
           setTimeout(() => {
             this._irisEl?.classList.remove('dave-blink');
             this._scheduleBlink();
-          }, BLINK_DURATION_MS);
+          }, DAVE_CONFIG.BLINK_DURATION_MS);
         }, 140);
       } else {
         this._scheduleBlink();
       }
-    }, BLINK_DURATION_MS);
+    }, DAVE_CONFIG.BLINK_DURATION_MS);
   }
 
 
@@ -888,11 +914,11 @@ class _DaveMode {
     const dy = e.clientY - eye.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < CURSOR_FOLLOW_RADIUS && dist > 5) {
+    if (dist < DAVE_CONFIG.CURSOR_FOLLOW_RADIUS && dist > 5) {
       // Inside radius: follow cursor
-      const factor = Math.min(dist / CURSOR_FOLLOW_RADIUS, 1);
-      const ix = (dx / dist) * CURSOR_FOLLOW_MAX_DISP * factor;
-      const iy = (dy / dist) * CURSOR_FOLLOW_MAX_DISP * factor;
+      const factor = Math.min(dist / DAVE_CONFIG.CURSOR_FOLLOW_RADIUS, 1);
+      const ix = (dx / dist) * DAVE_CONFIG.CURSOR_FOLLOW_MAX_DISP * factor;
+      const iy = (dy / dist) * DAVE_CONFIG.CURSOR_FOLLOW_MAX_DISP * factor;
 
       if (!this._irisEl.classList.contains('dave-cursor-follow')) {
         this._irisEl.classList.add('dave-cursor-follow');
@@ -905,7 +931,7 @@ class _DaveMode {
       this._cursorIdleTimer = setTimeout(() => {
         // Cursor idle inside radius: resume scanning
         this._resumeIrisScan();
-      }, CURSOR_IDLE_MS);
+      }, DAVE_CONFIG.CURSOR_IDLE_MS);
 
     } else if (this._cursorInRadius) {
       // Left radius: resume scanning
@@ -930,7 +956,7 @@ class _DaveMode {
   _startAttentionSeeking() {
     this._stopAttentionSeeking();
     this._attentionCount = 0;
-    this._attentionTimer = setTimeout(() => this._seekAttention(), ATTENTION_FIRST_MS);
+    this._attentionTimer = setTimeout(() => this._seekAttention(), DAVE_CONFIG.ATTENTION_FIRST_MS);
   }
 
   _stopAttentionSeeking() {
@@ -959,7 +985,7 @@ class _DaveMode {
       if (!this._isDragging) this._presenceEl?.classList.add('dave-ambient');
     }, dur);
 
-    this._attentionTimer = setTimeout(() => this._seekAttention(), ATTENTION_REPEAT_MS);
+    this._attentionTimer = setTimeout(() => this._seekAttention(), DAVE_CONFIG.ATTENTION_REPEAT_MS);
   }
 
 
@@ -968,7 +994,7 @@ class _DaveMode {
   // ============================================================
 
   _startTerminalCheck() {
-    this._terminalCheckInterval = setInterval(() => this._updateTerminalLink(), TERMINAL_CHECK_MS);
+    this._terminalCheckInterval = setInterval(() => this._updateTerminalLink(), DAVE_CONFIG.TERMINAL_CHECK_MS);
   }
 
   _stopTerminalCheck() {
@@ -1019,8 +1045,8 @@ class _DaveMode {
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist > 0) {
-      const ix = (dx / dist) * CURSOR_FOLLOW_MAX_DISP;
-      const iy = (dy / dist) * CURSOR_FOLLOW_MAX_DISP;
+      const ix = (dx / dist) * DAVE_CONFIG.CURSOR_FOLLOW_MAX_DISP;
+      const iy = (dy / dist) * DAVE_CONFIG.CURSOR_FOLLOW_MAX_DISP;
       this._irisEl.classList.add('dave-cursor-follow');
       this._irisEl.style.transform = `translate(${ix.toFixed(1)}px, ${iy.toFixed(1)}px)`;
     }
@@ -1080,6 +1106,17 @@ class _DaveMode {
       this._triggerTear(emotion);
     }
 
+    // Fireworks for excited emotions — rare and special
+    if (FIREWORK_EMOTIONS.has(emotion)) {
+      const now = Date.now();
+      const cooldown = DAVE_CONFIG.FIREWORK_COOLDOWN_MS;
+      const elapsed = now - (this._lastFireworksTime || 0);
+      if (elapsed >= cooldown && Math.random() < 0.15) {
+        this._lastFireworksTime = now;
+        this._triggerFireworks();
+      }
+    }
+
     // Position bubble
     this._updateBubblePosition();
 
@@ -1124,7 +1161,7 @@ class _DaveMode {
     clearTimeout(this._bubbleTimer);
     this._bubbleTimer = setTimeout(() => {
       if (!this._bubbleHoverPaused) this._hideBubble();
-    }, BUBBLE_DISPLAY_MS);
+    }, DAVE_CONFIG.BUBBLE_DISPLAY_MS);
   }
 
   _hideBubble() {
@@ -1141,7 +1178,7 @@ class _DaveMode {
 
     setTimeout(() => {
       this._bubbleEl?.classList.remove('dave-bubble-exiting', 'dave-bubble-glitch');
-    }, BUBBLE_FADE_MS);
+    }, DAVE_CONFIG.BUBBLE_FADE_MS);
   }
 
 
@@ -1152,13 +1189,18 @@ class _DaveMode {
   _updateBubblePosition() {
     if (!this._bubbleEl || !this._presenceEl) return;
 
+    // Always reset all 4 sides first to prevent stretching
+    // (fixed elements stretch when both top+bottom or left+right are set)
+    this._bubbleEl.style.top = 'auto';
+    this._bubbleEl.style.bottom = 'auto';
+    this._bubbleEl.style.left = 'auto';
+    this._bubbleEl.style.right = 'auto';
+
     const isDragged = this._presenceEl.classList.contains('dave-dragged');
 
     // Non-dragged: default CSS positioning (bubble above eye at bottom-right)
     if (!isDragged) {
-      this._bubbleEl.style.top = 'auto';
       this._bubbleEl.style.bottom = '60px';
-      this._bubbleEl.style.left = 'auto';
       this._bubbleEl.style.right = '8px';
       const tail = this._bubbleEl.querySelector('.dave-bubble-tail');
       if (tail) tail.style.cssText = '';
@@ -1230,7 +1272,7 @@ class _DaveMode {
       if (/^\s+$/.test(token)) {
         textEl.appendChild(document.createTextNode(token));
         // Thinking pause between words
-        await this._tw(40 + Math.random() * 80, gen);
+        await this._tw(DAVE_CONFIG.TYPEWRITER_WORD_PAUSE_MIN + Math.random() * (DAVE_CONFIG.TYPEWRITER_WORD_PAUSE_MAX - DAVE_CONFIG.TYPEWRITER_WORD_PAUSE_MIN), gen);
         if (gen !== this._twGen) return;
         continue;
       }
@@ -1377,7 +1419,7 @@ class _DaveMode {
     this._presenceEl.classList.add('dave-reacting');
     this._reactTimer = setTimeout(() => {
       this._presenceEl?.classList.remove('dave-reacting');
-    }, REACT_JITTER_MS);
+    }, DAVE_CONFIG.REACT_JITTER_MS);
   }
 
 
@@ -1457,7 +1499,7 @@ class _DaveMode {
   _onPageRender({ page, total }) {
     this._resetIdleTimer();
     const now = Date.now();
-    if (now - this._lastPageTime < RAPID_ACTION_WINDOW_MS) {
+    if (now - this._lastPageTime < DAVE_CONFIG.RAPID_ACTION_WINDOW_MS) {
       this._lastPage = page;
       this._lastPageTime = now;
       return;
@@ -1531,9 +1573,9 @@ class _DaveMode {
     // Spam detection
     const now = Date.now();
     this._clickTimestamps.push(now);
-    this._clickTimestamps = this._clickTimestamps.filter(t => now - t < SPAM_WINDOW_MS);
+    this._clickTimestamps = this._clickTimestamps.filter(t => now - t < DAVE_CONFIG.SPAM_WINDOW_MS);
 
-    if (this._clickTimestamps.length >= SPAM_THRESHOLD && !this._spamActive) {
+    if (this._clickTimestamps.length >= DAVE_CONFIG.SPAM_THRESHOLD && !this._spamActive) {
       this._clickTimestamps = [];
       this._handleSpamClick();
       return;
@@ -1575,6 +1617,10 @@ class _DaveMode {
     const spamEmotions = { hal: EMOTION.ALARMED, matrix: EMOTION.EXISTENTIAL, hurt: EMOTION.ALARMED, shuteye: EMOTION.SAD, glare: EMOTION.ANNOYED, dizzy: EMOTION.SASSY };
     const msg = this._pickFromArray(reaction.pool);
     this._showBubble(msg, { force: true, emotion: spamEmotions[reaction.id] || EMOTION.NEUTRAL });
+
+    // Tears for dramatic spam reactions
+    if (reaction.id === 'shuteye') this._triggerTear(EMOTION.SAD, { burst: true });
+    else if (reaction.id === 'hurt') this._triggerTear(EMOTION.ALARMED);
 
     // Cleanup after duration
     this._spamCleanupTimer = setTimeout(() => {
@@ -1627,60 +1673,471 @@ class _DaveMode {
     }, 600);
   }
 
-  _triggerTear(emotion) {
-    if (!this._tearEl || !this._presenceEl) return;
-    const heavy = TEAR_EMOTIONS.has(emotion);
+  /**
+   * Position-based tear: lead char falls from eye center leaving trail chars behind.
+   * Lead: 2s lifespan, falls ~120px, scrambles chars, fades in last 25%.
+   * Trail: each shed char lives 750ms, scrambles, fades to death.
+   */
+  _triggerTear(emotion, opts = {}) {
+    if (!this._presenceEl) return;
     const subtle = SUBTLE_TEAR_EMOTIONS.has(emotion);
+    const burst = opts.burst === true;
+    const heavy = opts.heavy === true;
 
-    // Subtle tears only fire 30% of the time
-    if (subtle && Math.random() > 0.3) return;
+    if (subtle && !burst && !heavy && Math.random() > 0.3) return;
 
-    // Clear any existing tear
     this._stopTear();
 
-    this._tearEl.innerHTML = '';
-    this._tearEl.className = heavy ? 'dave-tear dave-tear-heavy' : 'dave-tear';
+    const rect = this._presenceEl.getBoundingClientRect();
+    const eyeCX = rect.left + rect.width / 2;
+    const eyeCY = rect.top + rect.height / 2;
+    const color = this._getIrisColor();
 
-    // Create tear streams (each is a falling column of characters)
-    const streamCount = heavy ? 2 : 1;
-    for (let s = 0; s < streamCount; s++) {
-      const stream = document.createElement('span');
-      stream.className = 'dave-tear-stream';
-      stream.dataset.idx = s;
-      const len = 5 + Math.floor(Math.random() * 4);
-      let chars = '';
-      for (let i = 0; i < len; i++) chars += TEAR_CHARS[Math.floor(Math.random() * TEAR_CHARS.length)];
-      stream.textContent = chars;
-      this._tearEl.appendChild(stream);
+    if (burst) {
+      // Burst: fountain of tears — shoot up fast, arc over, rain down.
+      // Two rapid waves (0-80ms gap) for a sudden "gush" that stops quickly.
+      // Each stream gets randomized lifespan, gravity (mass), drag, and shed rate
+      // so they break apart naturally instead of moving in lockstep.
+      const baseSpeed = DAVE_CONFIG.TEAR_BURST_SPEED;
+      const baseGrav = baseSpeed * 1.8;
+      const wave1 = 8 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < wave1; i++) {
+        const spread = (Math.random() - 0.5) * 30;
+        const spreadRad = (spread * Math.PI) / 180;
+        const speed = baseSpeed * (0.7 + Math.random() * 0.6); // wider speed range
+        const vx = Math.sin(spreadRad) * speed;
+        const vy = -Math.cos(spreadRad) * speed;
+        const delay = Math.random() * 80;
+        const tid = setTimeout(() => {
+          this._startTearStream(eyeCX + (Math.random() - 0.5) * 12, eyeCY, color, {
+            vx, vy,
+            gravity: baseGrav * (0.7 + Math.random() * 0.6),   // ±30% mass variation
+            drag: 0.96 + Math.random() * 0.035,                // 0.960-0.995 — some float longer
+            lifeMul: 0.7 + Math.random() * 0.6,                // 70-130% lifespan
+            trailLifeMul: 0.6 + Math.random() * 0.8,           // 60-140% trail life
+            shedMul: 0.7 + Math.random() * 0.6,                // faster/slower shedding
+          });
+        }, delay);
+        this._tearDropIntervals.push(tid);
+      }
+      // Wave 2: weaker follow-up
+      const wave2 = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < wave2; i++) {
+        const spread = (Math.random() - 0.5) * 24;
+        const spreadRad = (spread * Math.PI) / 180;
+        const speed = baseSpeed * (0.5 + Math.random() * 0.4);
+        const vx = Math.sin(spreadRad) * speed;
+        const vy = -Math.cos(spreadRad) * speed;
+        const delay = 100 + Math.random() * 100;
+        const tid = setTimeout(() => {
+          this._startTearStream(eyeCX + (Math.random() - 0.5) * 8, eyeCY, color, {
+            vx, vy,
+            gravity: baseGrav * (0.6 + Math.random() * 0.5),
+            drag: 0.96 + Math.random() * 0.035,
+            lifeMul: 0.6 + Math.random() * 0.5,
+            trailLifeMul: 0.5 + Math.random() * 0.7,
+            shedMul: 0.8 + Math.random() * 0.5,
+          });
+        }, delay);
+        this._tearDropIntervals.push(tid);
+      }
+    } else if (heavy) {
+      // Heavy: 4-5 streams spread across eye width, falling straight down.
+      // Each stream gets randomized fall distance, lifespan, and shed rate.
+      const dropCount = 4 + Math.floor(Math.random() * 2);
+      const spreadPx = 28;
+      for (let d = 0; d < dropCount; d++) {
+        const offsetX = ((d / (dropCount - 1)) - 0.5) * spreadPx;
+        const delay = Math.random() * 400;
+        const tid = setTimeout(() => {
+          this._startTearStream(eyeCX + offsetX + (Math.random() - 0.5) * 6, eyeCY, color, {
+            lifeMul: 0.7 + Math.random() * 0.6,
+            trailLifeMul: 0.6 + Math.random() * 0.8,
+            fallMul: 0.7 + Math.random() * 0.6,
+            shedMul: 0.7 + Math.random() * 0.6,
+          });
+        }, delay);
+        this._tearDropIntervals.push(tid);
+      }
+    } else {
+      // Single: exactly 1 stream straight down
+      this._startTearStream(eyeCX, eyeCY, color);
     }
 
-    // Activate
-    requestAnimationFrame(() => this._tearEl?.classList.add('dave-tear-active'));
+    const duration = burst ? DAVE_CONFIG.TEAR_DURATION_MS + 2000 : DAVE_CONFIG.TEAR_DURATION_MS;
+    this._tearTimer = setTimeout(() => this._stopTear(), duration);
+  }
 
-    // Scramble the stream chars while falling
-    this._tearStreamInterval = setInterval(() => {
-      this._tearEl?.querySelectorAll('.dave-tear-stream').forEach(s => {
-        let chars = '';
-        const len = s.textContent.length;
-        for (let i = 0; i < len; i++) chars += TEAR_CHARS[Math.floor(Math.random() * TEAR_CHARS.length)];
-        s.textContent = chars;
-      });
-    }, 100);
+  /** Single lead char that sheds trail chars as it moves.
+   *  Default: linear fall straight down (single/heavy tears).
+   *  With { vx, vy, gravity }: drag-based physics with "hang at apex" (burst).
+   *  Per-stream multipliers (lifeMul, trailLifeMul, fallMul, shedMul, drag) randomize each stream. */
+  _startTearStream(startX, startY, color, streamOpts = {}) {
+    const lifeMul = streamOpts.lifeMul || 1;
+    const trailLifeMul = streamOpts.trailLifeMul || 1;
+    const fallMul = streamOpts.fallMul || 1;
+    const shedMul = streamOpts.shedMul || 1;
 
-    // Auto-stop after duration
-    this._tearTimer = setTimeout(() => this._stopTear(), TEAR_DURATION_MS);
+    const leadLife = DAVE_CONFIG.TEAR_LEAD_LIFE_MS * lifeMul;
+    const trailLife = DAVE_CONFIG.TEAR_TRAIL_LIFE_MS * trailLifeMul;
+    const fallDist = DAVE_CONFIG.TEAR_FALL_DISTANCE * fallMul;
+    const shedInterval = DAVE_CONFIG.TEAR_SHED_MS * shedMul;
+    const scrambleMs = DAVE_CONFIG.TEAR_LEAD_SCRAMBLE_MS;
+    const fadeStart = 0.75;
+
+    // Physics mode uses per-frame drag + gravity (not raw projectile formula).
+    // Drag creates the "hang at apex" effect — velocity decays exponentially,
+    // then gravity slowly wins and pulls the tear down.
+    const hasPhysics = streamOpts.vx != null;
+    let vx = streamOpts.vx || 0;
+    let vy = streamOpts.vy || 0;
+    const grav = streamOpts.gravity || 0;
+    const drag = streamOpts.drag || 0.98;
+
+    const lead = document.createElement('span');
+    lead.className = 'dave-tear-lead-char';
+    lead.textContent = this._rndTearChar();
+    lead.style.left = startX + 'px';
+    lead.style.top = startY + 'px';
+    lead.style.color = '#fff';
+    lead.style.textShadow = `0 0 8px ${color}, 0 0 16px ${color}`;
+    document.body.appendChild(lead);
+
+    let posX = startX, posY = startY;
+    const born = performance.now();
+    let lastShed = born;
+    const dt = 1 / 60;
+
+    const animate = () => {
+      const now = performance.now();
+      const elapsed = now - born;
+      const progress = Math.min(elapsed / leadLife, 1);
+
+      if (hasPhysics) {
+        // Drag-based: decelerate, then gravity pulls down
+        vx *= drag;
+        vy *= drag;
+        vy += grav * dt;
+        posX += vx * dt;
+        posY += vy * dt;
+      } else {
+        // Simple linear fall straight down
+        const dist = progress * fallDist;
+        posX = startX + Math.sin(elapsed * 0.01) * 1.5;
+        posY = startY + dist;
+      }
+
+      lead.style.left = posX + 'px';
+      lead.style.top = posY + 'px';
+
+      // Fade in last 25%
+      if (progress > fadeStart) {
+        const fadeProg = (progress - fadeStart) / (1 - fadeStart);
+        lead.style.opacity = (1 - fadeProg).toString();
+      }
+
+      // Shed trail char periodically
+      if (now - lastShed >= shedInterval) {
+        lastShed = now;
+        this._spawnTearTrailChar(posX, posY, color, trailLife);
+      }
+
+      if (progress < 1 && lead.parentNode) {
+        this._tearDropIntervals.push(requestAnimationFrame(animate));
+      } else {
+        lead.remove();
+      }
+    };
+
+    const scrambleId = setInterval(() => {
+      if (!lead.parentNode) { clearInterval(scrambleId); return; }
+      lead.textContent = this._rndTearChar();
+    }, scrambleMs);
+    this._tearDropIntervals.push(scrambleId);
+
+    this._tearDropIntervals.push(requestAnimationFrame(animate));
+  }
+
+  /** Trail char left behind by a falling lead — fades and scrambles over its lifespan. */
+  _spawnTearTrailChar(x, y, color, lifeMs) {
+    const ch = document.createElement('span');
+    ch.className = 'dave-tear-trail-char';
+    ch.textContent = this._rndTearChar();
+    ch.style.left = x + 'px';
+    ch.style.top = y + 'px';
+    ch.style.color = color;
+    ch.style.textShadow = `0 0 5px ${color}`;
+    ch.style.opacity = '0.8';
+    document.body.appendChild(ch);
+
+    const born = performance.now();
+
+    // Scramble + fade loop
+    const tick = () => {
+      const age = performance.now() - born;
+      if (age >= lifeMs || !ch.parentNode) { ch.remove(); return; }
+      // Fade linearly
+      ch.style.opacity = (0.8 * (1 - age / lifeMs)).toString();
+      // Scramble char
+      if (Math.random() < 0.35) ch.textContent = this._rndTearChar();
+      this._tearDropIntervals.push(requestAnimationFrame(tick));
+    };
+    this._tearDropIntervals.push(requestAnimationFrame(tick));
+  }
+
+  _rndTearChar() {
+    return TEAR_CHARS[Math.floor(Math.random() * TEAR_CHARS.length)];
+  }
+
+  _getIrisColor() {
+    if (!this._presenceEl) return '#00ff41';
+    return getComputedStyle(this._presenceEl).getPropertyValue('--dave-iris').trim() || '#00ff41';
   }
 
   _stopTear() {
-    if (this._tearStreamInterval) {
-      clearInterval(this._tearStreamInterval);
-      this._tearStreamInterval = null;
+    for (const id of this._tearDropIntervals) {
+      clearTimeout(id);
+      clearInterval(id);
+      cancelAnimationFrame(id);
     }
+    this._tearDropIntervals = [];
     clearTimeout(this._tearTimer);
     this._tearTimer = null;
-    if (this._tearEl) {
-      this._tearEl.classList.remove('dave-tear-active');
-      setTimeout(() => { if (this._tearEl) this._tearEl.innerHTML = ''; }, 300);
+    // Clean up any lingering tear elements
+    document.querySelectorAll('.dave-tear-lead-char, .dave-tear-trail-char').forEach(el => el.remove());
+  }
+
+  // ---- Fireworks ----
+  // Research-based: three phases (burst→hang→fall), drag deceleration,
+  // color shift white→color→dim, secondary crackle sparks at end.
+
+  _triggerFireworks() {
+    if (!this._presenceEl) return;
+    const rect = this._presenceEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const irisColor = this._getIrisColor();
+
+    const SPARKS = ['*', '+', '·', '✦', '✧'];
+    const PALETTE = [irisColor, '#ffdd44', '#ff8844', '#44ffaa', '#ff44aa', '#44aaff'];
+    // Pick 2-3 dominant colors for this burst (real fireworks use a limited palette)
+    const burstColors = [];
+    for (let i = 0; i < 2 + Math.round(Math.random()); i++) {
+      burstColors.push(PALETTE[Math.floor(Math.random() * PALETTE.length)]);
+    }
+
+    const count = 35 + Math.floor(Math.random() * 15); // 35-50 main sparks
+    const drag = 0.97;   // velocity multiplier per frame (~3% drag)
+    const gravity = 60;   // px/s² — gentle gravity so sparks "hang"
+    const fps60dt = 1 / 60;
+
+    // All sparks fire within 20ms — instant burst
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      // Same speed ±20% for spherical burst shape
+      const baseSpd = 160 + Math.random() * 80; // 160-240 px/s
+      let vx = Math.cos(angle) * baseSpd;
+      let vy = Math.sin(angle) * baseSpd;
+      const sparkColor = burstColors[Math.floor(Math.random() * burstColors.length)];
+      const life = 1200 + Math.random() * 800; // 1.2-2.0s
+      const hasTrail = Math.random() < 0.4; // 40% of sparks leave trails
+      const hasCrackle = Math.random() < 0.2; // 20% spawn secondary crackle
+
+      const spark = document.createElement('span');
+      spark.className = 'dave-firework-spark';
+      spark.textContent = SPARKS[Math.floor(Math.random() * SPARKS.length)];
+      spark.style.left = cx + 'px';
+      spark.style.top = cy + 'px';
+      // Phase 1: start white-hot
+      spark.style.color = '#ffffff';
+      spark.style.textShadow = `0 0 8px ${sparkColor}, 0 0 16px ${sparkColor}`;
+      document.body.appendChild(spark);
+
+      let posX = cx, posY = cy;
+      const born = performance.now();
+      let lastTrailTime = born;
+      let crackled = false;
+
+      const tick = () => {
+        const now = performance.now();
+        const elapsed = now - born;
+        if (elapsed >= life || !spark.parentNode) { spark.remove(); return; }
+        const progress = elapsed / life; // 0→1
+
+        // Apply drag (exponential deceleration — creates "hang" effect)
+        vx *= drag;
+        vy *= drag;
+        // Apply gravity
+        vy += gravity * fps60dt;
+
+        posX += vx * fps60dt;
+        posY += vy * fps60dt;
+        spark.style.left = posX + 'px';
+        spark.style.top = posY + 'px';
+
+        // Color shift: white(0-15%) → bright color(15-50%) → dimmed(50-100%)
+        if (progress < 0.15) {
+          spark.style.color = '#ffffff';
+        } else if (progress < 0.5) {
+          spark.style.color = sparkColor;
+          const glowFade = 1 - (progress - 0.15) / 0.35;
+          spark.style.textShadow = `0 0 ${6 * glowFade}px ${sparkColor}, 0 0 ${12 * glowFade}px ${sparkColor}`;
+        } else {
+          spark.style.color = sparkColor;
+          spark.style.textShadow = 'none';
+        }
+
+        // Size shrink in final 40%
+        if (progress > 0.6) {
+          const shrink = 1 - (progress - 0.6) / 0.4;
+          spark.style.fontSize = (11 * Math.max(shrink, 0.3)) + 'px';
+        }
+
+        // Fade: hold full opacity until 50%, then fade out
+        if (progress > 0.5) {
+          const fadeProg = (progress - 0.5) / 0.5;
+          spark.style.opacity = (1 - fadeProg).toString();
+        }
+
+        // Trail: leave ghost afterimage every 80ms
+        if (hasTrail && now - lastTrailTime > 80 && progress < 0.7) {
+          lastTrailTime = now;
+          this._spawnFireworkTrail(posX, posY, sparkColor, progress);
+        }
+
+        // Crackle: secondary micro-burst at 85% life
+        if (hasCrackle && !crackled && progress > 0.85) {
+          crackled = true;
+          this._spawnCrackle(posX, posY, sparkColor);
+        }
+
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+
+  /** Tiny ghost afterimage left by a firework spark */
+  _spawnFireworkTrail(x, y, color, progress) {
+    const ghost = document.createElement('span');
+    ghost.className = 'dave-firework-trail';
+    ghost.textContent = '.';
+    ghost.style.left = x + 'px';
+    ghost.style.top = y + 'px';
+    ghost.style.color = color;
+    ghost.style.opacity = String(0.5 * (1 - progress));
+    document.body.appendChild(ghost);
+    setTimeout(() => ghost.remove(), 300);
+  }
+
+  /** Secondary micro-sparks when a firework crackles at end of life */
+  _spawnCrackle(x, y, color) {
+    const n = 4 + Math.floor(Math.random() * 4); // 4-7 micro-sparks
+    for (let i = 0; i < n; i++) {
+      const sp = document.createElement('span');
+      sp.className = 'dave-firework-spark';
+      sp.textContent = '·';
+      sp.style.left = x + 'px';
+      sp.style.top = y + 'px';
+      sp.style.color = '#ffffff';
+      sp.style.textShadow = `0 0 4px ${color}`;
+      sp.style.fontSize = '8px';
+      document.body.appendChild(sp);
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 30 + Math.random() * 40;
+      let vx = Math.cos(angle) * speed;
+      let vy = Math.sin(angle) * speed;
+      const life = 250 + Math.random() * 200;
+      const born = performance.now();
+
+      const tick = () => {
+        const elapsed = performance.now() - born;
+        if (elapsed >= life || !sp.parentNode) { sp.remove(); return; }
+        vx *= 0.94;
+        vy *= 0.94;
+        vy += 40 / 60;
+        const px = parseFloat(sp.style.left) + vx / 60;
+        const py = parseFloat(sp.style.top) + vy / 60;
+        sp.style.left = px + 'px';
+        sp.style.top = py + 'px';
+        sp.style.opacity = String(1 - elapsed / life);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+
+  // ---- Drag Trail ----
+  _startDragTrail() {
+    if (!this._dragTrailEnabled) return;
+    this._stopDragTrail();
+    this._dragTrailInterval = setInterval(() => {
+      if (!this._presenceEl || !this._isDragging) return;
+      const rect = this._presenceEl.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      this._spawnDragTrailChar(cx, cy);
+    }, DAVE_CONFIG.DRAG_TRAIL_INTERVAL_MS);
+  }
+
+  _stopDragTrail() {
+    if (this._dragTrailInterval) {
+      clearInterval(this._dragTrailInterval);
+      this._dragTrailInterval = null;
+    }
+  }
+
+  _spawnDragTrailChar(x, y) {
+    const color = this._getIrisColor();
+    const lifetime = DAVE_CONFIG.DRAG_TRAIL_LIFETIME_MS;
+
+    // Lead falling char
+    const ch = document.createElement('span');
+    ch.className = 'dave-drag-trail-char';
+    ch.textContent = this._rndTearChar();
+    const jitter = (Math.random() - 0.5) * 14;
+    ch.style.left = (x + jitter) + 'px';
+    ch.style.top = y + 'px';
+    ch.style.color = color;
+    ch.style.textShadow = `0 0 6px ${color}`;
+    document.body.appendChild(ch);
+
+    // Scramble while falling
+    let sc = 0;
+    const sid = setInterval(() => {
+      if (sc >= 3 || !ch.parentNode) { clearInterval(sid); return; }
+      ch.textContent = this._rndTearChar();
+      sc++;
+    }, 80);
+    setTimeout(() => ch.remove(), lifetime);
+
+    // Trail behind it: 2 chars that stay roughly where the lead was
+    for (let i = 0; i < 2; i++) {
+      setTimeout(() => {
+        const tr = document.createElement('span');
+        tr.className = 'dave-drag-trail-char dave-drag-trail-fade';
+        tr.textContent = this._rndTearChar();
+        tr.style.left = (x + jitter + (Math.random() - 0.5) * 4) + 'px';
+        tr.style.top = (y + 3 + i * 8) + 'px';
+        tr.style.color = color;
+        tr.style.textShadow = `0 0 4px ${color}`;
+        tr.style.fontSize = '7px';
+        tr.style.opacity = '0.6';
+        document.body.appendChild(tr);
+
+        // Scramble + fade
+        const born = performance.now();
+        const trLife = DAVE_CONFIG.DRAG_TRAIL_LIFE_MS;
+        const tick = () => {
+          const age = performance.now() - born;
+          if (age >= trLife || !tr.parentNode) { tr.remove(); return; }
+          tr.style.opacity = (0.6 * (1 - age / trLife)).toString();
+          if (Math.random() < 0.3) tr.textContent = this._rndTearChar();
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }, 50 + i * 70);
     }
   }
 
@@ -1732,7 +2189,7 @@ class _DaveMode {
   }
 
   _getCooldown() {
-    return this._mood === MOOD.BUSY ? COOLDOWN_BUSY_MS : COOLDOWN_DEFAULT_MS;
+    return this._mood === MOOD.BUSY ? DAVE_CONFIG.COOLDOWN_BUSY_MS : DAVE_CONFIG.COOLDOWN_DEFAULT_MS;
   }
 
   _recordComment() {
@@ -1778,7 +2235,7 @@ class _DaveMode {
     if (this._presenceEl && !this._isDragging && !this._spamActive) {
       this._presenceEl.classList.add('dave-ambient');
     }
-    this._idleTimer = setTimeout(() => this._handleIdle(), IDLE_TIMEOUT_MS);
+    this._idleTimer = setTimeout(() => this._handleIdle(), DAVE_CONFIG.IDLE_TIMEOUT_MS);
   }
 
   _stopIdleTimer() { clearTimeout(this._idleTimer); }
@@ -1797,7 +2254,7 @@ class _DaveMode {
     }
 
     this._startAttentionSeeking();
-    this._idleTimer = setTimeout(() => this._handleIdle(), IDLE_TIMEOUT_MS * 2);
+    this._idleTimer = setTimeout(() => this._handleIdle(), DAVE_CONFIG.IDLE_TIMEOUT_MS * 2);
   }
 }
 
@@ -1806,3 +2263,4 @@ class _DaveMode {
 //  Singleton Export
 // ============================================================
 export const DaveMode = new _DaveMode();
+export { DAVE_CONFIG, EMOTION };

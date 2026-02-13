@@ -132,6 +132,13 @@ function initializeElements() {
       // Initialize event listeners
       if (searchInput) {
         const debouncedSearch = debounce((value) => {
+          // Secret phrase: Dave debug dashboard
+          if (value.trim().toLowerCase() === 'dave let me in') {
+            searchInput.value = '';
+            _searchTerm = '';
+            document.dispatchEvent(new CustomEvent('dave:debugPanel'));
+            return;
+          }
           // Check if the value is a cloud storage URL
           if (window.handleCloudUrl && _isCloudUrl(value.trim())) {
             window.handleCloudUrl(value.trim());

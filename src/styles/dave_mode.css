@@ -78,6 +78,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  z-index: 1;
   overflow: hidden;
   box-shadow:
     0 0 8px rgba(0, 255, 65, 0.15),
@@ -500,6 +501,7 @@
   max-width: 240px;
   min-width: 120px;
   height: auto;
+  max-height: fit-content;
   background: rgba(10, 14, 10, 0.78);
   border: 1px solid #1a3a1a;
   border-radius: 6px;
@@ -754,55 +756,86 @@
 }
 
 
-/* ---------- Digital Tear ---------- */
-/* A stream of matrix characters that falls from the eye
-   when Dave is feeling dramatic, sad, or existential. */
+/* ---------- Digital Tear (Position-Based Matrix Rain) ---------- */
+/* Lead char falls from eye center, shedding trail chars that fade + scramble.
+   All positioning done by JS via rAF — CSS just styles the chars. */
 
-.dave-tear {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 45px;
-  overflow: visible;
+/* Lead character — bright white with colored glow, fixed position */
+.dave-tear-lead-char {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  line-height: 1;
   pointer-events: none;
-  z-index: -1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  z-index: 1499;
+  will-change: top, opacity;
 }
-.dave-tear.dave-tear-active {
-  opacity: 1;
+
+/* Trail characters — colored, smaller, positioned where the lead passed */
+.dave-tear-trail-char {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 8px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1498;
+  will-change: opacity;
 }
-.dave-tear-stream {
-  position: absolute;
-  left: 50%;
-  top: -2px;
+
+
+/* ---------- Firework Sparks ---------- */
+/* Three-phase firework: burst (white-hot) → hang (colored) → fall+fade.
+   Drag deceleration creates the "hang in air" effect. */
+
+.dave-firework-spark {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1500;
+  will-change: left, top, opacity, color;
+}
+
+/* Ghost trail left by sparks — tiny dots that fade fast */
+.dave-firework-trail {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 6px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1499;
+  transition: opacity 0.3s ease-out;
+}
+
+
+/* ---------- Drag Trail ---------- */
+/* Falling matrix characters spawned during drag, creating a comet trail */
+
+.dave-drag-trail-char {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  pointer-events: none;
+  z-index: 1499;
+  animation: dave-trail-fall 0.7s ease-in forwards;
+  opacity: 0.85;
+}
+@keyframes dave-trail-fall {
+  0%   { transform: translateY(0); opacity: 0.85; }
+  30%  { opacity: 0.5; }
+  100% { transform: translateY(55px); opacity: 0; }
+}
+
+/* Secondary trail chars that stay + fade via rAF (no CSS animation) */
+.dave-drag-trail-fade {
+  position: fixed;
   font-family: 'Courier New', monospace;
   font-size: 7px;
-  line-height: 8px;
-  color: var(--dave-iris, #66aacc);
-  text-shadow: 0 0 4px var(--dave-glow, rgba(102, 170, 204, 0.5));
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  letter-spacing: -2px;
-  white-space: nowrap;
-  animation: dave-tear-fall 2s ease-in forwards;
-}
-@keyframes dave-tear-fall {
-  0%   { transform: translateY(-4px); opacity: 0.9; }
-  30%  { opacity: 0.75; }
-  100% { transform: translateY(38px); opacity: 0; }
-}
-/* Multiple tear streams for heavier crying */
-.dave-tear.dave-tear-heavy {
-  width: 14px;
-}
-.dave-tear.dave-tear-heavy .dave-tear-stream:nth-child(2) {
-  left: 75%;
-  animation-delay: 0.5s;
-  opacity: 0.4;
-  font-size: 6px;
+  pointer-events: none;
+  z-index: 1498;
+  will-change: opacity;
 }
 
 
