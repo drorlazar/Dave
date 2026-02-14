@@ -538,6 +538,7 @@ class _DaveAlive {
     this._lastActivityReaction = 0;
     this._activityCooldownMs = 60000;
     this._fullscreenStartTime = 0;
+    this._activityCheckInterval = null;
 
     // Behavior cooldowns
     this._lastInspection = 0;
@@ -723,7 +724,7 @@ class _DaveAlive {
     });
 
     // Periodically check for activity patterns
-    setInterval(() => this._checkActivityPatterns(), 5000);
+    this._activityCheckInterval = setInterval(() => this._checkActivityPatterns(), 5000);
   }
 
   _logActivity(type) {
@@ -2085,6 +2086,8 @@ class _DaveAlive {
 
   // Cleanup on disable
   destroy() {
+    clearInterval(this._activityCheckInterval);
+    this._activityCheckInterval = null;
     if (this._scrollHandler) {
       window.removeEventListener('wheel', this._scrollHandler);
     }

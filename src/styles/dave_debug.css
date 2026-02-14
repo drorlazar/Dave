@@ -21,7 +21,7 @@
     0 0 30px rgba(0, 255, 65, 0.08),
     0 8px 32px rgba(0, 0, 0, 0.6);
   font-family: 'Courier New', Courier, monospace;
-  color: #00ff41;
+  color: var(--dave-green);
   z-index: 2000;
   resize: both;
   min-width: 360px;
@@ -61,7 +61,7 @@
 .dave-debug-close {
   background: none;
   border: 1px solid #2a5a2a;
-  color: #00ff41;
+  color: var(--dave-green);
   font-size: 11px;
   font-family: inherit;
   padding: 2px 8px;
@@ -153,7 +153,7 @@
 .dave-debug-emo-btn {
   background: #0d120d;
   border: 1px solid #1a3a1a;
-  color: #00ff41;
+  color: var(--dave-green);
   font-family: inherit;
   font-size: 10px;
   padding: 4px 9px;
@@ -166,7 +166,7 @@
 }
 .dave-debug-emo-btn.active {
   background: #1a3a1a;
-  border-color: #00ff41;
+  border-color: var(--dave-green);
 }
 
 /* Tear buttons row */
@@ -208,7 +208,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #00ff41;
+  background: var(--dave-green);
   border: 1px solid #0a0e0a;
   cursor: pointer;
   box-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
@@ -217,7 +217,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #00ff41;
+  background: var(--dave-green);
   border: 1px solid #0a0e0a;
   cursor: pointer;
 }
@@ -241,8 +241,8 @@
   transition: all 0.15s ease;
 }
 .dave-debug-toggle-btn.on {
-  border-color: #00ff41;
-  color: #00ff41;
+  border-color: var(--dave-green);
+  color: var(--dave-green);
   background: #0d1a0d;
 }
 .dave-debug-toggle-btn:hover {
@@ -260,7 +260,7 @@
 .dave-debug-btn {
   background: #0d120d;
   border: 1px solid #1a3a1a;
-  color: #00ff41;
+  color: var(--dave-green);
   font-family: inherit;
   font-size: 10px;
   padding: 4px 10px;
@@ -282,7 +282,7 @@
   width: 100%;
   background: #0d120d;
   border: 1px solid #1a3a1a;
-  color: #00ff41;
+  color: var(--dave-green);
   font-family: inherit;
   font-size: 10px;
   padding: 6px 8px;
@@ -292,7 +292,7 @@
   box-sizing: border-box;
 }
 .dave-debug-bubble-input:focus {
-  border-color: #00ff41;
+  border-color: var(--dave-green);
 }
 .dave-debug-bubble-input::placeholder {
   color: #2a5a2a;
@@ -305,7 +305,7 @@
 .dave-debug-bubble-row select {
   background: #0d120d;
   border: 1px solid #1a3a1a;
-  color: #00ff41;
+  color: var(--dave-green);
   font-family: inherit;
   font-size: 10px;
   padding: 4px 6px;
@@ -355,8 +355,8 @@
   transition: all 0.15s ease;
 }
 .dave-debug-preset-chip:hover {
-  border-color: #00ff41;
-  color: #00ff41;
+  border-color: var(--dave-green);
+  color: var(--dave-green);
 }
 .dave-debug-preset-chip .dave-debug-preset-x {
   font-size: 8px;
@@ -374,7 +374,7 @@
 .dave-debug-preset-name {
   background: #0d120d;
   border: 1px solid #1a3a1a;
-  color: #00ff41;
+  color: var(--dave-green);
   font-family: inherit;
   font-size: 9px;
   padding: 3px 6px;
@@ -383,7 +383,7 @@
   width: 100px;
 }
 .dave-debug-preset-name:focus {
-  border-color: #00ff41;
+  border-color: var(--dave-green);
 }
 .dave-debug-preset-name::placeholder {
   color: #2a5a2a;

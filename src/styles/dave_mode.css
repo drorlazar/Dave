@@ -1,3 +1,7 @@
+:root {
+  --dave-green: #00ff41;
+}
+
 /* ============================================================
    DAVE MODE - The Personality Layer
    Dave is watching. Dave has opinions. Dave is... optional.
@@ -101,8 +105,8 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #00ff41;
-  box-shadow: 0 0 6px #00ff41;
+  background: var(--dave-green);
+  box-shadow: 0 0 6px var(--dave-green);
   animation: dave-iris-scan 7s linear infinite;
   transition: width 0.08s ease, height 0.08s ease, border-radius 0.08s ease,
               background 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
@@ -133,7 +137,7 @@
 .dave-presence-iris.dave-blink {
   height: 2px !important;
   border-radius: 5px / 1px !important;
-  box-shadow: 0 0 3px #00ff41;
+  box-shadow: 0 0 3px var(--dave-green);
 }
 
 /* Cursor following: stop CSS animation, use JS transform */
@@ -223,7 +227,7 @@
 }
 .dave-presence.dave-reacting .dave-presence-iris {
   animation: dave-iris-react 0.3s ease !important;
-  box-shadow: 0 0 12px #00ff41;
+  box-shadow: 0 0 12px var(--dave-green);
 }
 @keyframes dave-iris-react {
   0%, 100% { transform: translate(0, 0); }
@@ -426,8 +430,8 @@
 .dave-iris-matrix-rain {
   font-size: 5px;
   font-family: 'Courier New', monospace;
-  color: #00ff41;
-  text-shadow: 0 0 2px #00ff41;
+  color: var(--dave-green);
+  text-shadow: 0 0 2px var(--dave-green);
   line-height: 6px;
   letter-spacing: -0.5px;
   display: block;
@@ -469,8 +473,8 @@
 .dave-presence.dave-spam-glare .dave-presence-iris {
   width: 18px !important;
   height: 18px !important;
-  background: #00ff41 !important;
-  box-shadow: 0 0 18px #00ff41, 0 0 36px rgba(0, 255, 65, 0.5) !important;
+  background: var(--dave-green) !important;
+  box-shadow: 0 0 18px var(--dave-green), 0 0 36px rgba(0, 255, 65, 0.5) !important;
   animation: none !important;
 }
 .dave-presence.dave-spam-glare .dave-presence-eye {
@@ -510,7 +514,7 @@
   font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
   line-height: 1.45;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
   box-shadow:
     0 0 12px rgba(0, 255, 65, 0.06),
@@ -560,7 +564,7 @@
 
 /* Blinking cursor */
 .dave-bubble-cursor {
-  color: #00ff41;
+  color: var(--dave-green);
   animation: dave-cursor-blink 0.8s step-end infinite;
   text-shadow: 0 0 4px rgba(0, 255, 65, 0.5);
   font-weight: bold;
@@ -607,7 +611,7 @@
   opacity: 1;
 }
 .dave-bubble-dismiss:hover {
-  color: #00ff41;
+  color: var(--dave-green);
 }
 
 /* Glitch entrance */
@@ -636,7 +640,7 @@
 }
 .dave-char-resolved {
   opacity: 1;
-  color: #00ff41;
+  color: var(--dave-green);
 }
 
 
@@ -758,7 +762,7 @@
 
 /* ---------- Digital Tear (Position-Based Matrix Rain) ---------- */
 /* Lead char falls from eye center, shedding trail chars that fade + scramble.
-   All positioning done by JS via rAF — CSS just styles the chars. */
+   JS sets left/top once at creation, then animates offset via transform: translate(). */
 
 /* Lead character — bright white with colored glow, fixed position */
 .dave-tear-lead-char {
@@ -768,7 +772,7 @@
   line-height: 1;
   pointer-events: none;
   z-index: 1499;
-  will-change: top, opacity;
+  will-change: transform, opacity;
 }
 
 /* Trail characters — colored, smaller, positioned where the lead passed */
@@ -784,8 +788,9 @@
 
 
 /* ---------- Firework Sparks ---------- */
-/* Three-phase firework: burst (white-hot) → hang (colored) → fall+fade.
-   Drag deceleration creates the "hang in air" effect. */
+/* Three-phase firework: burst (white-hot) -> hang (colored) -> fall+fade.
+   Drag deceleration creates the "hang in air" effect.
+   JS sets left/top once at creation, then animates offset via transform: translate(). */
 
 .dave-firework-spark {
   position: fixed;
@@ -795,7 +800,7 @@
   line-height: 1;
   pointer-events: none;
   z-index: 1500;
-  will-change: left, top, opacity, color;
+  will-change: transform, opacity;
 }
 
 /* Ghost trail left by sparks — tiny dots that fade fast */

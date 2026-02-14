@@ -1,6 +1,6 @@
 /* dave_alive.css — Dave Alive Behavior Styles
    Movement trails, inspections, constellations, post-its, and more.
-   All visual effects use text characters in Dave's green (#00ff41).
+   All visual effects use text characters in Dave's green (var(--dave-green)).
    NO emoji. NO colored icons. Handcrafted experience. */
 
 /* ============================================================
@@ -13,9 +13,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 11px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 6px currentColor;
-  z-index: 99997;
+  z-index: 2500;
   will-change: opacity, transform;
   transition: none;
 }
@@ -57,11 +57,11 @@
   font-size: 9px;
   font-weight: bold;
   line-height: 1.3;
-  color: #00ff41;
+  color: var(--dave-green);
   background: rgba(0, 10, 2, 0.88);
   border: 1px solid rgba(0, 255, 65, 0.3);
   box-shadow: 0 0 8px rgba(0, 255, 65, 0.15), inset 0 0 20px rgba(0, 255, 65, 0.03);
-  z-index: 99996;
+  z-index: 2500;
   opacity: 0;
   transition: opacity 0.5s ease;
   /* CRT scanline effect */
@@ -103,14 +103,14 @@
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 99995;
+  z-index: 2400;
 }
 
 .dave-constellation-line {
-  stroke: #00ff41;
+  stroke: var(--dave-green);
   stroke-width: 1.5;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 4px #00ff41);
+  filter: drop-shadow(0 0 4px var(--dave-green));
   opacity: 0.7;
 }
 
@@ -139,9 +139,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 14px;
-  color: #00ff41;
-  text-shadow: 0 0 8px #00ff41, 0 0 16px #00ff41;
-  z-index: 99996;
+  color: var(--dave-green);
+  text-shadow: 0 0 8px var(--dave-green), 0 0 16px var(--dave-green);
+  z-index: 2500;
   animation: daveConstellationStarPulse 1.5s ease-in-out infinite;
 }
 
@@ -156,9 +156,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 11px;
-  color: #00ff41;
-  text-shadow: 0 0 6px #00ff41;
-  z-index: 99997;
+  color: var(--dave-green);
+  text-shadow: 0 0 6px var(--dave-green);
+  z-index: 2500;
   opacity: 0;
   text-align: center;
   white-space: nowrap;
@@ -179,9 +179,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 8px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 4px currentColor;
-  z-index: 99996;
+  z-index: 2500;
   opacity: 0;
   animation: daveConstellationParticleFly 1.2s ease-out forwards;
 }
@@ -207,9 +207,9 @@
   pointer-events: none;
   font-family: 'Courier New', monospace;
   font-weight: bold;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 5px currentColor;
-  z-index: 99998;
+  z-index: 2600;
   opacity: 0;
   animation: daveAliveZzzFloat 2.5s ease-out forwards;
 }
@@ -245,9 +245,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 14px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 6px currentColor;
-  z-index: 99998;
+  z-index: 2600;
   white-space: nowrap;
   transform: translateX(-50%);
   letter-spacing: 2px;
@@ -270,9 +270,9 @@
 }
 
 @keyframes daveMorseReveal {
-  0% { transform: translateX(-50%) scale(1); color: #00ff41; }
-  50% { transform: translateX(-50%) scale(1.15); color: #66ff99; text-shadow: 0 0 12px #00ff41; }
-  100% { transform: translateX(-50%) scale(1); color: #00ff41; }
+  0% { transform: translateX(-50%) scale(1); color: var(--dave-green); }
+  50% { transform: translateX(-50%) scale(1.15); color: #66ff99; text-shadow: 0 0 12px var(--dave-green); }
+  100% { transform: translateX(-50%) scale(1); color: var(--dave-green); }
 }
 
 
@@ -327,8 +327,8 @@
 .dave-presence-iris.dave-iris-shrinking {
   width: 10px;
   height: 10px;
-  background: #00ff41;
-  box-shadow: 0 0 6px #00ff41;
+  background: var(--dave-green);
+  box-shadow: 0 0 6px var(--dave-green);
   transition: width 0.4s cubic-bezier(0.2, 0, 0.1, 1),
               height 0.4s cubic-bezier(0.2, 0, 0.1, 1),
               background 0.3s ease,
@@ -434,8 +434,8 @@
   width: 2px;
   height: 2px;
   border-radius: 50%;
-  background: #00ff41;
-  box-shadow: 0 0 3px #00ff41, 0 0 6px rgba(0, 255, 65, 0.4);
+  background: var(--dave-green);
+  box-shadow: 0 0 3px var(--dave-green), 0 0 6px rgba(0, 255, 65, 0.4);
   pointer-events: none;
   z-index: 3;
   animation: daveRadarPingDot 1.5s ease-out forwards;
@@ -521,8 +521,8 @@
   left: 50%;
   width: 2px;
   height: 6px;
-  background: #00ff41;
-  box-shadow: 0 0 3px #00ff41;
+  background: var(--dave-green);
+  box-shadow: 0 0 3px var(--dave-green);
   transform-origin: bottom center;
   pointer-events: none;
   margin-left: -1px;
@@ -537,8 +537,8 @@
   left: 50%;
   width: 1.5px;
   height: 9px;
-  background: #00ff41;
-  box-shadow: 0 0 4px #00ff41;
+  background: var(--dave-green);
+  box-shadow: 0 0 4px var(--dave-green);
   transform-origin: bottom center;
   pointer-events: none;
   margin-left: -0.75px;
@@ -553,8 +553,8 @@
   left: 50%;
   width: 0.5px;
   height: 10px;
-  background: #00ff41;
-  box-shadow: 0 0 3px #00ff41;
+  background: var(--dave-green);
+  box-shadow: 0 0 3px var(--dave-green);
   transform-origin: bottom center;
   pointer-events: none;
   margin-left: -0.25px;
@@ -574,8 +574,8 @@
   margin-top: -1px;
   margin-left: -1px;
   border-radius: 50%;
-  background: #00ff41;
-  box-shadow: 0 0 3px #00ff41;
+  background: var(--dave-green);
+  box-shadow: 0 0 3px var(--dave-green);
   z-index: 1;
 }
 
@@ -586,8 +586,8 @@
   left: 50%;
   width: 2px;
   height: 10px;
-  background: #00ff41;
-  box-shadow: 0 0 5px #00ff41;
+  background: var(--dave-green);
+  box-shadow: 0 0 5px var(--dave-green);
   transform-origin: bottom center;
   pointer-events: none;
   z-index: 2;
@@ -609,7 +609,7 @@
 }
 
 .dave-presence.dave-puppet-mode .dave-presence-iris {
-  box-shadow: 0 0 8px #00ff41, 0 0 16px #00ff41 !important;
+  box-shadow: 0 0 8px var(--dave-green), 0 0 16px var(--dave-green) !important;
 }
 
 /* Floating CRT screen */
@@ -622,7 +622,7 @@
   border: 1px solid rgba(0, 255, 65, 0.4);
   box-shadow: 0 0 12px rgba(0, 255, 65, 0.15), inset 0 0 20px rgba(0, 255, 65, 0.03);
   border-radius: 3px;
-  z-index: 99998;
+  z-index: 2600;
   opacity: 0;
   transform: scale(0.8);
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -646,7 +646,7 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 8px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 3px currentColor;
   padding: 3px 5px 2px;
   border-bottom: 1px solid rgba(0, 255, 65, 0.2);
@@ -659,7 +659,7 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 14px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 6px currentColor;
   pointer-events: none;
   white-space: pre;
@@ -701,9 +701,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 12px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 8px currentColor, 0 0 14px currentColor;
-  z-index: 99997;
+  z-index: 2500;
   opacity: 0;
   animation: daveHeartAppear 0.2s ease forwards;
 }
@@ -735,9 +735,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 8px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 4px currentColor;
-  z-index: 99996;
+  z-index: 2500;
   animation: daveSubDrip 1.2s ease-in forwards;
 }
 
@@ -761,9 +761,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 11px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 6px currentColor;
-  z-index: 99997;
+  z-index: 2500;
   opacity: 0;
   animation: daveHeartAppear 0.15s ease forwards;
 }
@@ -783,7 +783,7 @@
   border: 1px solid rgba(0, 255, 65, 0.3);
   box-shadow: 0 0 10px rgba(0, 255, 65, 0.1), inset 0 0 10px rgba(0, 255, 65, 0.05);
   border-radius: 4px;
-  z-index: 99994;
+  z-index: 2400;
   animation: daveInspectGlow 2s ease-in-out infinite;
 }
 
@@ -803,9 +803,9 @@
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 8px;
-  color: #00ff41;
+  color: var(--dave-green);
   text-shadow: 0 0 4px currentColor;
-  z-index: 99995;
+  z-index: 2400;
   opacity: 0.4;
   will-change: opacity;
 }

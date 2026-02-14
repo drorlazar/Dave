@@ -885,15 +885,6 @@ body:not(.dark-mode) .dropdown-content .sort-direction:focus {
   background-color: #e0e0e0;
 }
 
-.dropdown-content .sort-direction:focus {
-  outline: none;
-  background-color: #555;
-}
-
-body:not(.dark-mode) .dropdown-content .sort-direction:focus {
-  background-color: #e0e0e0;
-}
-
 .dropdown-content .sort-direction i {
   transition: transform 0.3s;
 }

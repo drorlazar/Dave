@@ -80,7 +80,7 @@ body:not(.dark-mode) .dave-cmd-item.selected {
 
 .dave-game-container {
   background: #0a0a0a;
-  border: 2px solid #00ff41;
+  border: 2px solid var(--dave-green);
   border-radius: 12px;
   padding: 0;
   max-width: 520px;
@@ -119,7 +119,7 @@ body:not(.dark-mode) .dave-cmd-item.selected {
 }
 
 .dave-game-title {
-  color: #00ff41;
+  color: var(--dave-green);
   font-family: 'Courier New', monospace;
   font-weight: bold;
   font-size: 16px;
@@ -130,7 +130,7 @@ body:not(.dark-mode) .dave-cmd-item.selected {
 .dave-game-close {
   background: none;
   border: 1px solid rgba(0, 255, 65, 0.3);
-  color: #00ff41;
+  color: var(--dave-green);
   font-size: 20px;
   cursor: pointer;
   padding: 2px 10px;
@@ -141,7 +141,7 @@ body:not(.dark-mode) .dave-cmd-item.selected {
 
 .dave-game-close:hover {
   background: rgba(0, 255, 65, 0.15);
-  border-color: #00ff41;
+  border-color: var(--dave-green);
 }
 
 .dave-game-canvas {
@@ -152,7 +152,7 @@ body:not(.dark-mode) .dave-cmd-item.selected {
 
 .dave-game-hud {
   padding: 8px 16px;
-  color: #00ff41;
+  color: var(--dave-green);
   font-family: 'Courier New', monospace;
   font-size: 14px;
   text-align: center;
@@ -193,8 +193,8 @@ body:not(.dark-mode) .dave-cmd-item.selected {
   font-size: 20px;
   font-family: 'Courier New', monospace;
   font-weight: bold;
-  color: #00ff41;
-  text-shadow: 0 0 10px #00ff41;
+  color: var(--dave-green);
+  text-shadow: 0 0 10px var(--dave-green);
   animation: daveRaveParticleFall linear forwards;
   pointer-events: none;
   will-change: transform;
@@ -442,29 +442,9 @@ body:not(.dark-mode) .dave-cmd-item.selected {
 
 /* ============================================================
    Sleep Mode
+   Sleep visuals now use .dave-sleeping from dave_mode.css.
+   Only supplementary sleep UI styles remain here.
    ============================================================ */
-
-.dave-sleep-mode .dave-presence-iris {
-  transform: scaleY(0.15) !important;
-  animation: none !important;
-  transition: transform 1.2s ease;
-  box-shadow: none !important;
-  opacity: 0.3 !important;
-}
-
-/* Also dim the eye glow pseudo-element so it doesn't look like a second pupil */
-.dave-sleep-mode .dave-presence-eye::after {
-  animation: none !important;
-  opacity: 0.05 !important;
-}
-
-.dave-sleep-mode .dave-presence-eye {
-  box-shadow: 0 0 4px rgba(0, 255, 65, 0.05) !important;
-}
-
-.dave-sleep-mode {
-  animation: none !important;
-}
 
 /* Yawn stretch before sleeping */
 .dave-yawn-stretch {
