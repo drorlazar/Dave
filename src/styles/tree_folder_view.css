@@ -1,0 +1,692 @@
+/* Tree Side Tab - collapsible toggle on screen edge */
+.tree-side-tab {
+  position: fixed;
+  top: 64px;
+  z-index: 89; /* Below panel (90) so it slides behind */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  color: var(--theme-text);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: left 0.3s ease-in-out, right 0.3s ease-in-out, background 0.2s, color 0.2s;
+}
+
+.tree-side-tab:hover {
+  background: var(--theme-accent);
+  color: #fff;
+  border-color: var(--theme-accent);
+}
+
+/* Left-side tab */
+.tree-side-tab-left {
+  left: 0;
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+}
+
+/* When panel is open, tab slides behind the panel */
+body.tree-panel-visible .tree-side-tab-left {
+  left: 0;
+}
+
+/* Right-side tab */
+.tree-side-tab-right {
+  right: 0;
+  left: auto;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+}
+
+body.tree-panel-visible .tree-side-tab-right {
+  right: 0;
+}
+
+/* Tree Folder View Panel Styles */
+.tree-folder-panel {
+  position: fixed;
+  top: 60px; /* Below the top bar */
+  bottom: 0;
+  width: var(--tree-panel-width, 280px); /* Use CSS variable with fallback */
+  background-color: var(--theme-bg);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+/* Left-side positioning (default) */
+.tree-folder-panel.panel-left {
+  left: 0;
+  border-right: 1px solid var(--theme-border);
+  transform: translateX(-100%); /* Hidden by default */
+}
+
+/* Right-side positioning */
+.tree-folder-panel.panel-right {
+  right: 0;
+  border-left: 1px solid var(--theme-border);
+  transform: translateX(100%); /* Hidden by default */
+}
+
+/* Panel visibility - Left side */
+body.tree-panel-visible .tree-folder-panel.panel-left {
+  transform: translateX(0);
+}
+
+body.tree-panel-visible .panel-left ~ #viewerContainer {
+  margin-left: var(--tree-panel-width, 280px);
+  margin-right: 0;
+  width: calc(100% - var(--tree-panel-width, 280px));
+  transition: margin 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+/* Panel visibility - Right side */
+body.tree-panel-visible .tree-folder-panel.panel-right {
+  transform: translateX(0);
+}
+
+body.tree-panel-visible .panel-right ~ #viewerContainer {
+  margin-right: var(--tree-panel-width, 280px);
+  margin-left: 0;
+  width: calc(100% - var(--tree-panel-width, 280px));
+  transition: margin 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+.tree-folder-header {
+  position: relative;
+  display: flex;
+  height: 38px;
+  border-bottom: 1px solid var(--theme-border);
+  background-color: var(--theme-surface);
+}
+
+.tree-folder-actions {
+  display: flex;
+  gap: 0;
+  width: 100%;
+}
+
+.tree-btn {
+  all: unset;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  height: 100%;
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--theme-surface);
+  border-right: 1px solid var(--theme-border);
+  color: var(--theme-text);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  font-size: 0.9rem;
+}
+
+.tree-folder-actions > .tree-btn:last-child,
+.tree-folder-actions > :last-child .tree-btn {
+  border-right: none;
+}
+
+/* SVG Icon Styles */
+.tree-btn .custom-fa-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Dark mode SVG styling for new FA-style icons */
+body.dark-mode .custom-fa-icon .folder-shape-fa {
+  fill: var(--icon-folder-fill-dark, #FEF7FF);
+}
+body.dark-mode .custom-fa-icon .chevron-overlay-fa {
+  stroke: var(--icon-chevron-text-dark, #3C3C3C);
+}
+body.dark-mode .custom-fa-icon .text-overlay-fa {
+  fill: var(--icon-chevron-text-dark, #3C3C3C);
+}
+
+/* Light mode SVG styling for new FA-style icons */
+body:not(.dark-mode) .custom-fa-icon .folder-shape-fa {
+  fill: var(--icon-chevron-text-dark, #3C3C3C) !important; /* Dark folder for light mode */
+}
+body:not(.dark-mode) .custom-fa-icon .chevron-overlay-fa {
+  stroke: var(--icon-folder-fill-dark, #FEF7FF) !important; /* Light chevron for light mode */
+}
+body:not(.dark-mode) .custom-fa-icon .text-overlay-fa {
+  fill: var(--icon-folder-fill-dark, #FEF7FF) !important; /* Light text for light mode */
+}
+
+.tree-btn:hover {
+  background-color: color-mix(in srgb, var(--theme-accent) 20%, transparent);
+  color: var(--theme-accent);
+}
+
+/* Tree Expand/Collapse Dropdown */
+.tree-expand-dropdown {
+  position: static;
+  display: flex;
+  flex: 1 1 0;
+}
+
+.tree-expand-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 4px;
+  right: 4px;
+  margin-top: 4px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  overflow: hidden;
+  padding: 4px 0;
+}
+
+.tree-expand-dropdown.active .tree-expand-menu {
+  display: block;
+}
+
+.tree-expand-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  color: var(--theme-text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s;
+}
+
+.tree-expand-item:hover {
+  background-color: color-mix(in srgb, var(--theme-accent) 15%, transparent);
+}
+
+.tree-expand-item i {
+  width: 16px;
+  text-align: center;
+  color: var(--theme-accent);
+  font-size: 0.85rem;
+}
+
+.tree-expand-divider {
+  height: 1px;
+  background: var(--theme-border);
+  margin: 4px 8px;
+}
+
+/* Tree History Dropdown */
+.tree-history-dropdown {
+  position: static;
+  display: flex;
+  flex: 1 1 0;
+}
+
+.tree-history-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 4px;
+  right: 4px;
+  margin-top: 4px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.tree-history-dropdown.active .tree-history-menu {
+  display: block;
+}
+
+.tree-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--theme-border);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tree-history-clear-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tree-history-clear-btn:hover {
+  color: #f56565;
+  background: rgba(245, 101, 101, 0.1);
+}
+
+.tree-history-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+.tree-history-list::-webkit-scrollbar { width: 5px; }
+.tree-history-list::-webkit-scrollbar-track { background: transparent; }
+.tree-history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+.tree-history-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+body:not(.dark-mode) .tree-history-list {
+  scrollbar-color: rgba(0,0,0,0.15) transparent;
+}
+body:not(.dark-mode) .tree-history-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
+body:not(.dark-mode) .tree-history-list::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+.tree-history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  color: #ddd;
+  font-size: 0.82rem;
+}
+
+.tree-history-item:hover {
+  background-color: #383838;
+}
+
+.tree-history-item i {
+  color: var(--theme-accent);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.tree-history-item-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tree-history-item-name {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.tree-history-item-path {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.68rem;
+  color: #888;
+  margin-top: 1px;
+}
+
+.tree-history-item-time {
+  display: block;
+  font-size: 0.68rem;
+  color: #777;
+  margin-top: 1px;
+}
+
+.tree-history-item-remove {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.tree-history-item:hover .tree-history-item-remove {
+  opacity: 1;
+}
+
+.tree-history-item-remove:hover {
+  color: #f56565;
+}
+
+.tree-history-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Light mode */
+body:not(.dark-mode) .tree-expand-menu {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+body:not(.dark-mode) .tree-history-menu {
+  background: #fff;
+  border-color: #ddd;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+body:not(.dark-mode) .tree-history-header {
+  border-bottom-color: #eee;
+  color: #999;
+}
+
+body:not(.dark-mode) .tree-history-clear-btn {
+  color: #bbb;
+}
+
+body:not(.dark-mode) .tree-history-item {
+  color: #333;
+}
+
+body:not(.dark-mode) .tree-history-item:hover {
+  background-color: #f5f5f5;
+}
+
+body:not(.dark-mode) .tree-history-item-path {
+  color: #aaa;
+}
+
+body:not(.dark-mode) .tree-history-item-time {
+  color: #aaa;
+}
+
+body:not(.dark-mode) .tree-history-item-remove {
+  color: #ccc;
+}
+
+body:not(.dark-mode) .tree-history-empty {
+  color: #bbb;
+}
+
+/* Menu spans full header width on both sides */
+
+.tree-folder-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 15px 0px 15px 15px; /* Reduced right padding to 5px */
+  height: calc(100% - 50px); /* Subtract header height */
+}
+
+#folderTreeContainer {
+  flex: 1;
+  overflow: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#folderTreeContainer ul[role="tree"] {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.tree-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #777;
+  text-align: center;
+  padding: 20px;
+}
+
+.tree-empty-state i {
+  margin-bottom: 15px;
+  opacity: 0.6;
+}
+
+.tree-empty-state p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.tree-container {
+  display: none; /* Hidden initially until folders are loaded */
+  height: 100%;
+}
+
+.tree-container.has-folders {
+  display: block;
+}
+
+/* Tree items styling */
+.tree-container ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+  display: block; /* Ensure vertical stacking */
+  width: 100%; /* Force full width */
+  flex-direction: column; /* Just to be sure */
+  position: relative; /* For proper stacking */
+}
+
+.tree-container ul ul {
+  padding-left: 16px; /* Indentation for nested levels */
+  display: block; /* Ensure vertical stacking */
+  max-height: 0; /* Start collapsed for animation */
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out; /* Animation for expand/collapse */
+  width: 100%; /* Force full width */
+  position: relative; /* Ensure proper stacking context */
+}
+
+.tree-container li[aria-expanded="true"] > ul {
+  max-height: 1000px; /* Large enough value for content */
+  display: block; /* Force block display when expanded */
+}
+
+.tree-container li {
+  padding: 4px 8px; /* Reduced padding for compactness */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Reduced gap */
+  border-radius: 3px; /* Slightly smaller radius */
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem; /* Reduced font size */
+  line-height: 1.3; /* Adjusted line height */
+  height: auto; /* Allow variable height for nested items */
+  min-height: 28px; /* Minimum height for consistency */
+  box-sizing: border-box;
+  flex-direction: row; /* Force horizontal layout for item content */
+  width: 100%; /* Take full width */
+  position: relative; /* For absolutely positioned children if any */
+  flex-wrap: wrap; /* Allow wrapping for deeply nested structures */
+}
+
+/* Force the nested ul to appear below its parent li */
+.tree-container li > ul {
+  flex-basis: 100%; /* Take the full width of the parent li */
+  margin-top: 4px; /* Add a small spacing */
+  margin-left: 0; /* No left margin, we use padding for indentation */
+}
+
+.tree-container li:hover {
+  background-color: #333;
+}
+
+.tree-container li.selected {
+  background-color: #414964; /* Darker blue for better contrast */
+  color: #fff;
+  font-weight: 500; /* Slightly bolder for selected */
+}
+
+.tree-container li .folder-icon,
+.tree-container li .chevron-icon {
+  width: 14px; /* Slightly smaller icons */
+  height: 14px;
+  display: inline-flex; /* Better alignment */
+  align-items: center;
+  justify-content: center;
+  color: #888; /* Lighter icon color for dark mode */
+  transition: color 0.2s, transform 0.3s ease-in-out; /* Smoother transform for chevron */
+  flex-shrink: 0; /* Prevent icons from shrinking */
+}
+
+.tree-container li[aria-expanded="true"] > .chevron-icon > i.fa-chevron-right {
+  transform: rotate(90deg);
+}
+
+/* Ensure chevron-down is used when JS adds it, and it also rotates */
+.tree-container li[aria-expanded="true"] > .chevron-icon > i.fa-chevron-down {
+  transform: rotate(0deg); /* fa-chevron-down is already pointing down */
+}
+
+
+.tree-container li.selected .folder-icon,
+.tree-container li.selected .chevron-icon {
+  color: #a991f7; /* Lighter purple for selected icons */
+}
+
+.tree-container li .folder-name {
+  flex: 1;
+  min-width: 0; /* Critical for text-overflow to work properly in flex children */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 2px; /* Small space after icons */
+}
+
+/* Tree folder resizer styling */
+.tree-folder-resizer {
+  display: block;
+  position: absolute;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  background-color: rgba(100, 100, 100, 0.2);
+  transition: background-color 0.2s;
+  z-index: 91;
+}
+
+/* Position the resizer appropriately based on panel side */
+.tree-folder-panel.panel-left .tree-folder-resizer {
+  right: 0; /* Resizer on right edge for left panel */
+}
+
+.tree-folder-panel.panel-right .tree-folder-resizer {
+  left: 0; /* Resizer on left edge for right panel */
+}
+
+.tree-folder-resizer:hover,
+.tree-folder-resizer.active {
+  background-color: color-mix(in srgb, var(--theme-accent) 40%, transparent);
+}
+
+/* Disable transitions during active resizing to prevent jerky movements */
+body.is-resizing .tree-folder-panel,
+body.is-resizing #viewerContainer,
+body.tile-slider-active #viewerContainer {
+  transition: none !important;
+}
+
+/* Force hardware acceleration for smoother slider operation */
+body.tile-slider-active #viewerContainer {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Light mode styles */
+body:not(.dark-mode) .tree-folder-panel {
+  background-color: var(--theme-bg);
+  border-right-color: var(--theme-border);
+}
+
+body:not(.dark-mode) .tree-folder-header {
+  background-color: var(--theme-surface);
+  border-bottom-color: var(--theme-border);
+}
+
+body:not(.dark-mode) .tree-btn {
+  background-color: var(--theme-surface);
+  border-right-color: var(--theme-border);
+  color: var(--theme-text);
+}
+
+body:not(.dark-mode) .tree-btn:hover {
+  background-color: var(--theme-border);
+  color: var(--theme-text);
+}
+
+body:not(.dark-mode) .tree-empty-state {
+  color: #888; /* Lighter empty state text */
+}
+
+body:not(.dark-mode) .tree-container li:hover {
+  background-color: #e9e9e9; /* Lighter hover */
+}
+
+body:not(.dark-mode) .tree-container li.selected {
+  background-color: #d4eaff; /* Lighter blue for selection */
+  color: #005a9e; /* Darker blue text for selection */
+  font-weight: 500;
+}
+
+body:not(.dark-mode) .tree-container li .folder-icon,
+body:not(.dark-mode) .tree-container li .chevron-icon {
+  color: #777; /* Consistent icon color */
+}
+
+body:not(.dark-mode) .tree-container li.selected .folder-icon,
+body:not(.dark-mode) .tree-container li.selected .chevron-icon {
+  color: #007bff; /* Standard blue for selected icons */
+}
+
+.icon-flipped-horizontal {
+  transform: scaleX(-1);
+}
+
+@media (max-width: 768px) {
+  .tree-folder-panel {
+    width: 220px; /* Slightly narrower on mobile */
+  }
+
+  body.tree-panel-visible #viewerContainer {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* On mobile, overlay the panel instead of pushing content */
+  body.tree-panel-visible .tree-folder-panel {
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  }
+}

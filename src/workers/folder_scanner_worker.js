@@ -155,15 +155,10 @@ self.onmessage = async (event) => {
     await scanDirectory(dirHandle, 0, maxRecursiveDepth, currentPath); // Start with depth 0
     self.postMessage({ status: 'scanComplete' });
   } catch (e) {
-    // This will catch errors re-thrown from scanDirectory's top level.
+    // This catches errors re-thrown from scanDirectory's top level.
     console.error(`Worker: Overall scan failed for ${currentPath}:`, e);
-    // No need to post 'scanError' here if scanDirectory already did, unless it's a setup error.
-    // If scanDirectory posts specific errors, scanComplete might still be sent by the successful completion of this try block.
-    // To ensure scanError is the final state on failure before completion:
-    // self.postMessage({ status: 'scanError', error: `Overall scan failed for ${currentPath}: ${e.message}` });
-    // However, scanComplete should ideally signify the *entire operation* finished, even if parts had errors.
-    // The current logic in scanDirectory posts errors per file/directory, then scanComplete is sent.
-    // This might be okay as the main thread can collect errors and still process successfully found files.
+    // Notify the main thread that the scan failed so the UI can respond
+    self.postMessage({ status: 'scanFailed', error: `Scan failed for ${currentPath}: ${e.message}` });
   }
 };
 

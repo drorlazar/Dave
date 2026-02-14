@@ -15,7 +15,7 @@
   font-size: 11px;
   color: var(--dave-green);
   text-shadow: 0 0 6px currentColor;
-  z-index: 2500;
+  z-index: 1800;
   will-change: opacity, transform;
   transition: none;
 }
@@ -61,7 +61,7 @@
   background: rgba(0, 10, 2, 0.88);
   border: 1px solid rgba(0, 255, 65, 0.3);
   box-shadow: 0 0 8px rgba(0, 255, 65, 0.15), inset 0 0 20px rgba(0, 255, 65, 0.03);
-  z-index: 2500;
+  z-index: 1800;
   opacity: 0;
   transition: opacity 0.5s ease;
   /* CRT scanline effect */
@@ -103,7 +103,7 @@
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 2400;
+  z-index: 1700;
 }
 
 .dave-constellation-line {
@@ -141,7 +141,7 @@
   font-size: 14px;
   color: var(--dave-green);
   text-shadow: 0 0 8px var(--dave-green), 0 0 16px var(--dave-green);
-  z-index: 2500;
+  z-index: 1800;
   animation: daveConstellationStarPulse 1.5s ease-in-out infinite;
 }
 
@@ -158,7 +158,7 @@
   font-size: 11px;
   color: var(--dave-green);
   text-shadow: 0 0 6px var(--dave-green);
-  z-index: 2500;
+  z-index: 1800;
   opacity: 0;
   text-align: center;
   white-space: nowrap;
@@ -181,7 +181,7 @@
   font-size: 8px;
   color: var(--dave-green);
   text-shadow: 0 0 4px currentColor;
-  z-index: 2500;
+  z-index: 1800;
   opacity: 0;
   animation: daveConstellationParticleFly 1.2s ease-out forwards;
 }
@@ -209,7 +209,7 @@
   font-weight: bold;
   color: var(--dave-green);
   text-shadow: 0 0 5px currentColor;
-  z-index: 2600;
+  z-index: 1900;
   opacity: 0;
   animation: daveAliveZzzFloat 2.5s ease-out forwards;
 }
@@ -247,7 +247,7 @@
   font-size: 14px;
   color: var(--dave-green);
   text-shadow: 0 0 6px currentColor;
-  z-index: 2600;
+  z-index: 1900;
   white-space: nowrap;
   transform: translateX(-50%);
   letter-spacing: 2px;
@@ -622,7 +622,7 @@
   border: 1px solid rgba(0, 255, 65, 0.4);
   box-shadow: 0 0 12px rgba(0, 255, 65, 0.15), inset 0 0 20px rgba(0, 255, 65, 0.03);
   border-radius: 3px;
-  z-index: 2600;
+  z-index: 1900;
   opacity: 0;
   transform: scale(0.8);
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -703,7 +703,7 @@
   font-size: 12px;
   color: var(--dave-green);
   text-shadow: 0 0 8px currentColor, 0 0 14px currentColor;
-  z-index: 2500;
+  z-index: 1800;
   opacity: 0;
   animation: daveHeartAppear 0.2s ease forwards;
 }
@@ -737,7 +737,7 @@
   font-size: 8px;
   color: var(--dave-green);
   text-shadow: 0 0 4px currentColor;
-  z-index: 2500;
+  z-index: 1800;
   animation: daveSubDrip 1.2s ease-in forwards;
 }
 
@@ -763,7 +763,7 @@
   font-size: 11px;
   color: var(--dave-green);
   text-shadow: 0 0 6px currentColor;
-  z-index: 2500;
+  z-index: 1800;
   opacity: 0;
   animation: daveHeartAppear 0.15s ease forwards;
 }
@@ -783,7 +783,7 @@
   border: 1px solid rgba(0, 255, 65, 0.3);
   box-shadow: 0 0 10px rgba(0, 255, 65, 0.1), inset 0 0 10px rgba(0, 255, 65, 0.05);
   border-radius: 4px;
-  z-index: 2400;
+  z-index: 1700;
   animation: daveInspectGlow 2s ease-in-out infinite;
 }
 
@@ -805,7 +805,7 @@
   font-size: 8px;
   color: var(--dave-green);
   text-shadow: 0 0 4px currentColor;
-  z-index: 2400;
+  z-index: 1700;
   opacity: 0.4;
   will-change: opacity;
 }
