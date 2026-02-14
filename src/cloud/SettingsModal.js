@@ -671,6 +671,34 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.3.0', date: 'Feb 14, 2026', title: 'Site Health Audit & Fixes',
+        features: [
+          'Fixed Dave alive effects rendering above modals (z-index 99994 reduced to 2400-2600)',
+          'Fixed video scrub listener leak (mousemove/mouseup no longer accumulate permanently)',
+          'Fireworks and tears now use GPU-composited transform instead of layout-triggering left/top',
+          'Extracted --dave-green CSS custom property (76 usages across 5 files)',
+          'Pinned model-viewer to v3.5.0 (was unpinned, risking silent breakage)',
+          'Fixed interval cleanup gaps: activity check and auto-behavior intervals now properly cleared',
+          'Counter.dev script no longer render-blocking (async defer)',
+          'Added CDN preconnect hints for faster loading',
+        ]
+      },
+      {
+        version: '2.2.0', date: 'Feb 14, 2026', title: 'Dave Goes Full Alive',
+        features: [
+          '13 autonomous behaviors across 3 tiers: subtle, medium, and dramatic',
+          'Trail engine: Dave moves around screen leaving glowing character trails',
+          'Iris effects: radar sweep with ping dots, analog clock with second hand, compass needle',
+          'Heart trail, spiral-to-fireworks, constellation creation, shadow puppet show',
+          'Element inspection, post-it notes, figure-8 patrol, sleeping on elements',
+          'Phased idle nagging with escalating command hints',
+          'Activity tracking: Dave notices rapid browsing, filtering, deep dives',
+          'Morse code blinking, scroll parallax reactions',
+          'Safety wrapper: _safeRun() prevents Dave from becoming permanently unresponsive',
+          '11 new dave commands: heart, spiral, constellation, show, patrol, and more',
+        ]
+      },
+      {
         version: '2.1.0', date: 'Feb 13, 2026', title: 'Full Dave Mode',
         features: [
           'Toggleable Full Dave Mode: Dave\'s personality on every interaction (settings gear > Full Dave Mode)',
