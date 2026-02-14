@@ -609,6 +609,48 @@ class _DaveAlive {
 
   get trailEngine() { return this._trailEngine; }
 
+  /**
+   * Reset all behavior flags and movement state. Called on error recovery
+   * to prevent Dave from getting permanently stuck.
+   */
+  _resetAllFlags() {
+    this._trailEngine._isMoving = false;
+    this._heartActive = false;
+    this._spiralActive = false;
+    this._sleepOnElementActive = false;
+    this._puppetActive = false;
+    this._morseActive = false;
+    // Restore ambient state
+    const p = DaveMode._presenceEl;
+    if (p) {
+      p.classList.remove('dave-alive-moving');
+      if (!DaveMode._isDragging) p.classList.add('dave-ambient');
+    }
+    // Restore cursor follow in case an iris effect was active
+    if (this._irisOverlay) {
+      this._irisOverlay.remove();
+      this._irisOverlay = null;
+      this._exitIrisEffect();
+    }
+    clearTimeout(this._irisTimer);
+    clearInterval(this._clockInterval);
+    // Clean up any lingering DOM elements
+    document.querySelectorAll('.dave-heart-particle, .dave-sub-drip, .dave-sub-drip-short, .dave-spiral-particle, .dave-puppet-screen').forEach(el => el.remove());
+    this._trailEngine.cleanupTrail();
+    DaveMode._startCursorFollow?.();
+  }
+
+  /**
+   * Safely run an async behavior. If it throws, reset all flags and log the error.
+   * Prevents a single behavior failure from bricking Dave for the rest of the session.
+   */
+  _safeRun(fn) {
+    Promise.resolve().then(() => fn()).catch(err => {
+      console.error('[DaveAlive] Behavior error, resetting state:', err);
+      this._resetAllFlags();
+    });
+  }
+
   // ============================================================
   //  Feature 1: Phased Idle Nagging
   // ============================================================
@@ -1952,69 +1994,69 @@ class _DaveAlive {
 
     // Feature 3: Morse code — 8% on cycle 3+
     if (cycle >= 3 && Math.random() < 0.08) {
-      this.triggerMorse();
+      this._safeRun(() => this.triggerMorse());
       return true;
     }
 
     // Feature 5a: Radar sweep — 6% on cycle 2+
     if (cycle >= 2 && Math.random() < 0.06) {
-      this.triggerRadarSweep();
+      this._safeRun(() => this.triggerRadarSweep());
       return true;
     }
 
     // Feature 5b: Iris clock — 5% on cycle 2+
     if (cycle >= 2 && Math.random() < 0.05) {
-      this.triggerClockMode();
+      this._safeRun(() => this.triggerClockMode());
       return true;
     }
 
     // Feature 6: Inspection — 15% on cycle 3+, with cooldown
     if (cycle >= 3 && Math.random() < 0.15) {
       if (Date.now() - this._lastInspection >= this._inspectionCooldownMs) {
-        this.triggerInspection();
+        this._safeRun(() => this.triggerInspection());
         return true;
       }
     }
 
     // Feature 7: Post-it — 10% on cycle 4+
     if (cycle >= 4 && Math.random() < 0.10) {
-      this.triggerPostIt();
+      this._safeRun(() => this.triggerPostIt());
       return true;
     }
 
     // Feature 10: Heart trail — 5% on cycle 4+
     if (cycle >= 4 && Math.random() < 0.05) {
-      this.triggerHeartTrail();
+      this._safeRun(() => this.triggerHeartTrail());
       return true;
     }
 
     // Feature 8: Patrol — 5% on cycle 5+
     if (cycle >= 5 && Math.random() < 0.05) {
-      this.triggerPatrol();
+      this._safeRun(() => this.triggerPatrol());
       return true;
     }
 
     // Feature 12: Constellation — 3% on cycle 5+
     if (cycle >= 5 && Math.random() < 0.03) {
-      this.triggerConstellation();
+      this._safeRun(() => this.triggerConstellation());
       return true;
     }
 
     // Feature 9: Sleep on element — 12% on cycle 6+
     if (cycle >= 6 && Math.random() < 0.12) {
-      this.triggerSleepOnElement();
+      this._safeRun(() => this.triggerSleepOnElement());
       return true;
     }
 
     // Feature 11: Spiral — 3% on proud/amused emotion
     if (cycle >= 4 && Math.random() < 0.03) {
-      this.triggerSpiralFireworks();
+      this._safeRun(() => this.triggerSpiralFireworks());
       return true;
     }
 
     // Feature 13: Shadow puppet — 2% on cycle 7+
     if (cycle >= 7 && Math.random() < 0.02) {
-      this.triggerShadowPuppet();
+      this._safeRun(() => this.triggerShadowPuppet());
       return true;
     }
 

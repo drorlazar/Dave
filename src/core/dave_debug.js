@@ -706,10 +706,10 @@ class _DaveDebug {
     tier1Row.className = 'dave-debug-trigger-row';
 
     const tier1Btns = [
-      ['Idle Nag', () => DaveAlive._showIdleNag()],
-      ['Morse Code', () => DaveAlive.triggerMorse()],
-      ['Radar Iris', () => DaveAlive.triggerRadarSweep(5000)],
-      ['Clock Iris', () => DaveAlive.triggerClockMode()],
+      ['Idle Nag', () => DaveAlive._safeRun(() => DaveAlive._showIdleNag())],
+      ['Morse Code', () => DaveAlive._safeRun(() => DaveAlive.triggerMorse())],
+      ['Radar Iris', () => DaveAlive._safeRun(() => DaveAlive.triggerRadarSweep(5000))],
+      ['Clock Iris', () => DaveAlive._safeRun(() => DaveAlive.triggerClockMode())],
     ];
     for (const [lbl, fn] of tier1Btns) {
       const btn = document.createElement('button');
@@ -730,10 +730,10 @@ class _DaveDebug {
     tier2Row.className = 'dave-debug-trigger-row';
 
     const tier2Btns = [
-      ['Inspect', () => DaveAlive.triggerInspection()],
-      ['Post-It', () => DaveAlive.triggerPostIt()],
-      ['Patrol', () => DaveAlive.triggerPatrol()],
-      ['Sleep On', () => DaveAlive.triggerSleepOnElement()],
+      ['Inspect', () => DaveAlive._safeRun(() => DaveAlive.triggerInspection())],
+      ['Post-It', () => DaveAlive._safeRun(() => DaveAlive.triggerPostIt())],
+      ['Patrol', () => DaveAlive._safeRun(() => DaveAlive.triggerPatrol())],
+      ['Sleep On', () => DaveAlive._safeRun(() => DaveAlive.triggerSleepOnElement())],
     ];
     for (const [lbl, fn] of tier2Btns) {
       const btn = document.createElement('button');
@@ -754,10 +754,10 @@ class _DaveDebug {
     tier3Row.className = 'dave-debug-trigger-row';
 
     const tier3Btns = [
-      ['Heart', () => DaveAlive.triggerHeartTrail()],
-      ['Spiral', () => DaveAlive.triggerSpiralFireworks()],
-      ['Constellation', () => DaveAlive.triggerConstellation()],
-      ['Puppet Show', () => DaveAlive.triggerShadowPuppet()],
+      ['Heart', () => DaveAlive._safeRun(() => DaveAlive.triggerHeartTrail())],
+      ['Spiral', () => DaveAlive._safeRun(() => DaveAlive.triggerSpiralFireworks())],
+      ['Constellation', () => DaveAlive._safeRun(() => DaveAlive.triggerConstellation())],
+      ['Puppet Show', () => DaveAlive._safeRun(() => DaveAlive.triggerShadowPuppet())],
     ];
     for (const [lbl, fn] of tier3Btns) {
       const btn = document.createElement('button');
