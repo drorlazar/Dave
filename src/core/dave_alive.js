@@ -548,6 +548,9 @@ class _DaveAlive {
     // Heart
     this._heartActive = false;
 
+    // Spiral
+    this._spiralActive = false;
+
     // Morse
     this._morseActive = false;
 
@@ -558,6 +561,7 @@ class _DaveAlive {
     // Iris transformations
     this._irisOverlay = null;
     this._irisTimer = null;
+    this._clockInterval = null;
 
     // Sleep on element
     this._sleepOnElementActive = false;
@@ -849,7 +853,7 @@ class _DaveAlive {
   // ============================================================
 
   /**
-   * Enter iris-effect mode: enlarge eye, stop cursor follow, expand iris.
+   * Enter iris-effect mode: enlarge eye via scale, stop cursor follow, expand iris.
    * Returns the eye element for appending overlays.
    */
   _enterIrisEffect() {
@@ -862,7 +866,11 @@ class _DaveAlive {
     DaveMode._irisEl.classList.remove('dave-cursor-follow');
     DaveMode._irisEl.style.transform = '';
 
-    // Enlarge eye + iris via CSS class
+    // Remove any lingering shrink classes from previous effect
+    eyeEl.classList.remove('dave-eye-shrinking');
+    DaveMode._irisEl.classList.remove('dave-iris-shrinking');
+
+    // Enlarge eye (scale) + iris (width/height) via CSS classes
     eyeEl.classList.add('dave-eye-enlarged');
     DaveMode._irisEl.classList.add('dave-iris-enlarged');
 
@@ -870,18 +878,25 @@ class _DaveAlive {
   }
 
   /**
-   * Exit iris-effect mode: restore eye size, resume cursor follow.
+   * Exit iris-effect mode: smooth shrink-back, then restore cursor follow.
    */
   _exitIrisEffect() {
     if (!DaveMode._irisEl) return;
     const eyeEl = DaveMode._irisEl.parentElement;
 
+    // Swap to shrinking classes for smooth return animation
     eyeEl?.classList.remove('dave-eye-enlarged');
     DaveMode._irisEl.classList.remove('dave-iris-enlarged');
+    eyeEl?.classList.add('dave-eye-shrinking');
+    DaveMode._irisEl.classList.add('dave-iris-shrinking');
 
-    // Restore iris scan animation and cursor following
-    DaveMode._resumeIrisScan?.();
-    DaveMode._startCursorFollow?.();
+    // After shrink animation completes, clean up and restore
+    setTimeout(() => {
+      eyeEl?.classList.remove('dave-eye-shrinking');
+      DaveMode._irisEl?.classList.remove('dave-iris-shrinking');
+      DaveMode._resumeIrisScan?.();
+      DaveMode._startCursorFollow?.();
+    }, 450);
   }
 
   triggerRadarSweep(durationMs = 5000) {
@@ -909,16 +924,41 @@ class _DaveAlive {
     const eyeEl = this._enterIrisEffect();
     if (!eyeEl) return;
 
-    const hand = document.createElement('div');
-    hand.className = 'dave-iris-clock';
-    const minutes = new Date().getMinutes();
-    const angle = (minutes / 60) * 360;
-    hand.style.transform = `rotate(${angle}deg)`;
-    eyeEl.appendChild(hand);
-    this._irisOverlay = hand;
+    // Clock face container
+    const face = document.createElement('div');
+    face.className = 'dave-iris-clock-face';
+
+    // Minute hand
+    const now = new Date();
+    const minuteAngle = (now.getMinutes() / 60) * 360 + (now.getSeconds() / 60) * 6;
+    const minuteHand = document.createElement('div');
+    minuteHand.className = 'dave-iris-clock-minute';
+    minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+    face.appendChild(minuteHand);
+
+    // Hour hand
+    const hourAngle = ((now.getHours() % 12) / 12) * 360 + (now.getMinutes() / 60) * 30;
+    const hourHand = document.createElement('div');
+    hourHand.className = 'dave-iris-clock-hour';
+    hourHand.style.transform = `rotate(${hourAngle}deg)`;
+    face.appendChild(hourHand);
+
+    eyeEl.appendChild(face);
+    this._irisOverlay = face;
+
+    // Tick the hands every second
+    this._clockInterval = setInterval(() => {
+      const t = new Date();
+      const mAngle = (t.getMinutes() / 60) * 360 + (t.getSeconds() / 60) * 6;
+      const hAngle = ((t.getHours() % 12) / 12) * 360 + (t.getMinutes() / 60) * 30;
+      minuteHand.style.transform = `rotate(${mAngle}deg)`;
+      hourHand.style.transform = `rotate(${hAngle}deg)`;
+    }, 1000);
 
     this._irisTimer = setTimeout(() => {
-      hand.remove();
+      clearInterval(this._clockInterval);
+      this._clockInterval = null;
+      face.remove();
       this._exitIrisEffect();
       this._irisOverlay = null;
       this._irisTimer = null;
@@ -1385,7 +1425,7 @@ class _DaveAlive {
         const wpIdx = Math.min(Math.floor(wpFloat), steps - 1);
         const wpFrac = wpFloat - wpIdx;
         const a = waypoints[wpIdx];
-        const b = waypoints[Math.min(wpIdx + 1, steps)];
+        const b = waypoints[Math.min(wpIdx + 1, steps)] || a;
         let cx = a.x + (b.x - a.x) * wpFrac;
         let cy = a.y + (b.y - a.y) * wpFrac;
 
@@ -1463,7 +1503,8 @@ class _DaveAlive {
   // ============================================================
 
   async triggerSpiralFireworks() {
-    if (this._trailEngine.isMoving || !DaveMode._enabled || !DaveMode._presenceEl) return;
+    if (this._trailEngine.isMoving || this._spiralActive || !DaveMode._enabled || !DaveMode._presenceEl) return;
+    this._spiralActive = true;
     this._trailEngine._isMoving = true;
 
     const p = DaveMode._presenceEl;
@@ -1521,7 +1562,7 @@ class _DaveAlive {
         const wpIdx = Math.min(Math.floor(wpFloat), steps - 1);
         const wpFrac = wpFloat - wpIdx;
         const a = waypoints[wpIdx];
-        const b = waypoints[Math.min(wpIdx + 1, steps)];
+        const b = waypoints[Math.min(wpIdx + 1, steps)] || a;
         let cx = a.x + (b.x - a.x) * wpFrac;
         let cy = a.y + (b.y - a.y) * wpFrac;
 
@@ -1592,6 +1633,7 @@ class _DaveAlive {
     trailEls.forEach(el => el.remove());
     document.querySelectorAll('.dave-spiral-particle, .dave-sub-drip, .dave-sub-drip-short').forEach(el => el.remove());
     this._trailEngine.cleanupTrail();
+    this._spiralActive = false;
   }
 
 
@@ -1947,6 +1989,7 @@ class _DaveAlive {
       this._exitIrisEffect();
     }
     clearTimeout(this._irisTimer);
+    clearInterval(this._clockInterval);
     clearTimeout(this._scrollResetTimer);
     if (this._constellationSvg) {
       this._constellationSvg.remove();

@@ -289,56 +289,87 @@
    Iris Transformations — Enlarged Eye Mode
    ============================================================ */
 
-/* Enlarged eye: grows from 32px to 56px for readable iris effects */
+/* Enlarged eye: scale transform for perfectly round growth */
 .dave-presence-eye.dave-eye-enlarged {
-  width: 56px;
-  height: 56px;
-  transition: width 0.4s cubic-bezier(0.2, 0, 0.1, 1),
-              height 0.4s cubic-bezier(0.2, 0, 0.1, 1),
-              box-shadow 0.4s ease, border-color 0.4s ease;
+  transform: scale(1.75);
   box-shadow:
-    0 0 18px rgba(0, 255, 65, 0.3),
-    inset 0 0 10px rgba(0, 255, 65, 0.08);
+    0 0 12px rgba(0, 255, 65, 0.35),
+    inset 0 0 8px rgba(0, 255, 65, 0.1);
   border-color: #2a5a2a;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.5s ease,
+              border-color 0.5s ease;
 }
 
-/* Iris fills the enlarged eye (from 10px to ~40px) */
+/* Iris grows to fill the enlarged eye */
 .dave-presence-iris.dave-iris-enlarged {
-  width: 40px;
-  height: 40px;
+  width: 22px;
+  height: 22px;
   animation: none;
-  box-shadow: 0 0 10px #00ff41, inset 0 0 4px rgba(0, 255, 65, 0.2);
+  background: transparent;
+  box-shadow: none;
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* Shrink-back transition on base eye (added so removal animates smoothly) */
+.dave-presence-eye.dave-eye-shrinking {
+  transform: scale(1);
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0.1, 1),
+              box-shadow 0.4s ease,
+              border-color 0.4s ease;
+}
+
+.dave-presence-iris.dave-iris-shrinking {
+  width: 10px;
+  height: 10px;
+  background: #00ff41;
+  box-shadow: 0 0 6px #00ff41;
   transition: width 0.4s cubic-bezier(0.2, 0, 0.1, 1),
               height 0.4s cubic-bezier(0.2, 0, 0.1, 1),
+              background 0.3s ease,
               box-shadow 0.3s ease;
 }
 
 /* Hide the ::after glow during enlargement so it doesn't compete */
 .dave-presence-eye.dave-eye-enlarged::after {
   opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 
-/* Radar sweep overlay — positioned inside enlarged eye */
+/* Radar sweep overlay — conic gradient wedge only, no background */
 .dave-iris-radar {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 40px;
-  height: 40px;
-  margin-top: -20px;
-  margin-left: -20px;
+  width: 22px;
+  height: 22px;
+  margin-top: -11px;
+  margin-left: -11px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 2;
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgba(0, 255, 65, 0.5) 30deg,
+    rgba(0, 255, 65, 0.6) 20deg,
+    rgba(0, 255, 65, 0.15) 50deg,
     transparent 60deg
   );
   animation: daveRadarSweep 1.8s linear infinite;
-  opacity: 0.8;
+}
+
+/* Radar scanline ring */
+.dave-iris-radar::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(0, 255, 65, 0.15);
+  pointer-events: none;
 }
 
 @keyframes daveRadarSweep {
@@ -346,21 +377,80 @@
   to { transform: rotate(360deg); }
 }
 
-/* Clock mode: minute hand inside enlarged eye */
-.dave-iris-clock {
+/* Clock mode: container for hour + minute hands, transparent bg */
+.dave-iris-clock-face {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  margin-top: -11px;
+  margin-left: -11px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Tiny tick marks at 12, 3, 6, 9 */
+.dave-iris-clock-face::before {
+  content: '';
+  position: absolute;
+  top: 1px; bottom: 1px; left: 1px; right: 1px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(0, 255, 65, 0.5) 0.5px, transparent 0.5px),
+    radial-gradient(circle at 92% 50%, rgba(0, 255, 65, 0.5) 0.5px, transparent 0.5px),
+    radial-gradient(circle at 50% 92%, rgba(0, 255, 65, 0.5) 0.5px, transparent 0.5px),
+    radial-gradient(circle at 8% 50%, rgba(0, 255, 65, 0.5) 0.5px, transparent 0.5px);
+  pointer-events: none;
+}
+
+/* Minute hand */
+.dave-iris-clock-minute {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.5px;
+  height: 9px;
+  background: #00ff41;
+  box-shadow: 0 0 4px #00ff41;
+  transform-origin: bottom center;
+  pointer-events: none;
+  margin-left: -0.75px;
+  margin-top: -9px;
+  border-radius: 1px;
+}
+
+/* Hour hand (shorter, slightly thicker) */
+.dave-iris-clock-hour {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 2px;
-  height: 16px;
+  height: 6px;
   background: #00ff41;
-  box-shadow: 0 0 5px #00ff41;
+  box-shadow: 0 0 3px #00ff41;
   transform-origin: bottom center;
   pointer-events: none;
-  z-index: 2;
   margin-left: -1px;
-  margin-top: -16px;
+  margin-top: -6px;
   border-radius: 1px;
+}
+
+/* Center dot for clock */
+.dave-iris-clock-face::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 2px;
+  margin-top: -1px;
+  margin-left: -1px;
+  border-radius: 50%;
+  background: #00ff41;
+  box-shadow: 0 0 3px #00ff41;
+  z-index: 1;
 }
 
 /* Compass needle inside enlarged eye */
@@ -369,14 +459,14 @@
   top: 50%;
   left: 50%;
   width: 2px;
-  height: 18px;
+  height: 10px;
   background: #00ff41;
-  box-shadow: 0 0 6px #00ff41;
+  box-shadow: 0 0 5px #00ff41;
   transform-origin: bottom center;
   pointer-events: none;
   z-index: 2;
   margin-left: -1px;
-  margin-top: -18px;
+  margin-top: -10px;
   border-radius: 1px;
   transition: transform 0.3s ease;
 }
