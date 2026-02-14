@@ -848,16 +848,56 @@ class _DaveAlive {
   //  Feature 5: Iris Transformations
   // ============================================================
 
+  /**
+   * Enter iris-effect mode: enlarge eye, stop cursor follow, expand iris.
+   * Returns the eye element for appending overlays.
+   */
+  _enterIrisEffect() {
+    if (!DaveMode._irisEl) return null;
+    const eyeEl = DaveMode._irisEl.parentElement;
+    if (!eyeEl) return null;
+
+    // Stop cursor following so iris is centered
+    DaveMode._stopCursorFollow?.();
+    DaveMode._irisEl.classList.remove('dave-cursor-follow');
+    DaveMode._irisEl.style.transform = '';
+
+    // Enlarge eye + iris via CSS class
+    eyeEl.classList.add('dave-eye-enlarged');
+    DaveMode._irisEl.classList.add('dave-iris-enlarged');
+
+    return eyeEl;
+  }
+
+  /**
+   * Exit iris-effect mode: restore eye size, resume cursor follow.
+   */
+  _exitIrisEffect() {
+    if (!DaveMode._irisEl) return;
+    const eyeEl = DaveMode._irisEl.parentElement;
+
+    eyeEl?.classList.remove('dave-eye-enlarged');
+    DaveMode._irisEl.classList.remove('dave-iris-enlarged');
+
+    // Restore iris scan animation and cursor following
+    DaveMode._resumeIrisScan?.();
+    DaveMode._startCursorFollow?.();
+  }
+
   triggerRadarSweep(durationMs = 5000) {
     if (this._irisOverlay || !DaveMode._irisEl) return;
 
+    const eyeEl = this._enterIrisEffect();
+    if (!eyeEl) return;
+
     const radar = document.createElement('div');
     radar.className = 'dave-iris-radar';
-    DaveMode._irisEl.appendChild(radar);
+    eyeEl.appendChild(radar);
     this._irisOverlay = radar;
 
     this._irisTimer = setTimeout(() => {
       radar.remove();
+      this._exitIrisEffect();
       this._irisOverlay = null;
       this._irisTimer = null;
     }, durationMs);
@@ -866,16 +906,20 @@ class _DaveAlive {
   triggerClockMode() {
     if (this._irisOverlay || !DaveMode._irisEl) return;
 
+    const eyeEl = this._enterIrisEffect();
+    if (!eyeEl) return;
+
     const hand = document.createElement('div');
     hand.className = 'dave-iris-clock';
     const minutes = new Date().getMinutes();
     const angle = (minutes / 60) * 360;
     hand.style.transform = `rotate(${angle}deg)`;
-    DaveMode._irisEl.appendChild(hand);
+    eyeEl.appendChild(hand);
     this._irisOverlay = hand;
 
     this._irisTimer = setTimeout(() => {
       hand.remove();
+      this._exitIrisEffect();
       this._irisOverlay = null;
       this._irisTimer = null;
     }, 10000);
@@ -884,9 +928,12 @@ class _DaveAlive {
   triggerCompassMode(targetX, targetY) {
     if (this._irisOverlay || !DaveMode._irisEl) return;
 
+    const eyeEl = this._enterIrisEffect();
+    if (!eyeEl) return;
+
     const needle = document.createElement('div');
     needle.className = 'dave-iris-compass';
-    DaveMode._irisEl.appendChild(needle);
+    eyeEl.appendChild(needle);
     this._irisOverlay = needle;
 
     // Point needle toward target
@@ -898,6 +945,7 @@ class _DaveAlive {
 
     this._irisTimer = setTimeout(() => {
       needle.remove();
+      this._exitIrisEffect();
       this._irisOverlay = null;
       this._irisTimer = null;
     }, 8000);
@@ -961,6 +1009,7 @@ class _DaveAlive {
     if (this._irisOverlay) {
       this._irisOverlay.remove();
       this._irisOverlay = null;
+      this._exitIrisEffect();
       clearTimeout(this._irisTimer);
     }
 
@@ -1895,6 +1944,7 @@ class _DaveAlive {
     if (this._irisOverlay) {
       this._irisOverlay.remove();
       this._irisOverlay = null;
+      this._exitIrisEffect();
     }
     clearTimeout(this._irisTimer);
     clearTimeout(this._scrollResetTimer);
