@@ -915,13 +915,42 @@ class _DaveAlive {
     const eyeEl = this._enterIrisEffect();
     if (!eyeEl) return;
 
-    const radar = document.createElement('div');
-    radar.className = 'dave-iris-radar';
-    eyeEl.appendChild(radar);
-    this._irisOverlay = radar;
+    // Build radar: container > grid + sweep
+    const container = document.createElement('div');
+    container.className = 'dave-iris-radar-container';
+
+    const grid = document.createElement('div');
+    grid.className = 'dave-iris-radar-grid';
+    container.appendChild(grid);
+
+    const sweep = document.createElement('div');
+    sweep.className = 'dave-iris-radar-sweep';
+    container.appendChild(sweep);
+
+    eyeEl.appendChild(container);
+    this._irisOverlay = container;
+
+    // Spawn pings at random positions every 1-2s
+    const spawnPing = () => {
+      const ping = document.createElement('div');
+      ping.className = 'dave-iris-radar-ping';
+      // Random position within the radar circle (polar coords -> cartesian)
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 2 + Math.random() * 7; // 2-9px from center
+      ping.style.left = (11 + dist * Math.cos(angle) - 1) + 'px';
+      ping.style.top = (11 + dist * Math.sin(angle) - 1) + 'px';
+      container.appendChild(ping);
+      setTimeout(() => ping.remove(), 1500);
+    };
+
+    // First ping after a short delay, then periodic
+    const firstPingTimer = setTimeout(spawnPing, 600);
+    const pingInterval = setInterval(spawnPing, 1200 + Math.random() * 800);
 
     this._irisTimer = setTimeout(() => {
-      radar.remove();
+      clearTimeout(firstPingTimer);
+      clearInterval(pingInterval);
+      container.remove();
       this._exitIrisEffect();
       this._irisOverlay = null;
       this._irisTimer = null;

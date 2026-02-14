@@ -342,8 +342,8 @@
 }
 
 
-/* Radar sweep overlay — conic gradient wedge only, no background */
-.dave-iris-radar {
+/* Radar container — holds background grid + sweep + pings */
+.dave-iris-radar-container {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -354,29 +354,116 @@
   border-radius: 50%;
   pointer-events: none;
   z-index: 2;
+  overflow: hidden;
+}
+
+/* Radar background: crosshair + concentric rings */
+.dave-iris-radar-grid {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  /* Crosshair lines */
+  background:
+    linear-gradient(0deg, transparent calc(50% - 0.25px), rgba(0, 255, 65, 0.12) calc(50% - 0.25px), rgba(0, 255, 65, 0.12) calc(50% + 0.25px), transparent calc(50% + 0.25px)),
+    linear-gradient(90deg, transparent calc(50% - 0.25px), rgba(0, 255, 65, 0.12) calc(50% - 0.25px), rgba(0, 255, 65, 0.12) calc(50% + 0.25px), transparent calc(50% + 0.25px));
+}
+
+/* Concentric range rings via box-shadow on a centered dot */
+.dave-iris-radar-grid::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3px rgba(0, 255, 65, 0.07),
+    0 0 0 6px rgba(0, 255, 65, 0.06),
+    0 0 0 9px rgba(0, 255, 65, 0.05);
+  pointer-events: none;
+}
+
+/* Diagonal crosshair lines (45deg) */
+.dave-iris-radar-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    linear-gradient(45deg, transparent calc(50% - 0.25px), rgba(0, 255, 65, 0.06) calc(50% - 0.25px), rgba(0, 255, 65, 0.06) calc(50% + 0.25px), transparent calc(50% + 0.25px)),
+    linear-gradient(-45deg, transparent calc(50% - 0.25px), rgba(0, 255, 65, 0.06) calc(50% - 0.25px), rgba(0, 255, 65, 0.06) calc(50% + 0.25px), transparent calc(50% + 0.25px));
+  pointer-events: none;
+}
+
+/* Outer rim ring */
+.dave-iris-radar-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 0.5px solid rgba(0, 255, 65, 0.18);
+  pointer-events: none;
+}
+
+/* Sweep wedge — rotates on top of grid */
+.dave-iris-radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgba(0, 255, 65, 0.6) 20deg,
-    rgba(0, 255, 65, 0.15) 50deg,
-    transparent 60deg
+    rgba(0, 255, 65, 0.55) 15deg,
+    rgba(0, 255, 65, 0.12) 45deg,
+    transparent 55deg
   );
   animation: daveRadarSweep 1.8s linear infinite;
-}
-
-/* Radar scanline ring */
-.dave-iris-radar::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 50%;
-  border: 0.5px solid rgba(0, 255, 65, 0.15);
-  pointer-events: none;
 }
 
 @keyframes daveRadarSweep {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* Ping dot — appears at random position, bright flash */
+.dave-iris-radar-ping {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #00ff41;
+  box-shadow: 0 0 3px #00ff41, 0 0 6px rgba(0, 255, 65, 0.4);
+  pointer-events: none;
+  z-index: 3;
+  animation: daveRadarPingDot 1.5s ease-out forwards;
+}
+
+/* Expanding ring from ping point */
+.dave-iris-radar-ping::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border: 0.5px solid rgba(0, 255, 65, 0.5);
+  pointer-events: none;
+  animation: daveRadarPingRing 1.5s ease-out forwards;
+}
+
+@keyframes daveRadarPingDot {
+  0% { opacity: 1; transform: scale(1); }
+  30% { opacity: 1; transform: scale(1.3); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+@keyframes daveRadarPingRing {
+  0% { width: 0; height: 0; margin-top: 0; margin-left: 0; opacity: 0.7; }
+  100% { width: 10px; height: 10px; margin-top: -5px; margin-left: -5px; opacity: 0; }
 }
 
 /* Clock mode: container for hour + minute hands, transparent bg */
