@@ -668,7 +668,17 @@ class _DaveAlive {
 
     on('dave:pageRender', () => this._logActivity('pageNav'));
     on('dave:filter', () => this._logActivity('filter'));
-    on('dave:search', (d) => { if (d.term) this._logActivity('search'); });
+    on('dave:search', (d) => {
+      if (d.term) {
+        this._logActivity('search');
+        // Radar sweep while searching — 30% chance, 10s cooldown
+        if (!this._irisOverlay && Math.random() < 0.3 &&
+            Date.now() - (this._lastSearchRadar || 0) > 10000) {
+          this._lastSearchRadar = Date.now();
+          this.triggerRadarSweep(3000);
+        }
+      }
+    });
 
     // Periodically check for activity patterns
     setInterval(() => this._checkActivityPatterns(), 5000);
@@ -1917,7 +1927,13 @@ class _DaveAlive {
       return true;
     }
 
-    // Feature 5: Iris clock — 5% on idle
+    // Feature 5a: Radar sweep — 6% on cycle 2+
+    if (cycle >= 2 && Math.random() < 0.06) {
+      this.triggerRadarSweep();
+      return true;
+    }
+
+    // Feature 5b: Iris clock — 5% on cycle 2+
     if (cycle >= 2 && Math.random() < 0.05) {
       this.triggerClockMode();
       return true;

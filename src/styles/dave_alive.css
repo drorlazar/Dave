@@ -464,15 +464,15 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 1px;
+  width: 0.5px;
   height: 10px;
   background: #00ff41;
-  box-shadow: 0 0 5px #00ff41;
+  box-shadow: 0 0 3px #00ff41;
   transform-origin: bottom center;
   pointer-events: none;
-  margin-left: -0.5px;
+  margin-left: -0.25px;
   margin-top: -10px;
-  border-radius: 0.5px;
+  border-radius: 0.25px;
   transition: transform 0.15s cubic-bezier(0.2, 2, 0.6, 1);
 }
 
