@@ -1,0 +1,568 @@
+/* dave_alive.css — Dave Alive Behavior Styles
+   Movement trails, inspections, constellations, post-its, and more.
+   All visual effects use text characters in Dave's green (#00ff41).
+   NO emoji. NO colored icons. Handcrafted experience. */
+
+/* ============================================================
+   Trail Characters (shared by heart, spiral, patrol, inspection)
+   ============================================================ */
+
+.dave-trail-char {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 11px;
+  color: #00ff41;
+  text-shadow: 0 0 6px currentColor;
+  z-index: 99997;
+  will-change: opacity, transform;
+  transition: none;
+}
+
+.dave-trail-char-fading {
+  transition: opacity 0.8s ease-out;
+  opacity: 0 !important;
+}
+
+
+/* ============================================================
+   Movement State (applied to .dave-presence during animations)
+   ============================================================ */
+
+.dave-trail-moving {
+  transition: left 0.05s linear, top 0.05s linear;
+}
+
+.dave-presence.dave-alive-moving {
+  /* Remove ambient bounce during autonomous movement */
+}
+
+.dave-presence.dave-alive-moving .dave-presence-eye {
+  /* Slight excitement glow during movement */
+  filter: brightness(1.15);
+}
+
+
+/* ============================================================
+   Post-It Notes
+   ============================================================ */
+
+.dave-postit {
+  position: fixed;
+  pointer-events: none;
+  width: 90px;
+  padding: 6px 5px;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: bold;
+  line-height: 1.3;
+  color: #00ff41;
+  background: rgba(0, 10, 2, 0.88);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.15), inset 0 0 20px rgba(0, 255, 65, 0.03);
+  z-index: 99996;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  /* CRT scanline effect */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 65, 0.02) 2px,
+    rgba(0, 255, 65, 0.02) 4px
+  );
+}
+
+.dave-postit.dave-postit-visible {
+  opacity: 1;
+}
+
+.dave-postit.dave-postit-fading {
+  opacity: 0;
+  transition: opacity 1s ease-out;
+}
+
+.dave-postit-signature {
+  display: block;
+  text-align: right;
+  margin-top: 3px;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+
+/* ============================================================
+   Constellation System
+   ============================================================ */
+
+.dave-constellation-svg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 99995;
+}
+
+.dave-constellation-line {
+  stroke: #00ff41;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px #00ff41);
+  opacity: 0.7;
+}
+
+.dave-constellation-line-drawing {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: daveConstellationDraw 0.8s ease forwards;
+}
+
+@keyframes daveConstellationDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+.dave-constellation-line-pulse {
+  animation: daveConstellationPulse 2s ease-in-out infinite;
+}
+
+@keyframes daveConstellationPulse {
+  0%, 100% { opacity: 0.5; stroke-width: 1.5; }
+  50% { opacity: 0.9; stroke-width: 2; }
+}
+
+.dave-constellation-star {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 14px;
+  color: #00ff41;
+  text-shadow: 0 0 8px #00ff41, 0 0 16px #00ff41;
+  z-index: 99996;
+  animation: daveConstellationStarPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes daveConstellationStarPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+.dave-constellation-name {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 11px;
+  color: #00ff41;
+  text-shadow: 0 0 6px #00ff41;
+  z-index: 99997;
+  opacity: 0;
+  text-align: center;
+  white-space: nowrap;
+  animation: daveConstellationNameFade 3s ease forwards;
+}
+
+@keyframes daveConstellationNameFade {
+  0% { opacity: 0; transform: translateY(5px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Constellation star particles */
+.dave-constellation-particle {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 8px;
+  color: #00ff41;
+  text-shadow: 0 0 4px currentColor;
+  z-index: 99996;
+  opacity: 0;
+  animation: daveConstellationParticleFly 1.2s ease-out forwards;
+}
+
+@keyframes daveConstellationParticleFly {
+  0% {
+    opacity: 0.8;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--particle-dx, 20px), var(--particle-dy, -20px)) scale(0.3);
+  }
+}
+
+
+/* ============================================================
+   Sleep Z Characters (for sleeping-on-element)
+   ============================================================ */
+
+.dave-alive-zzz {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #00ff41;
+  text-shadow: 0 0 5px currentColor;
+  z-index: 99998;
+  opacity: 0;
+  animation: daveAliveZzzFloat 2.5s ease-out forwards;
+}
+
+@keyframes daveAliveZzzFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0);
+  }
+  15% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) translateX(var(--zzz-drift, 8px));
+  }
+}
+
+
+/* ============================================================
+   Morse Code Blink
+   ============================================================ */
+
+.dave-presence-iris.dave-morse-blink {
+  opacity: 0.1 !important;
+  transition: opacity 0.03s ease;
+}
+
+/* Morse visual indicator — shows dots/dashes near Dave */
+.dave-morse-indicator {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 14px;
+  color: #00ff41;
+  text-shadow: 0 0 6px currentColor;
+  z-index: 99998;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  letter-spacing: 2px;
+  opacity: 0;
+  animation: daveMorseIndicatorIn 0.3s ease forwards;
+}
+
+.dave-morse-indicator-reveal {
+  animation: daveMorseReveal 0.5s ease forwards;
+}
+
+.dave-morse-indicator-fading {
+  transition: opacity 0.8s ease-out;
+  opacity: 0 !important;
+}
+
+@keyframes daveMorseIndicatorIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 0.9; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes daveMorseReveal {
+  0% { transform: translateX(-50%) scale(1); color: #00ff41; }
+  50% { transform: translateX(-50%) scale(1.15); color: #66ff99; text-shadow: 0 0 12px #00ff41; }
+  100% { transform: translateX(-50%) scale(1); color: #00ff41; }
+}
+
+
+/* ============================================================
+   Scroll Parallax
+   ============================================================ */
+
+.dave-presence.dave-scroll-reacting .dave-presence-eye {
+  transition: transform 0.3s ease-out;
+}
+
+
+/* ============================================================
+   Iris Transformations
+   ============================================================ */
+
+/* Radar sweep overlay inside iris */
+.dave-iris-radar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(0, 255, 65, 0.4) 30deg,
+    transparent 60deg
+  );
+  animation: daveRadarSweep 2s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes daveRadarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Clock mode: tiny minute hand */
+.dave-iris-clock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 6px;
+  background: #00ff41;
+  box-shadow: 0 0 3px #00ff41;
+  transform-origin: bottom center;
+  pointer-events: none;
+  margin-left: -0.5px;
+  margin-top: -6px;
+}
+
+/* Compass needle */
+.dave-iris-compass {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 7px;
+  background: #00ff41;
+  box-shadow: 0 0 4px #00ff41;
+  transform-origin: bottom center;
+  pointer-events: none;
+  margin-left: -0.5px;
+  margin-top: -7px;
+  transition: transform 0.3s ease;
+}
+
+
+/* ============================================================
+   Shadow Puppet Show — Floating CRT screen next to Dave
+   ============================================================ */
+
+/* Eye excitement glow during puppet show */
+.dave-presence.dave-puppet-mode .dave-presence-eye {
+  filter: brightness(1.3);
+  transition: filter 0.4s ease;
+}
+
+.dave-presence.dave-puppet-mode .dave-presence-iris {
+  box-shadow: 0 0 8px #00ff41, 0 0 16px #00ff41 !important;
+}
+
+/* Floating CRT screen */
+.dave-puppet-screen {
+  position: fixed;
+  pointer-events: none;
+  width: 120px;
+  height: 90px;
+  background: rgba(0, 8, 2, 0.92);
+  border: 1px solid rgba(0, 255, 65, 0.4);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.15), inset 0 0 20px rgba(0, 255, 65, 0.03);
+  border-radius: 3px;
+  z-index: 99998;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  overflow: hidden;
+  /* CRT scanline effect */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 65, 0.02) 2px,
+    rgba(0, 255, 65, 0.02) 4px
+  );
+}
+
+.dave-puppet-screen.dave-puppet-screen-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dave-puppet-screen-title {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 8px;
+  color: #00ff41;
+  text-shadow: 0 0 3px currentColor;
+  padding: 3px 5px 2px;
+  border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+.dave-puppet-stage {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 14px;
+  color: #00ff41;
+  text-shadow: 0 0 6px currentColor;
+  pointer-events: none;
+  white-space: pre;
+  text-align: center;
+  line-height: 1.1;
+  margin: 0;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 22px);
+}
+
+
+/* ============================================================
+   Heart Trail Pulse
+   ============================================================ */
+
+.dave-trail-char-pulse {
+  animation: daveTrailPulse 0.8s ease forwards;
+}
+
+@keyframes daveTrailPulse {
+  0% { transform: scale(1); text-shadow: 0 0 6px currentColor; }
+  50% { transform: scale(1.5); text-shadow: 0 0 12px currentColor, 0 0 20px currentColor; }
+  100% { transform: scale(1); text-shadow: 0 0 3px currentColor; opacity: 0; }
+}
+
+
+/* ============================================================
+   Heart Particles — Bleeding Heart Effect
+   Main particles stay in place while bleeding sub-drip chars.
+   On completion, all main particles drip down and fade.
+   ============================================================ */
+
+.dave-heart-particle {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 12px;
+  color: #00ff41;
+  text-shadow: 0 0 8px currentColor, 0 0 14px currentColor;
+  z-index: 99997;
+  opacity: 0;
+  animation: daveHeartAppear 0.2s ease forwards;
+}
+
+/* After heart is complete, main particles fall away */
+.dave-heart-particle.dave-heart-particle-fall {
+  animation: daveHeartFall 1.5s ease-in forwards;
+}
+
+@keyframes daveHeartAppear {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes daveHeartFall {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(var(--fall-dist, 35px)); }
+}
+
+
+/* ============================================================
+   Sub-Drip Particles (shared by heart + spiral bleeding)
+   Small chars that drip downward from main trail particles.
+   ============================================================ */
+
+.dave-sub-drip {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 8px;
+  color: #00ff41;
+  text-shadow: 0 0 4px currentColor;
+  z-index: 99996;
+  animation: daveSubDrip 1.2s ease-in forwards;
+}
+
+.dave-sub-drip.dave-sub-drip-short {
+  animation-duration: 0.8s;
+}
+
+@keyframes daveSubDrip {
+  0% { opacity: 0.7; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(var(--sub-drip-dist, 25px)); }
+}
+
+
+/* ============================================================
+   Spiral Trail Particles — Same bleeding pattern, shorter
+   ============================================================ */
+
+.dave-spiral-particle {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 11px;
+  color: #00ff41;
+  text-shadow: 0 0 6px currentColor;
+  z-index: 99997;
+  opacity: 0;
+  animation: daveHeartAppear 0.15s ease forwards;
+}
+
+.dave-spiral-particle.dave-spiral-particle-pulse {
+  animation: daveTrailPulse 0.8s ease forwards;
+}
+
+
+/* ============================================================
+   Inspection Glow (target element highlight)
+   ============================================================ */
+
+.dave-inspect-highlight {
+  position: fixed;
+  pointer-events: none;
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.1), inset 0 0 10px rgba(0, 255, 65, 0.05);
+  border-radius: 4px;
+  z-index: 99994;
+  animation: daveInspectGlow 2s ease-in-out infinite;
+}
+
+@keyframes daveInspectGlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+
+/* ============================================================
+   Patrol Trail (lighter than normal trail)
+   ============================================================ */
+
+.dave-patrol-trail-char {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 8px;
+  color: #00ff41;
+  text-shadow: 0 0 4px currentColor;
+  z-index: 99995;
+  opacity: 0.4;
+  will-change: opacity;
+}
+
+
+/* ============================================================
+   Fade utility
+   ============================================================ */
+
+.dave-fade-out {
+  transition: opacity 1s ease-out !important;
+  opacity: 0 !important;
+}

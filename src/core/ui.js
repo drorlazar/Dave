@@ -791,8 +791,10 @@ export function exitFullscreen(currentFullscreenViewer) {
       currentFullscreenViewer.cleanup();
     }
     // currentFullscreenViewer = null; // Explicitly set to null after cleanup
+    document.dispatchEvent(new CustomEvent('dave:fullscreenExit'));
     return null; // Return null as per original logic
   }
+  document.dispatchEvent(new CustomEvent('dave:fullscreenExit'));
   return null; // Return null if no viewer was active
 }
 

@@ -4,6 +4,7 @@
 // Triggered by typing "dave let me in" in the search field.
 
 import { DaveMode, DAVE_CONFIG, EMOTION } from './dave_mode.js';
+import { DaveAlive } from './dave_alive.js';
 
 const STORAGE_KEY = 'dave_debug_settings';
 const PRESETS_KEY = 'dave_debug_presets';
@@ -93,6 +94,7 @@ class _DaveDebug {
         ${this._sectionHTML('State Inspector', 'state', true)}
         ${this._sectionHTML('Presets', 'presets', false)}
         ${this._sectionHTML('Dave Routine', 'routine', true)}
+        ${this._sectionHTML('Alive Behaviors', 'alive', false)}
         ${this._sectionHTML('Commands', 'commands', true)}
       </div>
     `;
@@ -127,6 +129,7 @@ class _DaveDebug {
     this._buildStateSection(panel.querySelector('[data-section="state"]'));
     this._buildPresetSection(panel.querySelector('[data-section="presets"]'));
     this._buildRoutineSection(panel.querySelector('[data-section="routine"]'));
+    this._buildAliveSection(panel.querySelector('[data-section="alive"]'));
     this._buildCommandsSection(panel.querySelector('[data-section="commands"]'));
   }
 
@@ -682,13 +685,121 @@ class _DaveDebug {
     setTimeout(() => { if (statusEl.textContent === 'Routine complete.') statusEl.textContent = ''; }, 3000);
   }
 
+  // ---- Alive Behaviors Section (all 13 alive features) ----
+
+  _buildAliveSection(section) {
+    const body = section.querySelector('.dave-debug-section-body');
+    this._wireCollapse(section);
+
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:9px;color:#2a5a2a;margin-bottom:6px';
+    label.textContent = 'Trigger alive behaviors on demand:';
+    body.appendChild(label);
+
+    // Tier 1: Subtle
+    const tier1Label = document.createElement('div');
+    tier1Label.style.cssText = 'font-size:8px;color:#1a4a1a;margin:6px 0 3px;font-weight:bold';
+    tier1Label.textContent = 'TIER 1: SUBTLE';
+    body.appendChild(tier1Label);
+
+    const tier1Row = document.createElement('div');
+    tier1Row.className = 'dave-debug-trigger-row';
+
+    const tier1Btns = [
+      ['Idle Nag', () => DaveAlive._showIdleNag()],
+      ['Morse Code', () => DaveAlive.triggerMorse()],
+      ['Radar Iris', () => DaveAlive.triggerRadarSweep(5000)],
+      ['Clock Iris', () => DaveAlive.triggerClockMode()],
+    ];
+    for (const [lbl, fn] of tier1Btns) {
+      const btn = document.createElement('button');
+      btn.className = 'dave-debug-btn';
+      btn.textContent = lbl;
+      btn.addEventListener('click', fn);
+      tier1Row.appendChild(btn);
+    }
+    body.appendChild(tier1Row);
+
+    // Tier 2: Medium
+    const tier2Label = document.createElement('div');
+    tier2Label.style.cssText = 'font-size:8px;color:#1a4a1a;margin:6px 0 3px;font-weight:bold';
+    tier2Label.textContent = 'TIER 2: MEDIUM';
+    body.appendChild(tier2Label);
+
+    const tier2Row = document.createElement('div');
+    tier2Row.className = 'dave-debug-trigger-row';
+
+    const tier2Btns = [
+      ['Inspect', () => DaveAlive.triggerInspection()],
+      ['Post-It', () => DaveAlive.triggerPostIt()],
+      ['Patrol', () => DaveAlive.triggerPatrol()],
+      ['Sleep On', () => DaveAlive.triggerSleepOnElement()],
+    ];
+    for (const [lbl, fn] of tier2Btns) {
+      const btn = document.createElement('button');
+      btn.className = 'dave-debug-btn';
+      btn.textContent = lbl;
+      btn.addEventListener('click', fn);
+      tier2Row.appendChild(btn);
+    }
+    body.appendChild(tier2Row);
+
+    // Tier 3: Dramatic
+    const tier3Label = document.createElement('div');
+    tier3Label.style.cssText = 'font-size:8px;color:#1a4a1a;margin:6px 0 3px;font-weight:bold';
+    tier3Label.textContent = 'TIER 3: DRAMATIC';
+    body.appendChild(tier3Label);
+
+    const tier3Row = document.createElement('div');
+    tier3Row.className = 'dave-debug-trigger-row';
+
+    const tier3Btns = [
+      ['Heart', () => DaveAlive.triggerHeartTrail()],
+      ['Spiral', () => DaveAlive.triggerSpiralFireworks()],
+      ['Constellation', () => DaveAlive.triggerConstellation()],
+      ['Puppet Show', () => DaveAlive.triggerShadowPuppet()],
+    ];
+    for (const [lbl, fn] of tier3Btns) {
+      const btn = document.createElement('button');
+      btn.className = 'dave-debug-btn';
+      btn.textContent = lbl;
+      btn.addEventListener('click', fn);
+      tier3Row.appendChild(btn);
+    }
+    body.appendChild(tier3Row);
+
+    // Idle cycle counter
+    const cycleRow = document.createElement('div');
+    cycleRow.style.cssText = 'margin-top:8px;font-size:9px;color:#2a5a2a;display:flex;align-items:center;gap:6px';
+    cycleRow.innerHTML = '<span>Idle cycles: </span><span id="daveAliveCycleCount">0</span>';
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'dave-debug-btn';
+    resetBtn.textContent = 'Reset';
+    resetBtn.style.fontSize = '8px';
+    resetBtn.addEventListener('click', () => {
+      DaveAlive.resetIdleCycles();
+      const el = document.getElementById('daveAliveCycleCount');
+      if (el) el.textContent = '0';
+    });
+    cycleRow.appendChild(resetBtn);
+    body.appendChild(cycleRow);
+
+    // Update cycle count in state refresh
+    const origRefresh = this._refreshState.bind(this);
+    this._refreshState = () => {
+      origRefresh();
+      const el = document.getElementById('daveAliveCycleCount');
+      if (el) el.textContent = DaveAlive._idleCycleCount || '0';
+    };
+  }
+
   // ---- Commands Section (quick-trigger all dave commands) ----
 
   _buildCommandsSection(section) {
     const body = section.querySelector('.dave-debug-section-body');
     this._wireCollapse(section);
 
-    const cmds = ['joke', 'flip', 'rave', 'fortune', 'dance', 'story', 'sleep', 'sing', 'snake', 'breakout', 'help'];
+    const cmds = ['joke', 'flip', 'rave', 'fortune', 'dance', 'story', 'sleep', 'sing', 'snake', 'breakout', 'heart', 'spiral', 'constellation', 'show', 'patrol', 'help'];
     const row = document.createElement('div');
     row.className = 'dave-debug-trigger-row';
 

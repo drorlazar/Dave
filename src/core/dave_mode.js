@@ -2245,12 +2245,21 @@ class _DaveMode {
     this._updateMood(MOOD.BORED);
     this._presenceEl?.classList.add('dave-sleeping');
 
-    const sessionMinutes = Math.floor((Date.now() - this._session.startTime) / 60000);
-    if (!this._isTerminalActive()) {
-      this._showBubble(
-        this._pickMessage(MSG.idle, { sessionMinutes, visits: this._visits }),
-        { force: true, emotion: EMOTION.EXISTENTIAL }
-      );
+    // Dispatch idle event for alive engine to hook into
+    document.dispatchEvent(new CustomEvent('dave:idle', {
+      detail: { sessionMinutes: Math.floor((Date.now() - this._session.startTime) / 60000) }
+    }));
+
+    // The alive engine handles nagging now (phased idle pools).
+    // Only show generic idle message if alive engine is not loaded.
+    if (!window._daveAliveLoaded) {
+      const sessionMinutes = Math.floor((Date.now() - this._session.startTime) / 60000);
+      if (!this._isTerminalActive()) {
+        this._showBubble(
+          this._pickMessage(MSG.idle, { sessionMinutes, visits: this._visits }),
+          { force: true, emotion: EMOTION.EXISTENTIAL }
+        );
+      }
     }
 
     this._startAttentionSeeking();

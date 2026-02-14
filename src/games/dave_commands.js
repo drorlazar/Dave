@@ -6,6 +6,7 @@ import { DaveMode, EMOTION } from '../core/dave_mode.js';
 import { DaveMusicMode } from './dave_music.js';
 import { DaveSnake } from './dave_snake.js';
 import { DaveBreakout } from './dave_breakout.js';
+import { DaveAlive } from '../core/dave_alive.js';
 
 // ============================================================
 //  Command Definitions
@@ -23,6 +24,11 @@ const COMMANDS = [
   { name: 'music',    icon: '\u266C',  desc: 'Music listening mode' },
   { name: 'snake',    icon: 'S',  desc: 'Play Matrix Snake' },
   { name: 'breakout', icon: '\u25C6',  desc: 'Play Dave Breakout' },
+  { name: 'heart',    icon: '\u2665',  desc: 'Dave traces a heart trail' },
+  { name: 'spiral',   icon: '@',  desc: 'Spiral into fireworks' },
+  { name: 'constellation', icon: '\u2605', desc: 'Draw star lines between tiles' },
+  { name: 'show',     icon: '\u00A7',  desc: 'Shadow puppet show' },
+  { name: 'patrol',   icon: '\u221E',  desc: 'Figure-8 security patrol' },
   { name: 'help',     icon: '?',  desc: 'List all commands' },
 ];
 
@@ -460,6 +466,11 @@ class _DaveCommands {
       'music':    () => this._cmdMusic(),
       'snake':    () => this._cmdGame('snake'),
       'breakout': () => this._cmdGame('breakout'),
+      'heart':         () => DaveAlive.triggerHeartTrail(),
+      'spiral':        () => DaveAlive.triggerSpiralFireworks(),
+      'constellation': () => DaveAlive.triggerConstellation(),
+      'show':          () => DaveAlive.triggerShadowPuppet(),
+      'patrol':        () => DaveAlive.triggerPatrol(),
       'help':     () => this._cmdHelp(),
       'let me in': () => document.dispatchEvent(new CustomEvent('dave:debugPanel')),
     };
