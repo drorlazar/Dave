@@ -7,6 +7,11 @@
   --theme-text: #e0e0e0;
   --theme-border: #444;
   --theme-accent: #9b77ff;
+  --theme-hover: #333;
+  --theme-muted: #888;
+  --theme-divider: #444;
+  --theme-input-bg: #1e1e1e;
+  --theme-danger: #ef5350;
 }
 
 /* Light mode defaults (overridden by theme system when active) */
@@ -16,6 +21,11 @@ body:not(.dark-mode) {
   --theme-text: #333333;
   --theme-border: #e0e0e0;
   --theme-accent: #7c5ccc;
+  --theme-hover: #e9e9e9;
+  --theme-muted: #666;
+  --theme-divider: #ddd;
+  --theme-input-bg: #f0f0f0;
+  --theme-danger: #d32f2f;
 }
 
 * {
