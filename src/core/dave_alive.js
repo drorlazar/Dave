@@ -928,13 +928,15 @@ class _DaveAlive {
     const face = document.createElement('div');
     face.className = 'dave-iris-clock-face';
 
-    // Minute hand
+    // 12 hour tick marks (built as tiny span elements)
+    for (let i = 0; i < 12; i++) {
+      const tick = document.createElement('span');
+      tick.className = i % 3 === 0 ? 'dave-iris-clock-tick-major' : 'dave-iris-clock-tick';
+      tick.style.transform = `rotate(${i * 30}deg)`;
+      face.appendChild(tick);
+    }
+
     const now = new Date();
-    const minuteAngle = (now.getMinutes() / 60) * 360 + (now.getSeconds() / 60) * 6;
-    const minuteHand = document.createElement('div');
-    minuteHand.className = 'dave-iris-clock-minute';
-    minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
-    face.appendChild(minuteHand);
 
     // Hour hand
     const hourAngle = ((now.getHours() % 12) / 12) * 360 + (now.getMinutes() / 60) * 30;
@@ -943,14 +945,30 @@ class _DaveAlive {
     hourHand.style.transform = `rotate(${hourAngle}deg)`;
     face.appendChild(hourHand);
 
+    // Minute hand
+    const minuteAngle = (now.getMinutes() / 60) * 360 + (now.getSeconds() / 60) * 6;
+    const minuteHand = document.createElement('div');
+    minuteHand.className = 'dave-iris-clock-minute';
+    minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+    face.appendChild(minuteHand);
+
+    // Seconds hand
+    const secondAngle = (now.getSeconds() / 60) * 360;
+    const secondHand = document.createElement('div');
+    secondHand.className = 'dave-iris-clock-second';
+    secondHand.style.transform = `rotate(${secondAngle}deg)`;
+    face.appendChild(secondHand);
+
     eyeEl.appendChild(face);
     this._irisOverlay = face;
 
-    // Tick the hands every second
+    // Tick all hands every second
     this._clockInterval = setInterval(() => {
       const t = new Date();
+      const sAngle = (t.getSeconds() / 60) * 360;
       const mAngle = (t.getMinutes() / 60) * 360 + (t.getSeconds() / 60) * 6;
       const hAngle = ((t.getHours() % 12) / 12) * 360 + (t.getMinutes() / 60) * 30;
+      secondHand.style.transform = `rotate(${sAngle}deg)`;
       minuteHand.style.transform = `rotate(${mAngle}deg)`;
       hourHand.style.transform = `rotate(${hAngle}deg)`;
     }, 1000);
@@ -962,7 +980,7 @@ class _DaveAlive {
       this._exitIrisEffect();
       this._irisOverlay = null;
       this._irisTimer = null;
-    }, 10000);
+    }, 5000);
   }
 
   triggerCompassMode(targetX, targetY) {

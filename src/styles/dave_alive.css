@@ -391,21 +391,57 @@
   z-index: 2;
 }
 
-/* Tiny tick marks at 12, 3, 6, 9 */
-.dave-iris-clock-face::before {
-  content: '';
+/* Tick marks — minor (1-px dots at each hour) */
+.dave-iris-clock-tick,
+.dave-iris-clock-tick-major {
   position: absolute;
-  top: 1px; bottom: 1px; left: 1px; right: 1px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 8%, rgba(0, 255, 65, 0.5) 0.5px, transparent 0.5px),
-    radial-gradient(circle at 92% 50%, rgba(0, 255, 65, 0.5) 0.5px, transparent 0.5px),
-    radial-gradient(circle at 50% 92%, rgba(0, 255, 65, 0.5) 0.5px, transparent 0.5px),
-    radial-gradient(circle at 8% 50%, rgba(0, 255, 65, 0.5) 0.5px, transparent 0.5px);
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 11px;
+  margin-left: -0.5px;
+  transform-origin: 50% 11px; /* pivot at center of face */
   pointer-events: none;
 }
 
-/* Minute hand */
+/* Minor tick: small dot at outer edge */
+.dave-iris-clock-tick::after {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 1.5px;
+  background: rgba(0, 255, 65, 0.35);
+  border-radius: 50%;
+}
+
+/* Major tick (12, 3, 6, 9): taller, brighter */
+.dave-iris-clock-tick-major::after {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 2.5px;
+  background: rgba(0, 255, 65, 0.6);
+  box-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
+  border-radius: 0.5px;
+}
+
+/* Hour hand (short, thick) */
+.dave-iris-clock-hour {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 6px;
+  background: #00ff41;
+  box-shadow: 0 0 3px #00ff41;
+  transform-origin: bottom center;
+  pointer-events: none;
+  margin-left: -1px;
+  margin-top: -6px;
+  border-radius: 1px;
+}
+
+/* Minute hand (longer, thinner) */
 .dave-iris-clock-minute {
   position: absolute;
   top: 50%;
@@ -421,20 +457,21 @@
   border-radius: 1px;
 }
 
-/* Hour hand (shorter, slightly thicker) */
-.dave-iris-clock-hour {
+/* Seconds hand (longest, thinnest, brighter glow) */
+.dave-iris-clock-second {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 2px;
-  height: 6px;
+  width: 1px;
+  height: 10px;
   background: #00ff41;
-  box-shadow: 0 0 3px #00ff41;
+  box-shadow: 0 0 5px #00ff41;
   transform-origin: bottom center;
   pointer-events: none;
-  margin-left: -1px;
-  margin-top: -6px;
-  border-radius: 1px;
+  margin-left: -0.5px;
+  margin-top: -10px;
+  border-radius: 0.5px;
+  transition: transform 0.15s cubic-bezier(0.2, 2, 0.6, 1);
 }
 
 /* Center dot for clock */
