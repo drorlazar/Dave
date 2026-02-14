@@ -364,14 +364,8 @@ async function handleFolderPick(dirHandle, basePath) {
     const workerMaxDepth = depthSetting;
 
 
-    // Calculate the correct base path for the worker
-    // Handle both local development and GitHub Pages deployment
-    const baseUrl = window.location.pathname.includes('/Dave/')
-      ? '/Dave/src/workers/folder_scanner_worker.js'
-      : '/src/workers/folder_scanner_worker.js';
-
-    // Remove { type: 'module' } as the worker doesn't use ES modules
-    const worker = new Worker(baseUrl);
+    // Resolve worker path relative to this module, works regardless of serving path
+    const worker = new Worker(new URL('../workers/folder_scanner_worker.js', import.meta.url));
     let newModelFiles = [];
     let scanErrorOccurred = false;
 

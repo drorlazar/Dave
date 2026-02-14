@@ -453,6 +453,14 @@ class _DaveMode {
     this._boundDragMove = null;
     this._boundDragEnd = null;
 
+    // Cached position — eliminates layout-forcing parseFloat reads from
+    // style.left/style.top.  All readers use _posX/_posY instead.
+    // NOTE: We keep writing to style.left/style.top in _applyPosition because
+    // .dave-presence.dave-ambient uses CSS `transform` for its bounce animation,
+    // and setting style.transform here would conflict with those keyframes.
+    this._posX = 0;
+    this._posY = 0;
+
     // Attention seeking
     this._attentionTimer = null;
     this._attentionCount = 0;
@@ -481,6 +489,9 @@ class _DaveMode {
     // Drag trail
     this._dragTrailInterval = null;
     this._dragTrailEnabled = true;
+
+    // Tracked rAF IDs for fireworks, crackle sparks, and drag trail animations
+    this._activeRAFs = new Set();
 
     this._session = {
       startTime: Date.now(),
@@ -562,8 +573,17 @@ class _DaveMode {
     this._stopCursorFollow();
     this._stopTerminalCheck();
     this._stopTear();
+    this._cancelAllRAFs();
     this._hideBubble();
     this._removeDOM();
+  }
+
+  /** Cancel all tracked requestAnimationFrame loops (fireworks, crackle, drag trail). */
+  _cancelAllRAFs() {
+    for (const id of this._activeRAFs) cancelAnimationFrame(id);
+    this._activeRAFs.clear();
+    // Clean up any lingering firework/trail DOM elements
+    document.querySelectorAll('.dave-firework-spark, .dave-firework-trail, .dave-drag-trail-char').forEach(el => el.remove());
   }
 
   toggle() {
@@ -827,21 +847,27 @@ class _DaveMode {
     this._dragHasMoved = false;
   }
 
+  /**
+   * Set Dave's position.  Caches x/y in _posX/_posY so readers never need
+   * layout-forcing parseFloat(style.left/top).  Still writes to style.left/top
+   * because .dave-ambient's CSS animation uses `transform` for the bounce
+   * keyframes — setting style.transform here would conflict.
+   */
   _applyPosition(x, y) {
     if (!this._presenceEl) return;
+    this._posX = x;
+    this._posY = y;
     this._presenceEl.classList.add('dave-dragged');
     this._presenceEl.style.left = x + 'px';
     this._presenceEl.style.top = y + 'px';
   }
 
-  /** Get eye center in viewport coords (accounts for CSS animation via getBCR) */
+  /** Get eye center in viewport coords (reads cached _posX/_posY to avoid layout thrash) */
   _getEyeBasePos() {
     if (!this._presenceEl) return { x: window.innerWidth - 36, y: window.innerHeight - 36 };
     if (this._presenceEl.classList.contains('dave-dragged')) {
-      // Use stored style values (not animated) to avoid bounce jitter
-      const x = parseFloat(this._presenceEl.style.left) || 0;
-      const y = parseFloat(this._presenceEl.style.top) || 0;
-      return { x: x + 16, y: y + 16 };
+      // Use cached position values (not animated) to avoid bounce jitter
+      return { x: this._posX + 16, y: this._posY + 16 };
     }
     // Default position: CSS right:20px bottom:20px width:32px → center at (innerWidth-36, innerHeight-36)
     return { x: window.innerWidth - 36, y: window.innerHeight - 36 };
@@ -1207,9 +1233,9 @@ class _DaveMode {
       return;
     }
 
-    // Read the stored CSS position values directly (avoids bounce animation jitter)
-    const eyeX = parseFloat(this._presenceEl.style.left) || 0;
-    const eyeY = parseFloat(this._presenceEl.style.top) || 0;
+    // Read cached position values (avoids layout-forcing parseFloat + bounce animation jitter)
+    const eyeX = this._posX;
+    const eyeY = this._posY;
     const eyeCX = eyeX + 16; // center X
     const eyeBottom = eyeY + 32; // bottom edge of eye
     const viewH = window.innerHeight;
@@ -1907,8 +1933,8 @@ class _DaveMode {
   }
 
   // ---- Fireworks ----
-  // Research-based: three phases (burst→hang→fall), drag deceleration,
-  // color shift white→color→dim, secondary crackle sparks at end.
+  // Research-based: three phases (burst->hang->fall), drag deceleration,
+  // color shift white->color->dim, secondary crackle sparks at end.
 
   _triggerFireworks() {
     if (!this._presenceEl) return;
@@ -1917,7 +1943,7 @@ class _DaveMode {
     const cy = rect.top + rect.height / 2;
     const irisColor = this._getIrisColor();
 
-    const SPARKS = ['*', '+', '·', '✦', '✧'];
+    const SPARKS = ['*', '+', '\u00B7', '\u2726', '\u2727'];
     const PALETTE = [irisColor, '#ffdd44', '#ff8844', '#44ffaa', '#ff44aa', '#44aaff'];
     // Pick 2-3 dominant colors for this burst (real fireworks use a limited palette)
     const burstColors = [];
@@ -1927,13 +1953,13 @@ class _DaveMode {
 
     const count = 35 + Math.floor(Math.random() * 15); // 35-50 main sparks
     const drag = 0.97;   // velocity multiplier per frame (~3% drag)
-    const gravity = 60;   // px/s² — gentle gravity so sparks "hang"
+    const gravity = 60;   // px/s^2 -- gentle gravity so sparks "hang"
     const fps60dt = 1 / 60;
 
-    // All sparks fire within 20ms — instant burst
+    // All sparks fire within 20ms -- instant burst
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      // Same speed ±20% for spherical burst shape
+      // Same speed +/-20% for spherical burst shape
       const baseSpd = 160 + Math.random() * 80; // 160-240 px/s
       let vx = Math.cos(angle) * baseSpd;
       let vy = Math.sin(angle) * baseSpd;
@@ -1958,12 +1984,13 @@ class _DaveMode {
       let crackled = false;
 
       const tick = () => {
+        this._activeRAFs.delete(currentRAF);
         const now = performance.now();
         const elapsed = now - born;
         if (elapsed >= life || !spark.parentNode) { spark.remove(); return; }
-        const progress = elapsed / life; // 0→1
+        const progress = elapsed / life; // 0->1
 
-        // Apply drag (exponential deceleration — creates "hang" effect)
+        // Apply drag (exponential deceleration -- creates "hang" effect)
         vx *= drag;
         vy *= drag;
         // Apply gravity
@@ -1973,7 +2000,7 @@ class _DaveMode {
         offY += vy * fps60dt;
         spark.style.transform = `translate(${offX}px, ${offY}px)`;
 
-        // Color shift: white(0-15%) → bright color(15-50%) → dimmed(50-100%)
+        // Color shift: white(0-15%) -> bright color(15-50%) -> dimmed(50-100%)
         if (progress < 0.15) {
           spark.style.color = '#ffffff';
         } else if (progress < 0.5) {
@@ -2009,9 +2036,11 @@ class _DaveMode {
           this._spawnCrackle(cx + offX, cy + offY, sparkColor);
         }
 
-        requestAnimationFrame(tick);
+        currentRAF = requestAnimationFrame(tick);
+        this._activeRAFs.add(currentRAF);
       };
-      requestAnimationFrame(tick);
+      let currentRAF = requestAnimationFrame(tick);
+      this._activeRAFs.add(currentRAF);
     }
   }
 
@@ -2028,13 +2057,15 @@ class _DaveMode {
     setTimeout(() => ghost.remove(), 300);
   }
 
-  /** Secondary micro-sparks when a firework crackles at end of life */
+  /** Secondary micro-sparks when a firework crackles at end of life.
+   *  Uses offset-based transform instead of per-frame style.left/top writes
+   *  to avoid layout thrash and leverage GPU compositing. */
   _spawnCrackle(x, y, color) {
     const n = 4 + Math.floor(Math.random() * 4); // 4-7 micro-sparks
     for (let i = 0; i < n; i++) {
       const sp = document.createElement('span');
       sp.className = 'dave-firework-spark';
-      sp.textContent = '·';
+      sp.textContent = '\u00B7';
       sp.style.left = x + 'px';
       sp.style.top = y + 'px';
       sp.style.color = '#ffffff';
@@ -2049,20 +2080,27 @@ class _DaveMode {
       const life = 250 + Math.random() * 200;
       const born = performance.now();
 
+      // Track offset from initial position — animate via transform: translate()
+      // instead of accumulating style.left/top per frame (GPU composited, no layout thrash)
+      let offX = 0, offY = 0;
+
+      let crackleRAF;
       const tick = () => {
+        this._activeRAFs.delete(crackleRAF);
         const elapsed = performance.now() - born;
         if (elapsed >= life || !sp.parentNode) { sp.remove(); return; }
         vx *= 0.94;
         vy *= 0.94;
         vy += 40 / 60;
-        const px = parseFloat(sp.style.left) + vx / 60;
-        const py = parseFloat(sp.style.top) + vy / 60;
-        sp.style.left = px + 'px';
-        sp.style.top = py + 'px';
+        offX += vx / 60;
+        offY += vy / 60;
+        sp.style.transform = `translate(${offX}px, ${offY}px)`;
         sp.style.opacity = String(1 - elapsed / life);
-        requestAnimationFrame(tick);
+        crackleRAF = requestAnimationFrame(tick);
+        this._activeRAFs.add(crackleRAF);
       };
-      requestAnimationFrame(tick);
+      crackleRAF = requestAnimationFrame(tick);
+      this._activeRAFs.add(crackleRAF);
     }
   }
 
@@ -2127,14 +2165,18 @@ class _DaveMode {
         // Scramble + fade
         const born = performance.now();
         const trLife = DAVE_CONFIG.DRAG_TRAIL_LIFE_MS;
+        let trailRAF;
         const tick = () => {
+          this._activeRAFs.delete(trailRAF);
           const age = performance.now() - born;
           if (age >= trLife || !tr.parentNode) { tr.remove(); return; }
           tr.style.opacity = (0.6 * (1 - age / trLife)).toString();
           if (Math.random() < 0.3) tr.textContent = this._rndTearChar();
-          requestAnimationFrame(tick);
+          trailRAF = requestAnimationFrame(tick);
+          this._activeRAFs.add(trailRAF);
         };
-        requestAnimationFrame(tick);
+        trailRAF = requestAnimationFrame(tick);
+        this._activeRAFs.add(trailRAF);
       }, 50 + i * 70);
     }
   }

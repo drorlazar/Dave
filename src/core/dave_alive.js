@@ -574,8 +574,17 @@ class _DaveAlive {
     // Shadow puppet
     this._puppetActive = false;
 
-    // Event hooks
+    // Event hooks (activity tracking hooks from _installActivityHooks)
     this._hooks = [];
+
+    // Tracked rAF IDs for patrol, heart trail, and spiral animations
+    this._activeRAFs = new Set();
+
+    // Bound document-level event handlers for init/destroy lifecycle.
+    // Storing references allows removeEventListener to work correctly.
+    this._onIdleCycleBound = this._onIdleCycle.bind(this);
+    this._onFullscreenBound = this._onFullscreen.bind(this);
+    this._onFullscreenExitBound = this._onFullscreenExit.bind(this);
   }
 
   init() {
@@ -583,7 +592,7 @@ class _DaveAlive {
     this._initialized = true;
 
     // Wire into Dave Mode's idle cycle
-    document.addEventListener('dave:idle', () => this._onIdleCycle());
+    document.addEventListener('dave:idle', this._onIdleCycleBound);
 
     // Activity tracking events
     this._installActivityHooks();
@@ -592,23 +601,29 @@ class _DaveAlive {
     this._installScrollParallax();
 
     // Fullscreen tracking for deep dive detection
-    document.addEventListener('dave:fullscreen', () => {
-      this._fullscreenStartTime = Date.now();
-    });
-    document.addEventListener('dave:fullscreenExit', () => {
-      if (this._fullscreenStartTime) {
-        const duration = Date.now() - this._fullscreenStartTime;
-        if (duration > 30000) {
-          this._logActivity('deepDive');
-        }
-        this._fullscreenStartTime = 0;
-      }
-    });
+    document.addEventListener('dave:fullscreen', this._onFullscreenBound);
+    document.addEventListener('dave:fullscreenExit', this._onFullscreenExitBound);
 
     console.log('[DaveAlive] Initialized');
   }
 
   get trailEngine() { return this._trailEngine; }
+
+  // ---- Named handlers for fullscreen events ----
+
+  _onFullscreen() {
+    this._fullscreenStartTime = Date.now();
+  }
+
+  _onFullscreenExit() {
+    if (this._fullscreenStartTime) {
+      const duration = Date.now() - this._fullscreenStartTime;
+      if (duration > 30000) {
+        this._logActivity('deepDive');
+      }
+      this._fullscreenStartTime = 0;
+    }
+  }
 
   /**
    * Reset all behavior flags and movement state. Called on error recovery
@@ -621,6 +636,8 @@ class _DaveAlive {
     this._sleepOnElementActive = false;
     this._puppetActive = false;
     this._morseActive = false;
+    // Cancel all tracked rAF loops
+    this._cancelAllRAFs();
     // Restore ambient state
     const p = DaveMode._presenceEl;
     if (p) {
@@ -639,6 +656,14 @@ class _DaveAlive {
     document.querySelectorAll('.dave-heart-particle, .dave-sub-drip, .dave-sub-drip-short, .dave-spiral-particle, .dave-puppet-screen').forEach(el => el.remove());
     this._trailEngine.cleanupTrail();
     DaveMode._startCursorFollow?.();
+  }
+
+  /** Cancel all tracked requestAnimationFrame loops (patrol, heart, spiral). */
+  _cancelAllRAFs() {
+    for (const id of this._activeRAFs) cancelAnimationFrame(id);
+    this._activeRAFs.clear();
+    // Clean up any lingering patrol trail DOM elements
+    document.querySelectorAll('.dave-patrol-trail-char').forEach(el => el.remove());
   }
 
   /**
@@ -1276,7 +1301,9 @@ class _DaveAlive {
     let lastTrail = performance.now();
 
     await new Promise((resolve) => {
+      let patrolRAF;
       const step = (now) => {
+        this._activeRAFs.delete(patrolRAF);
         if (!DaveMode._presenceEl || !DaveMode._enabled) { resolve(); return; }
         const dt = (now - lastTime) / 1000;
         lastTime = now;
@@ -1336,9 +1363,11 @@ class _DaveAlive {
           }
         }
 
-        requestAnimationFrame(step);
+        patrolRAF = requestAnimationFrame(step);
+        this._activeRAFs.add(patrolRAF);
       };
-      requestAnimationFrame(step);
+      patrolRAF = requestAnimationFrame(step);
+      this._activeRAFs.add(patrolRAF);
     });
 
     // Return to origin
@@ -1439,6 +1468,12 @@ class _DaveAlive {
       this._sleepOnElementActive = false;
       clearInterval(zzzInterval);
 
+      // Remove all three wake listeners (only one fires with {once},
+      // but the others remain — clean them up explicitly)
+      document.removeEventListener('click', wake);
+      document.removeEventListener('keydown', wake);
+      DaveMode._presenceEl?.removeEventListener('mousedown', wake);
+
       if (eye) {
         eye.style.transform = '';
         setTimeout(() => { eye.style.transition = ''; }, 500);
@@ -1515,7 +1550,9 @@ class _DaveAlive {
     p.classList.add('dave-alive-moving', 'dave-dragged');
 
     await new Promise((resolve) => {
+      let heartRAF;
       const step = (now) => {
+        this._activeRAFs.delete(heartRAF);
         if (!DaveMode._presenceEl || !DaveMode._enabled) { resolve(); return; }
 
         const elapsed = now - startTime;
@@ -1563,12 +1600,14 @@ class _DaveAlive {
         }
 
         if (progress < 1) {
-          requestAnimationFrame(step);
+          heartRAF = requestAnimationFrame(step);
+          this._activeRAFs.add(heartRAF);
         } else {
           resolve();
         }
       };
-      requestAnimationFrame(step);
+      heartRAF = requestAnimationFrame(step);
+      this._activeRAFs.add(heartRAF);
     });
 
     // Heart complete — stop bleeding, hold for a beat
@@ -1652,7 +1691,9 @@ class _DaveAlive {
     let lastTrailTime = 0;
 
     await new Promise((resolve) => {
+      let spiralRAF;
       const step = (now) => {
+        this._activeRAFs.delete(spiralRAF);
         if (!DaveMode._presenceEl || !DaveMode._enabled) { resolve(); return; }
 
         const elapsed = now - startTime;
@@ -1701,12 +1742,14 @@ class _DaveAlive {
         }
 
         if (progress < 1) {
-          requestAnimationFrame(step);
+          spiralRAF = requestAnimationFrame(step);
+          this._activeRAFs.add(spiralRAF);
         } else {
           resolve();
         }
       };
-      requestAnimationFrame(step);
+      spiralRAF = requestAnimationFrame(step);
+      this._activeRAFs.add(spiralRAF);
     });
 
     // Stop all bleeding drips
@@ -2086,10 +2129,16 @@ class _DaveAlive {
 
   // Cleanup on disable
   destroy() {
+    // Remove the three document-level listeners added in init()
+    document.removeEventListener('dave:idle', this._onIdleCycleBound);
+    document.removeEventListener('dave:fullscreen', this._onFullscreenBound);
+    document.removeEventListener('dave:fullscreenExit', this._onFullscreenExitBound);
+
     clearInterval(this._activityCheckInterval);
     this._activityCheckInterval = null;
     if (this._scrollHandler) {
       window.removeEventListener('wheel', this._scrollHandler);
+      this._scrollHandler = null;
     }
     if (this._irisOverlay) {
       this._irisOverlay.remove();
@@ -2102,14 +2151,28 @@ class _DaveAlive {
     if (this._constellationSvg) {
       this._constellationSvg.remove();
     }
+
+    // Clean up sleep wake handlers if sleep is active
+    if (this._sleepWakeHandler) {
+      document.removeEventListener('click', this._sleepWakeHandler);
+      document.removeEventListener('keydown', this._sleepWakeHandler);
+      DaveMode._presenceEl?.removeEventListener('mousedown', this._sleepWakeHandler);
+      this._sleepWakeHandler = null;
+      this._sleepOnElementActive = false;
+    }
+
     this._trailEngine.cleanupTrail();
     this._trailEngine.abort();
+    this._cancelAllRAFs();
     for (const { evt, bound } of this._hooks) {
       document.removeEventListener(evt, bound);
     }
     this._hooks = [];
     // Clean up all alive DOM elements
     document.querySelectorAll('.dave-postit, .dave-constellation-star, .dave-constellation-name, .dave-constellation-particle, .dave-alive-zzz, .dave-trail-char, .dave-patrol-trail-char, .dave-inspect-highlight, .dave-morse-indicator, .dave-puppet-screen, .dave-heart-particle, .dave-sub-drip, .dave-spiral-particle').forEach(el => el.remove());
+
+    // Reset initialized flag so init() can be called again after re-enable
+    this._initialized = false;
   }
 }
 
