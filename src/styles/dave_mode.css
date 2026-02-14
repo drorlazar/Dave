@@ -1,0 +1,873 @@
+/* ============================================================
+   DAVE MODE - The Personality Layer
+   Dave is watching. Dave has opinions. Dave is... optional.
+   ============================================================ */
+
+/* ---------- Presence Indicator ---------- */
+
+.dave-presence {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  z-index: 1500;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity 0.3s ease;
+}
+
+.dave-presence.dave-presence-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Ambient bounce: decaying bouncing ball with squash & stretch.
+   12 Principles: squash/stretch, slow-in/slow-out, anticipation, follow-through */
+.dave-presence.dave-ambient {
+  animation: dave-bounce 5s linear infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes dave-bounce {
+  /* Anticipation: tiny dip before first bounce */
+  0%       { transform: translateY(0) scaleX(1) scaleY(1); animation-timing-function: ease-in; }
+  1.5%     { transform: translateY(1px) scaleX(1.06) scaleY(0.92); animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33); }
+  /* Stretch on takeoff */
+  3%       { transform: translateY(-4px) scaleX(0.92) scaleY(1.1); animation-timing-function: cubic-bezier(0.2, 0, 0.1, 1); }
+  /* Peak: slight settle */
+  5.5%     { transform: translateY(-14px) scaleX(0.94) scaleY(1.06); animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1); }
+  /* Stretch on fall */
+  8%       { transform: translateY(-4px) scaleX(0.93) scaleY(1.08); animation-timing-function: ease-in; }
+  /* Squash on landing */
+  10%      { transform: translateY(0) scaleX(1.12) scaleY(0.88); animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33); }
+  /* 2nd bounce: stretch up */
+  12%      { transform: translateY(-3px) scaleX(0.94) scaleY(1.06); animation-timing-function: cubic-bezier(0.2, 0, 0.1, 1); }
+  14%      { transform: translateY(-8px) scaleX(0.96) scaleY(1.04); animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1); }
+  /* Squash on 2nd landing */
+  18%      { transform: translateY(0) scaleX(1.08) scaleY(0.92); animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33); }
+  /* 3rd bounce: small */
+  20%      { transform: translateY(-4px) scaleX(0.97) scaleY(1.03); animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1); }
+  /* Final squash + follow-through settle */
+  23%      { transform: translateY(0) scaleX(1.04) scaleY(0.96); animation-timing-function: ease-out; }
+  /* Overshoot settle */
+  25%      { transform: translateY(0) scaleX(0.98) scaleY(1.02); animation-timing-function: ease-in-out; }
+  27%      { transform: translateY(0) scaleX(1) scaleY(1); }
+  100%     { transform: translateY(0) scaleX(1) scaleY(1); }
+}
+
+/* When dragged, switch from right/bottom to left/top positioning */
+.dave-presence.dave-dragged {
+  right: auto;
+  bottom: auto;
+}
+
+
+/* ---------- Eye Shell ---------- */
+
+.dave-presence-eye {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #0a0e0a;
+  border: 1.5px solid #1a3a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  box-shadow:
+    0 0 8px rgba(0, 255, 65, 0.15),
+    inset 0 0 6px rgba(0, 255, 65, 0.0);
+  transition: box-shadow 0.4s ease, border-color 0.4s ease, transform 0.15s ease;
+}
+
+.dave-presence:hover .dave-presence-eye {
+  box-shadow:
+    0 0 16px rgba(0, 255, 65, 0.35),
+    inset 0 0 8px rgba(0, 255, 65, 0.08);
+}
+
+
+/* ---------- Iris / Pupil ---------- */
+/* Mixed animation: snappy saccade-like jumps with brief holds,
+   but eased (not stepped) for a living feel. */
+
+.dave-presence-iris {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #00ff41;
+  box-shadow: 0 0 6px #00ff41;
+  animation: dave-iris-scan 7s linear infinite;
+  transition: width 0.08s ease, height 0.08s ease, border-radius 0.08s ease,
+              background 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+/* Saccade animation: quick snaps between positions with holds.
+   Each snap is ~2% of 7s = 0.14s. Each hold is ~12% = 0.84s. */
+@keyframes dave-iris-scan {
+  0%       { transform: translate(0, 0); }
+  12%      { transform: translate(0, 0); animation-timing-function: cubic-bezier(0.2, 0, 0.1, 1); }
+  14%      { transform: translate(3px, -1px); }
+  26%      { transform: translate(3px, -1px); animation-timing-function: cubic-bezier(0.2, 0, 0.1, 1); }
+  28%      { transform: translate(-2px, 1px); }
+  40%      { transform: translate(-2px, 1px); animation-timing-function: cubic-bezier(0.2, 0, 0.1, 1); }
+  42%      { transform: translate(1px, 2px); }
+  54%      { transform: translate(1px, 2px); animation-timing-function: cubic-bezier(0.2, 0, 0.1, 1); }
+  56%      { transform: translate(-1px, -2px); }
+  68%      { transform: translate(-1px, -2px); animation-timing-function: cubic-bezier(0.2, 0, 0.1, 1); }
+  70%      { transform: translate(2px, 0); }
+  82%      { transform: translate(2px, 0); animation-timing-function: cubic-bezier(0.2, 0, 0.1, 1); }
+  84%      { transform: translate(0, 0); }
+  100%     { transform: translate(0, 0); }
+}
+
+/* Blink: iris becomes a thin horizontal rectangle */
+.dave-presence-iris.dave-blink {
+  height: 2px !important;
+  border-radius: 5px / 1px !important;
+  box-shadow: 0 0 3px #00ff41;
+}
+
+/* Cursor following: stop CSS animation, use JS transform */
+.dave-presence-iris.dave-cursor-follow {
+  animation: none;
+  transition: transform 0.08s ease-out, width 0.08s ease, height 0.08s ease,
+              border-radius 0.08s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+/* ---------- Pulsing Ring ---------- */
+
+.dave-presence-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  animation: dave-pulse-ring 2.5s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes dave-pulse-ring {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+
+/* ---------- Inner Glow States ---------- */
+/* Pseudo-element radiates different glow colors per state. */
+
+.dave-presence-eye::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 255, 65, 0.06) 0%, transparent 70%);
+  animation: dave-glow-idle 3s ease-in-out infinite;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+@keyframes dave-glow-idle {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 0.7; }
+}
+
+/* Speaking: bright green, faster pulse */
+.dave-presence.dave-speaking .dave-presence-eye {
+  box-shadow: 0 0 18px rgba(0, 255, 65, 0.4), inset 0 0 12px rgba(0, 255, 65, 0.2);
+  border-color: #2a5a2a;
+}
+.dave-presence.dave-speaking .dave-presence-iris {
+  background: #44ff88;
+  box-shadow: 0 0 10px #44ff88, 0 0 20px rgba(68, 255, 136, 0.3);
+}
+.dave-presence.dave-speaking .dave-presence-eye::after {
+  animation: dave-glow-speak 1.2s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(68, 255, 136, 0.15) 0%, transparent 70%);
+}
+@keyframes dave-glow-speak {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+/* Thinking: warm amber pulse */
+.dave-presence.dave-thinking .dave-presence-eye {
+  box-shadow: 0 0 14px rgba(255, 180, 40, 0.25), inset 0 0 10px rgba(255, 180, 40, 0.1);
+  border-color: #3a3a1a;
+}
+.dave-presence.dave-thinking .dave-presence-iris {
+  background: #ccdd44;
+  box-shadow: 0 0 8px #ccdd44;
+}
+.dave-presence.dave-thinking .dave-presence-eye::after {
+  animation: dave-glow-think 2s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(255, 200, 60, 0.12) 0%, transparent 70%);
+}
+@keyframes dave-glow-think {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 0.9; }
+}
+
+/* Reacting: quick bright flash */
+.dave-presence.dave-reacting .dave-presence-eye {
+  box-shadow: 0 0 22px rgba(0, 255, 65, 0.5), inset 0 0 14px rgba(0, 255, 65, 0.25);
+  border-color: #3a6a3a;
+}
+.dave-presence.dave-reacting .dave-presence-iris {
+  animation: dave-iris-react 0.3s ease !important;
+  box-shadow: 0 0 12px #00ff41;
+}
+@keyframes dave-iris-react {
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(2px, -2px); }
+  50%      { transform: translate(-2px, 1px); }
+  75%      { transform: translate(1px, -1px); }
+}
+.dave-presence.dave-reacting .dave-presence-eye::after {
+  animation: dave-glow-react 0.3s ease;
+}
+@keyframes dave-glow-react {
+  0%   { opacity: 0.3; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* Mood: snarky = reddish-orange glow */
+.dave-presence.dave-mood-snarky .dave-presence-eye {
+  box-shadow: 0 0 14px rgba(255, 80, 40, 0.25), inset 0 0 10px rgba(255, 80, 40, 0.1);
+  border-color: #3a2a1a;
+}
+.dave-presence.dave-mood-snarky .dave-presence-iris {
+  background: #ff6644;
+  box-shadow: 0 0 8px #ff6644;
+}
+
+/* Mood: impressed = bright teal glow */
+.dave-presence.dave-mood-impressed .dave-presence-eye {
+  box-shadow: 0 0 20px rgba(80, 255, 180, 0.35), inset 0 0 12px rgba(80, 255, 180, 0.15);
+  border-color: #2a6a4a;
+}
+.dave-presence.dave-mood-impressed .dave-presence-iris {
+  background: #50ffb4;
+  box-shadow: 0 0 12px #50ffb4;
+}
+
+/* Sleeping: dim, slow breathing */
+.dave-presence.dave-sleeping .dave-presence-iris {
+  opacity: 0.2;
+  animation: none !important;
+  height: 2px;
+  border-radius: 5px / 1px;
+  box-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
+}
+.dave-presence.dave-sleeping .dave-presence-pulse {
+  animation: none;
+  opacity: 0;
+}
+.dave-presence.dave-sleeping .dave-presence-eye {
+  box-shadow: 0 0 4px rgba(0, 255, 65, 0.05), inset 0 0 4px rgba(0, 255, 65, 0.02);
+}
+.dave-presence.dave-sleeping .dave-presence-eye::after {
+  animation: dave-glow-sleep 4s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(0, 255, 65, 0.03) 0%, transparent 70%);
+}
+@keyframes dave-glow-sleep {
+  0%, 100% { opacity: 0.1; }
+  50%      { opacity: 0.4; }
+}
+
+
+/* ---------- Dragging ---------- */
+
+.dave-presence.dave-dragging {
+  cursor: grabbing;
+  z-index: 1600;
+}
+.dave-presence.dave-dragging .dave-presence-eye {
+  box-shadow: 0 0 24px rgba(0, 255, 65, 0.5), inset 0 0 14px rgba(0, 255, 65, 0.2);
+  border-color: #4a8a4a;
+  transform: scale(1.12);
+}
+.dave-presence.dave-dragging .dave-presence-iris {
+  animation: none !important;
+  background: #66ffaa;
+  box-shadow: 0 0 14px #66ffaa;
+}
+.dave-presence.dave-dragging .dave-presence-pulse {
+  animation: none;
+  opacity: 0;
+}
+
+/* Drop settle: squash on impact, stretch up, settle */
+.dave-presence.dave-dropped {
+  animation: dave-drop-settle 0.5s ease-out forwards;
+  transform-origin: center bottom;
+}
+@keyframes dave-drop-settle {
+  0%   { transform: scaleX(1) scaleY(1); }
+  20%  { transform: scaleX(1.2) scaleY(0.8); }
+  40%  { transform: scaleX(0.9) scaleY(1.1); }
+  60%  { transform: scaleX(1.06) scaleY(0.94); }
+  80%  { transform: scaleX(0.98) scaleY(1.02); }
+  100% { transform: scaleX(1) scaleY(1); }
+}
+
+
+/* ---------- Attention-Seeking Idle ---------- */
+
+.dave-presence.dave-nudge {
+  animation: dave-nudge 0.6s ease-in-out;
+  transform-origin: center bottom;
+}
+@keyframes dave-nudge {
+  0%, 100% { transform: translate(0, 0) scaleX(1) scaleY(1); }
+  15%      { transform: translate(0, 1px) scaleX(1.06) scaleY(0.94); }
+  35%      { transform: translate(3px, -3px) scaleX(0.94) scaleY(1.06); }
+  55%      { transform: translate(-2px, -1px) scaleX(0.96) scaleY(1.04); }
+  75%      { transform: translate(1px, 0) scaleX(1.03) scaleY(0.97); }
+}
+
+.dave-presence.dave-hop {
+  animation: dave-hop 0.6s ease-out;
+  transform-origin: center bottom;
+}
+@keyframes dave-hop {
+  0%   { transform: translateY(0) scaleX(1) scaleY(1); }
+  8%   { transform: translateY(1px) scaleX(1.1) scaleY(0.85); }
+  20%  { transform: translateY(-6px) scaleX(0.9) scaleY(1.12); }
+  40%  { transform: translateY(-14px) scaleX(0.95) scaleY(1.05); }
+  65%  { transform: translateY(-3px) scaleX(0.92) scaleY(1.08); }
+  80%  { transform: translateY(0) scaleX(1.08) scaleY(0.9); }
+  90%  { transform: translateY(0) scaleX(0.98) scaleY(1.02); }
+  100% { transform: translateY(0) scaleX(1) scaleY(1); }
+}
+
+.dave-presence.dave-attention-seek {
+  animation: dave-attention 2s ease-in-out;
+  transform-origin: center bottom;
+}
+@keyframes dave-attention {
+  0%, 100% { transform: translate(0, 0) scaleX(1) scaleY(1); }
+  /* Anticipation dip */
+  3%       { transform: translate(0, 1px) scaleX(1.08) scaleY(0.88); }
+  /* Big hop up (stretch) */
+  8%       { transform: translate(0, -12px) scaleX(0.9) scaleY(1.12); }
+  /* Landing squash */
+  14%      { transform: translate(0, 0) scaleX(1.1) scaleY(0.9); }
+  18%      { transform: translate(0, 0) scaleX(1) scaleY(1); }
+  /* Side hop right */
+  22%      { transform: translate(0, 1px) scaleX(1.05) scaleY(0.95); }
+  28%      { transform: translate(5px, -4px) scaleX(0.94) scaleY(1.06); }
+  34%      { transform: translate(0, 0) scaleX(1.06) scaleY(0.94); }
+  38%      { transform: translate(0, 0) scaleX(1) scaleY(1); }
+  /* Smaller hop */
+  42%      { transform: translate(0, -7px) scaleX(0.94) scaleY(1.06); }
+  48%      { transform: translate(0, 0) scaleX(1.06) scaleY(0.94); }
+  52%      { transform: translate(0, 0) scaleX(1) scaleY(1); }
+  /* Side hop left */
+  56%      { transform: translate(-4px, -3px) scaleX(0.96) scaleY(1.04); }
+  62%      { transform: translate(0, 0) scaleX(1.04) scaleY(0.96); }
+  66%      { transform: translate(0, 0) scaleX(1) scaleY(1); }
+  /* Tiny hop settle */
+  72%      { transform: translate(0, -3px) scaleX(0.97) scaleY(1.03); }
+  78%      { transform: translate(0, 0) scaleX(1.02) scaleY(0.98); }
+  82%      { transform: translate(0, 0) scaleX(1) scaleY(1); }
+}
+
+
+/* ---------- Terminal Linked ---------- */
+
+.dave-presence.dave-terminal-linked .dave-presence-eye {
+  border-color: #2a4a2a;
+}
+
+
+/* ---------- Spam Click Reactions ---------- */
+
+/* HAL-9000: menacing red eye */
+.dave-presence.dave-spam-hal .dave-presence-iris {
+  background: #ff0000 !important;
+  box-shadow: 0 0 14px #ff0000, 0 0 28px rgba(255, 0, 0, 0.4) !important;
+  animation: none !important;
+  width: 12px;
+  height: 12px;
+}
+.dave-presence.dave-spam-hal .dave-presence-eye {
+  border-color: #5a1a1a;
+  box-shadow: 0 0 24px rgba(255, 0, 0, 0.5), inset 0 0 16px rgba(255, 0, 0, 0.25) !important;
+}
+.dave-presence.dave-spam-hal .dave-presence-eye::after {
+  background: radial-gradient(circle, rgba(255, 0, 0, 0.2) 0%, transparent 70%) !important;
+  animation: none !important;
+  opacity: 1;
+}
+.dave-presence.dave-spam-hal .dave-presence-pulse {
+  border-color: rgba(255, 0, 0, 0.4);
+}
+
+/* Matrix code: tiny green chars replace pupil */
+.dave-presence.dave-spam-matrix .dave-presence-iris {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 2px !important;
+  background: #0a0e0a !important;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.5) !important;
+  animation: none !important;
+  overflow: hidden;
+}
+.dave-iris-matrix-rain {
+  font-size: 5px;
+  font-family: 'Courier New', monospace;
+  color: #00ff41;
+  text-shadow: 0 0 2px #00ff41;
+  line-height: 6px;
+  letter-spacing: -0.5px;
+  display: block;
+  text-align: center;
+  pointer-events: none;
+  word-break: break-all;
+  width: 16px;
+}
+
+/* Hurt: shake + shrunk iris */
+.dave-presence.dave-spam-hurt {
+  animation: dave-hurt-shake 0.15s ease infinite !important;
+  transform-origin: center bottom;
+}
+.dave-presence.dave-spam-hurt .dave-presence-iris {
+  width: 4px !important;
+  height: 4px !important;
+  animation: none !important;
+}
+@keyframes dave-hurt-shake {
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(-3px, 1px); }
+  50%      { transform: translate(2px, -1px); }
+  75%      { transform: translate(-1px, 2px); }
+}
+
+/* Shut eye: iris disappears completely */
+.dave-presence.dave-spam-shuteye .dave-presence-iris {
+  height: 0 !important;
+  width: 14px !important;
+  opacity: 0 !important;
+  animation: none !important;
+}
+.dave-presence.dave-spam-shuteye .dave-presence-eye {
+  box-shadow: 0 0 4px rgba(0, 255, 65, 0.05) !important;
+}
+
+/* Glare: huge dilated pupil */
+.dave-presence.dave-spam-glare .dave-presence-iris {
+  width: 18px !important;
+  height: 18px !important;
+  background: #00ff41 !important;
+  box-shadow: 0 0 18px #00ff41, 0 0 36px rgba(0, 255, 65, 0.5) !important;
+  animation: none !important;
+}
+.dave-presence.dave-spam-glare .dave-presence-eye {
+  box-shadow: 0 0 28px rgba(0, 255, 65, 0.6), inset 0 0 16px rgba(0, 255, 65, 0.3) !important;
+}
+
+/* Dizzy: iris orbits in circle */
+.dave-presence.dave-spam-dizzy .dave-presence-iris {
+  animation: dave-dizzy-orbit 0.4s linear infinite !important;
+}
+@keyframes dave-dizzy-orbit {
+  0%   { transform: translate(3px, 0); }
+  25%  { transform: translate(0, 3px); }
+  50%  { transform: translate(-3px, 0); }
+  75%  { transform: translate(0, -3px); }
+  100% { transform: translate(3px, 0); }
+}
+
+
+/* ---------- Speech Bubble ---------- */
+
+.dave-bubble {
+  position: fixed;
+  bottom: 60px;
+  right: 8px;
+  top: auto;
+  left: auto;
+  max-width: 240px;
+  min-width: 120px;
+  height: auto;
+  max-height: fit-content;
+  background: rgba(10, 14, 10, 0.78);
+  border: 1px solid #1a3a1a;
+  border-radius: 6px;
+  padding: 8px 22px 8px 10px;
+  z-index: 1501;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #00ff41;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+  box-shadow:
+    0 0 12px rgba(0, 255, 65, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(8px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.dave-bubble.dave-bubble-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.dave-bubble.dave-bubble-exiting {
+  opacity: 0;
+  transform: translateY(4px) scale(0.97);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* CRT scanlines */
+.dave-bubble-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  border-radius: 6px;
+  z-index: 1;
+}
+
+.dave-bubble-content {
+  position: relative;
+  z-index: 2;
+  word-break: break-word;
+  transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+
+/* Blinking cursor */
+.dave-bubble-cursor {
+  color: #00ff41;
+  animation: dave-cursor-blink 0.8s step-end infinite;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.5);
+  font-weight: bold;
+}
+@keyframes dave-cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.dave-bubble.dave-bubble-exiting .dave-bubble-cursor {
+  display: none;
+}
+
+/* Tail pointing toward eye */
+.dave-bubble-tail {
+  position: absolute;
+  bottom: -6px;
+  right: 20px;
+  width: 10px;
+  height: 10px;
+  background: rgba(10, 14, 10, 0.78);
+  border-right: 1px solid #1a3a1a;
+  border-bottom: 1px solid #1a3a1a;
+  transform: rotate(45deg);
+  z-index: 0;
+}
+
+/* Dismiss */
+.dave-bubble-dismiss {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  background: none;
+  border: none;
+  color: #2a5a2a;
+  font-size: 13px;
+  cursor: pointer;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.dave-bubble:hover .dave-bubble-dismiss {
+  opacity: 1;
+}
+.dave-bubble-dismiss:hover {
+  color: #00ff41;
+}
+
+/* Glitch entrance */
+.dave-bubble.dave-bubble-glitch {
+  animation: dave-bubble-glitch 0.3s linear;
+}
+@keyframes dave-bubble-glitch {
+  0%   { transform: translateY(0) scale(1); filter: hue-rotate(0deg); }
+  20%  { transform: translate(-2px, 1px) scale(1.01); filter: hue-rotate(90deg); }
+  40%  { transform: translate(2px, -1px) scale(0.99); filter: hue-rotate(-90deg); }
+  60%  { transform: translate(-1px, 0) scale(1); filter: hue-rotate(45deg); }
+  80%  { transform: translate(1px, 0) scale(1); filter: hue-rotate(-20deg); }
+  100% { transform: translateY(0) scale(1); filter: hue-rotate(0deg); }
+}
+
+
+/* ---------- Matrix Typewriter Characters ---------- */
+
+.dave-char {
+  display: inline;
+  transition: opacity 0.12s ease, color 0.1s ease;
+}
+.dave-char-decoding {
+  opacity: 0.55;
+  color: #00cc33;
+}
+.dave-char-resolved {
+  opacity: 1;
+  color: #00ff41;
+}
+
+
+/* ---------- Emotion Color System ---------- */
+/* Dave's eye and bubble tint to match his emotional state.
+   CSS custom properties drive both iris and bubble text simultaneously. */
+
+.dave-presence {
+  --dave-iris: #00ff41;
+  --dave-glow: rgba(0, 255, 65, 0.4);
+  --dave-border: #1a3a1a;
+  --dave-text: #00ff41;
+  --dave-text-glow: rgba(0, 255, 65, 0.3);
+  transition: opacity 0.3s ease;
+}
+
+/* Amused: bright green with a warm shift */
+.dave-presence[data-emotion="amused"] { --dave-iris: #66ffaa; --dave-glow: rgba(102, 255, 170, 0.4); --dave-border: #2a5a3a; --dave-text: #66ffaa; --dave-text-glow: rgba(102, 255, 170, 0.3); }
+/* Curious: teal/cyan - inquisitive */
+.dave-presence[data-emotion="curious"] { --dave-iris: #44ddff; --dave-glow: rgba(68, 221, 255, 0.4); --dave-border: #1a3a5a; --dave-text: #44ddff; --dave-text-glow: rgba(68, 221, 255, 0.3); }
+/* Proud: bright teal-gold */
+.dave-presence[data-emotion="proud"] { --dave-iris: #50ffb4; --dave-glow: rgba(80, 255, 180, 0.5); --dave-border: #2a6a4a; --dave-text: #50ffb4; --dave-text-glow: rgba(80, 255, 180, 0.3); }
+/* Annoyed: orange-amber */
+.dave-presence[data-emotion="annoyed"] { --dave-iris: #ffaa44; --dave-glow: rgba(255, 170, 68, 0.4); --dave-border: #4a3a1a; --dave-text: #ffaa44; --dave-text-glow: rgba(255, 170, 68, 0.3); }
+/* Sad: desaturated blue-green, dimmed */
+.dave-presence[data-emotion="sad"] { --dave-iris: #66aacc; --dave-glow: rgba(102, 170, 204, 0.3); --dave-border: #2a3a4a; --dave-text: #88bbdd; --dave-text-glow: rgba(136, 187, 221, 0.25); }
+/* Alarmed: red-orange flash */
+.dave-presence[data-emotion="alarmed"] { --dave-iris: #ff5544; --dave-glow: rgba(255, 85, 68, 0.5); --dave-border: #5a2a1a; --dave-text: #ff7766; --dave-text-glow: rgba(255, 119, 102, 0.3); }
+/* Warm: soft golden-green */
+.dave-presence[data-emotion="warm"] { --dave-iris: #bbee55; --dave-glow: rgba(187, 238, 85, 0.4); --dave-border: #3a4a1a; --dave-text: #bbee55; --dave-text-glow: rgba(187, 238, 85, 0.25); }
+/* Sassy: magenta-pink tint */
+.dave-presence[data-emotion="sassy"] { --dave-iris: #ff66cc; --dave-glow: rgba(255, 102, 204, 0.4); --dave-border: #4a1a3a; --dave-text: #ff88dd; --dave-text-glow: rgba(255, 136, 221, 0.3); }
+/* Existential: deep purple, contemplative */
+.dave-presence[data-emotion="existential"] { --dave-iris: #aa88ff; --dave-glow: rgba(170, 136, 255, 0.35); --dave-border: #2a1a4a; --dave-text: #bb99ff; --dave-text-glow: rgba(187, 153, 255, 0.3); }
+/* Smug: lime green with extra brightness */
+.dave-presence[data-emotion="smug"] { --dave-iris: #aaff44; --dave-glow: rgba(170, 255, 68, 0.45); --dave-border: #3a5a1a; --dave-text: #aaff44; --dave-text-glow: rgba(170, 255, 68, 0.3); }
+
+/* Apply emotion colors to iris */
+.dave-presence[data-emotion] .dave-presence-iris {
+  background: var(--dave-iris);
+  box-shadow: 0 0 6px var(--dave-iris);
+  transition: background 0.6s ease, box-shadow 0.6s ease, width 0.08s ease, height 0.08s ease;
+}
+.dave-presence[data-emotion].dave-speaking .dave-presence-iris {
+  background: var(--dave-iris);
+  box-shadow: 0 0 10px var(--dave-iris), 0 0 20px var(--dave-glow);
+}
+/* Apply emotion to eye shell glow */
+.dave-presence[data-emotion].dave-speaking .dave-presence-eye {
+  box-shadow: 0 0 18px var(--dave-glow), inset 0 0 12px var(--dave-glow);
+  border-color: var(--dave-border);
+}
+.dave-presence[data-emotion].dave-speaking .dave-presence-eye::after {
+  background: radial-gradient(circle, var(--dave-glow) 0%, transparent 70%);
+}
+/* Apply emotion to pulse ring */
+.dave-presence[data-emotion].dave-speaking .dave-presence-pulse {
+  border-color: var(--dave-glow);
+}
+/* Apply emotion color to bubble text - direct values since vars don't cross siblings */
+.dave-presence[data-emotion="amused"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="amused"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="amused"] ~ .dave-bubble .dave-char-resolved { color: #66ffaa; text-shadow: 0 0 4px rgba(102, 255, 170, 0.3); }
+
+.dave-presence[data-emotion="curious"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="curious"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="curious"] ~ .dave-bubble .dave-char-resolved { color: #44ddff; text-shadow: 0 0 4px rgba(68, 221, 255, 0.3); }
+
+.dave-presence[data-emotion="proud"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="proud"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="proud"] ~ .dave-bubble .dave-char-resolved { color: #50ffb4; text-shadow: 0 0 4px rgba(80, 255, 180, 0.3); }
+
+.dave-presence[data-emotion="annoyed"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="annoyed"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="annoyed"] ~ .dave-bubble .dave-char-resolved { color: #ffaa44; text-shadow: 0 0 4px rgba(255, 170, 68, 0.3); }
+
+.dave-presence[data-emotion="sad"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="sad"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="sad"] ~ .dave-bubble .dave-char-resolved { color: #88bbdd; text-shadow: 0 0 4px rgba(136, 187, 221, 0.25); }
+
+.dave-presence[data-emotion="alarmed"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="alarmed"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="alarmed"] ~ .dave-bubble .dave-char-resolved { color: #ff7766; text-shadow: 0 0 4px rgba(255, 119, 102, 0.3); }
+
+.dave-presence[data-emotion="warm"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="warm"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="warm"] ~ .dave-bubble .dave-char-resolved { color: #bbee55; text-shadow: 0 0 4px rgba(187, 238, 85, 0.25); }
+
+.dave-presence[data-emotion="sassy"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="sassy"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="sassy"] ~ .dave-bubble .dave-char-resolved { color: #ff88dd; text-shadow: 0 0 4px rgba(255, 136, 221, 0.3); }
+
+.dave-presence[data-emotion="existential"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="existential"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="existential"] ~ .dave-bubble .dave-char-resolved { color: #bb99ff; text-shadow: 0 0 4px rgba(187, 153, 255, 0.3); }
+
+.dave-presence[data-emotion="smug"] ~ .dave-bubble .dave-bubble-content,
+.dave-presence[data-emotion="smug"] ~ .dave-bubble .dave-bubble-cursor,
+.dave-presence[data-emotion="smug"] ~ .dave-bubble .dave-char-resolved { color: #aaff44; text-shadow: 0 0 4px rgba(170, 255, 68, 0.3); }
+
+/* Decoding chars inherit emotion color at lower opacity */
+.dave-presence[data-emotion="amused"] ~ .dave-bubble .dave-char-decoding { color: #66ffaa; opacity: 0.55; }
+.dave-presence[data-emotion="curious"] ~ .dave-bubble .dave-char-decoding { color: #44ddff; opacity: 0.55; }
+.dave-presence[data-emotion="proud"] ~ .dave-bubble .dave-char-decoding { color: #50ffb4; opacity: 0.55; }
+.dave-presence[data-emotion="annoyed"] ~ .dave-bubble .dave-char-decoding { color: #ffaa44; opacity: 0.55; }
+.dave-presence[data-emotion="sad"] ~ .dave-bubble .dave-char-decoding { color: #88bbdd; opacity: 0.55; }
+.dave-presence[data-emotion="alarmed"] ~ .dave-bubble .dave-char-decoding { color: #ff7766; opacity: 0.55; }
+.dave-presence[data-emotion="warm"] ~ .dave-bubble .dave-char-decoding { color: #bbee55; opacity: 0.55; }
+.dave-presence[data-emotion="sassy"] ~ .dave-bubble .dave-char-decoding { color: #ff88dd; opacity: 0.55; }
+.dave-presence[data-emotion="existential"] ~ .dave-bubble .dave-char-decoding { color: #bb99ff; opacity: 0.55; }
+.dave-presence[data-emotion="smug"] ~ .dave-bubble .dave-char-decoding { color: #aaff44; opacity: 0.55; }
+
+/* Emotion transition on the eye - smooth color morph */
+.dave-presence[data-emotion] .dave-presence-eye {
+  border-color: var(--dave-border);
+  transition: box-shadow 0.6s ease, border-color 0.6s ease, transform 0.15s ease;
+}
+
+
+/* ---------- Digital Tear (Position-Based Matrix Rain) ---------- */
+/* Lead char falls from eye center, shedding trail chars that fade + scramble.
+   All positioning done by JS via rAF — CSS just styles the chars. */
+
+/* Lead character — bright white with colored glow, fixed position */
+.dave-tear-lead-char {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1499;
+  will-change: top, opacity;
+}
+
+/* Trail characters — colored, smaller, positioned where the lead passed */
+.dave-tear-trail-char {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 8px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1498;
+  will-change: opacity;
+}
+
+
+/* ---------- Firework Sparks ---------- */
+/* Three-phase firework: burst (white-hot) → hang (colored) → fall+fade.
+   Drag deceleration creates the "hang in air" effect. */
+
+.dave-firework-spark {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1500;
+  will-change: left, top, opacity, color;
+}
+
+/* Ghost trail left by sparks — tiny dots that fade fast */
+.dave-firework-trail {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 6px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1499;
+  transition: opacity 0.3s ease-out;
+}
+
+
+/* ---------- Drag Trail ---------- */
+/* Falling matrix characters spawned during drag, creating a comet trail */
+
+.dave-drag-trail-char {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  pointer-events: none;
+  z-index: 1499;
+  animation: dave-trail-fall 0.7s ease-in forwards;
+  opacity: 0.85;
+}
+@keyframes dave-trail-fall {
+  0%   { transform: translateY(0); opacity: 0.85; }
+  30%  { opacity: 0.5; }
+  100% { transform: translateY(55px); opacity: 0; }
+}
+
+/* Secondary trail chars that stay + fade via rAF (no CSS animation) */
+.dave-drag-trail-fade {
+  position: fixed;
+  font-family: 'Courier New', monospace;
+  font-size: 7px;
+  pointer-events: none;
+  z-index: 1498;
+  will-change: opacity;
+}
+
+
+/* ---------- Light Mode ---------- */
+
+body:not(.dark-mode) .dave-presence-eye {
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.1);
+}
+body:not(.dark-mode) .dave-bubble {
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.05), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 768px) {
+  .dave-bubble {
+    max-width: 200px;
+    font-size: 11px;
+  }
+  .dave-presence {
+    bottom: 16px;
+    right: 16px;
+    width: 28px;
+    height: 28px;
+  }
+  .dave-presence-eye {
+    width: 28px;
+    height: 28px;
+  }
+  .dave-presence-iris {
+    width: 8px;
+    height: 8px;
+  }
+}

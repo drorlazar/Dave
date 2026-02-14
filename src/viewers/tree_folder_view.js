@@ -999,19 +999,12 @@ async function selectFolder(li, folder) {
 
 // Load files from the selected folder into the viewer
 async function loadFilesFromSelectedFolder(folder) {
-    const viewerContainer = document.getElementById('viewerContainer');
-    if (viewerContainer) {
-        viewerContainer.innerHTML = `<div class="loading-message"><i class="fa fa-spinner fa-spin"></i> Loading files from ${folder.name}...</div>`;
-    }
-
     try {
         if (folder.handle) { // Local folder
             console.log(`Loading local files from folder: ${folder.name}`);
             // First, load the files with the original handleFolderPick
             // Pass full path so file paths are always rooted from the top-level folder
             await handleFolderPick(folder.handle, folder.path + '/');
-            // Record in folder history with full tree path
-            addToHistory(folder.handle, folder.path);
 
             // Then ensure a proper render with an animation frame delay
             // This helps ensure all DOM updates are processed before re-rendering
@@ -1044,8 +1037,9 @@ async function loadFilesFromSelectedFolder(folder) {
         }
     } catch (error) {
         console.error("Error loading files from selected folder:", error);
-        if (viewerContainer) {
-            viewerContainer.innerHTML = `<div class='error-message'>Error loading files: ${error.message}</div>`;
+        const vc = document.getElementById('viewerContainer');
+        if (vc) {
+            vc.innerHTML = `<div class='error-message'>Error loading files: ${error.message}</div>`;
         }
         alert(`Error: ${error.message}\n\nFailed to load files from folder.`);
     }
@@ -1459,17 +1453,17 @@ function handleScanDepthChange(event) {
     const depthValue = event.currentTarget.dataset.depth;
     setScanDepth(depthValue);
 
-    // If we have a current folder structure, reload it with the new depth
-    if (currentDirectoryHandle) {
-        console.log(`Tree View: Scan depth changed to ${scanDepth}, reloading folder structure...`);
-        reloadFolderStructure();
+    // Re-load files for the currently selected folder so the main view
+    // reflects the new depth without requiring the user to re-click
+    if (selectedTreeFolder) {
+        debouncedLoadFiles(selectedTreeFolder);
     }
 }
 
 // Set scan depth based on UI selection
 function setScanDepth(depthValue) {
     if (depthValue === 'off') {
-        scanDepth = 1; // Default to 1 level if off
+        scanDepth = 0; // No subfolders
     } else if (depthValue === 'all') {
         scanDepth = Infinity; // Scan all levels
     } else {

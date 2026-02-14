@@ -307,6 +307,7 @@ function sortFiles() {
 
   // Re-render the current page with sorted files
   renderPage(getCurrentPage());
+  document.dispatchEvent(new CustomEvent('dave:sort', { detail: { field: currentSort.field, direction: currentSort.direction } }));
 }
 
 
@@ -321,6 +322,7 @@ function updateFilteredModelFiles() {
   if (previousLength !== filteredModelFiles.length) {
     setCurrentPage(0);
     renderPage(getCurrentPage());
+    document.dispatchEvent(new CustomEvent('dave:filter', { detail: { count: filteredModelFiles.length, total: modelFiles.length } }));
   }
 }
 
@@ -398,6 +400,7 @@ async function handleFolderPick(dirHandle, basePath) {
         updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
         renderPage(getCurrentPage());
         console.log(`Worker scan complete. Processed ${modelFiles.length} supported files.`);
+        document.dispatchEvent(new CustomEvent('dave:filesLoaded', { detail: { count: modelFiles.length } }));
         if (modelFiles.length === 0 && !scanErrorOccurred) {
             viewerContainer.innerHTML = "<div class='no-files-message'>No supported files found in this folder.</div>";
         }
@@ -726,6 +729,7 @@ async function loadTileContent(tile) {
   } catch (error) {
     console.error(`Error loading ${model.type} content:`, error);
     errorHandler.reportAssetError(model.subtype || model.type, model.name, error);
+    document.dispatchEvent(new CustomEvent('dave:error', { detail: { name: model.name, type: model.type } }));
     placeholder.innerHTML = `<i class="fa fa-exclamation-triangle"></i><br>Error loading ${model.type}`;
   }
 }
@@ -808,6 +812,7 @@ function renderPage(pageIndex) {
   });
 
   updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
+  document.dispatchEvent(new CustomEvent('dave:pageRender', { detail: { page: pageIndex, total: Math.ceil(filteredModelFiles.length / getItemsPerPage()) } }));
 
   // Show welcome message if no files loaded
   if (modelFiles.length === 0) {
@@ -816,6 +821,7 @@ function renderPage(pageIndex) {
 }
 
 async function showFullscreen(model) {
+  document.dispatchEvent(new CustomEvent('dave:fullscreen', { detail: { name: model.name, type: model.type } }));
   const fullscreenOverlay = document.getElementById('fullscreenOverlay');
   const fullscreenViewer = document.getElementById('fullscreenViewer');
   const fullscreenViewerWrap = document.getElementById('fullscreenViewerWrap');
@@ -1400,6 +1406,7 @@ window.addEventListener('cloudFilesLoaded', (event) => {
   setCurrentPage(0);
   updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
   renderPage(getCurrentPage());
+  document.dispatchEvent(new CustomEvent('dave:filesLoaded', { detail: { count: modelFiles.length } }));
 
   // Show cloud path bar if context is available
   if (context) {

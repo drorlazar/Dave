@@ -32,6 +32,7 @@ function clearSearch(searchInput) {
   setCurrentPage(0);
   updateFilteredModelFiles();
   renderPage(getCurrentPage());
+  document.dispatchEvent(new CustomEvent('dave:search', { detail: { term: '' } }));
 }
 
 // Function to close all dropdowns
@@ -131,6 +132,18 @@ function initializeElements() {
       // Initialize event listeners
       if (searchInput) {
         const debouncedSearch = debounce((value) => {
+          // Dave command system: "dave <command>" — suppress normal search for dave prefix
+          const trimmed = value.trim().toLowerCase();
+          if (trimmed === 'dave let me in') {
+            searchInput.value = '';
+            _searchTerm = '';
+            document.dispatchEvent(new CustomEvent('dave:debugPanel'));
+            return;
+          }
+          // If user is typing a dave command, don't search files — the dropdown handles it
+          if (trimmed === 'dave' || (trimmed.startsWith('dave ') && trimmed !== 'dave let me in')) {
+            return;
+          }
           // Check if the value is a cloud storage URL
           if (window.handleCloudUrl && _isCloudUrl(value.trim())) {
             window.handleCloudUrl(value.trim());
@@ -142,10 +155,27 @@ function initializeElements() {
           setCurrentPage(0);
           updateFilteredModelFiles();
           renderPage(getCurrentPage());
+          document.dispatchEvent(new CustomEvent('dave:search', { detail: { term: value } }));
         }, 300);
 
         searchInput.addEventListener('input', (e) => {
           debouncedSearch(e.target.value);
+        });
+
+        // Enter key: dispatch typed dave command (dropdown stays open for browsing)
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const val = searchInput.value.trim().toLowerCase();
+            if (val.startsWith('dave ') && val !== 'dave let me in') {
+              const cmd = val.slice(5).trim();
+              if (cmd) {
+                e.preventDefault();
+                // Don't clear input — dropdown stays open for further commands
+                document.dispatchEvent(new CustomEvent('dave:command', { detail: { command: cmd } }));
+                return;
+              }
+            }
+          }
         });
 
         // Also handle paste events for instant cloud URL detection
@@ -216,6 +246,7 @@ function initializeElements() {
           e.stopPropagation();
           const isDarkMode = document.body.classList.contains('dark-mode');
           updateTheme(!isDarkMode);
+          document.dispatchEvent(new CustomEvent('dave:themeChange', { detail: { theme: isDarkMode ? 'light' : 'dark' } }));
         });
       }
 
@@ -760,8 +791,10 @@ export function exitFullscreen(currentFullscreenViewer) {
       currentFullscreenViewer.cleanup();
     }
     // currentFullscreenViewer = null; // Explicitly set to null after cleanup
+    document.dispatchEvent(new CustomEvent('dave:fullscreenExit'));
     return null; // Return null as per original logic
   }
+  document.dispatchEvent(new CustomEvent('dave:fullscreenExit'));
   return null; // Return null if no viewer was active
 }
 
@@ -779,6 +812,7 @@ export function updateSelectionCount() {
 export function clearSelection() {
   _selectedFiles.clear();
   updateSelectionCount();
+  document.dispatchEvent(new CustomEvent('dave:selection', { detail: { count: 0 } }));
   // Update selection state without full re-render
   document.querySelectorAll('.model-tile').forEach(tile => {
     tile.classList.remove('selected');
@@ -865,6 +899,7 @@ export function toggleSelectionUI(fileName) {
     tile?.classList.add('selected');
   }
   updateSelectionCount();
+  document.dispatchEvent(new CustomEvent('dave:selection', { detail: { count: _selectedFiles.size } }));
 }
 
 // Sort button click handler
@@ -1413,4 +1448,5 @@ export function selectAllFiles() {
     }
   });
   updateSelectionCount();
+  document.dispatchEvent(new CustomEvent('dave:selection', { detail: { count: _selectedFiles.size } }));
 }
