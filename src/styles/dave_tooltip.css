@@ -1,0 +1,643 @@
+/* D.A.V.E Help Tooltip Styles */
+.dave-help-tooltip {
+  position: fixed;
+  z-index: calc(var(--z-modal) + 1);
+  width: 480px;
+  max-width: 90vw;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(0, 120, 255, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.dave-help-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dave-help-tooltip.top .tooltip-arrow {
+  bottom: -8px;
+  top: auto;
+  transform: translateX(-50%) rotate(180deg);
+}
+
+.tooltip-arrow {
+  position: absolute;
+  top: -8px;
+  left: 40px;
+  width: 16px;
+  height: 16px;
+  background: rgba(30, 30, 30, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.tooltip-content {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.tooltip-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tooltip-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tooltip-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.tooltip-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.tooltip-version {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+.tooltip-section {
+  margin-bottom: 24px;
+}
+
+.tooltip-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.tooltip-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tooltip-section h4 i {
+  font-size: 1rem;
+  color: rgba(102, 126, 234, 0.8);
+}
+
+.about-description {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 8px 0;
+}
+
+.about-tagline {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+}
+
+.shortcuts-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.shortcut-category {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.shortcut-category h5 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.shortcut-category h5 i {
+  font-size: 0.85rem;
+  color: rgba(102, 126, 234, 0.7);
+}
+
+.shortcut-items {
+  display: grid;
+  gap: 6px;
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 4px 0;
+}
+
+.shortcut-item kbd {
+  display: inline-block;
+  padding: 3px 8px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  min-width: 80px;
+  text-align: center;
+}
+
+.shortcut-item span {
+  color: rgba(255, 255, 255, 0.7);
+  flex: 1;
+  text-align: right;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.features-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.features-list li i {
+  font-size: 0.85rem;
+  color: rgba(102, 126, 234, 0.7);
+  width: 16px;
+  text-align: center;
+}
+
+.resource-links {
+  display: grid;
+  gap: 8px;
+}
+
+.resource-links a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.resource-links a:hover {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.4);
+  transform: translateX(4px);
+}
+
+.resource-links a i {
+  font-size: 1rem;
+  color: rgba(102, 126, 234, 0.8);
+}
+
+.tooltip-footer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.creator-credit {
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 8px 0;
+}
+
+.creator-credit i {
+  color: rgba(102, 126, 234, 0.6);
+}
+
+.tooltip-footer .tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  padding: 8px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 6px;
+}
+
+.tooltip-footer .tip i {
+  color: rgba(255, 200, 0, 0.8);
+}
+
+/* Tooltip collapsible sections */
+.tooltip-collapsible-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tooltip-collapsible-header:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+.tooltip-collapse-icon {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.tooltip-collapsible.collapsed .tooltip-collapse-icon {
+  transform: rotate(0deg);
+}
+
+.tooltip-collapsible:not(.collapsed) .tooltip-collapse-icon {
+  transform: rotate(90deg);
+}
+
+.tooltip-collapsible.collapsed .tooltip-collapsible-body {
+  display: none;
+}
+
+/* Light mode adjustments for tooltip */
+body:not(.dark-mode) .dave-help-tooltip {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 80px rgba(102, 126, 234, 0.1);
+}
+
+body:not(.dark-mode) .tooltip-arrow {
+  background: rgba(255, 255, 255, 0.98);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode) .tooltip-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode) .tooltip-version {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+body:not(.dark-mode) .tooltip-section h4 {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+body:not(.dark-mode) .about-description {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+body:not(.dark-mode) .shortcut-category {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body:not(.dark-mode) .shortcut-category h5 {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+body:not(.dark-mode) .shortcut-item kbd {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+body:not(.dark-mode) .shortcut-item span {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+body:not(.dark-mode) .features-list li {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+body:not(.dark-mode) .resource-links a {
+  background: rgba(102, 126, 234, 0.05);
+  border: 1px solid rgba(102, 126, 234, 0.15);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+body:not(.dark-mode) .resource-links a:hover {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+body:not(.dark-mode) .tooltip-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode) .creator-credit {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+body:not(.dark-mode) .tooltip-footer .tip {
+  color: rgba(0, 0, 0, 0.7);
+  background: rgba(102, 126, 234, 0.05);
+}
+
+body:not(.dark-mode) .tooltip-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body:not(.dark-mode) .tooltip-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Talk to Dave - Feedback Section
+   ============================================ */
+
+.talk-to-dave {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dave-mini-terminal {
+  position: relative;
+  background: #0a0e0a;
+  border: 1px solid rgba(0, 255, 65, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.dave-feedback-textarea {
+  width: 100%;
+  min-height: 80px;
+  max-height: 120px;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #00ff41;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.dave-feedback-textarea::placeholder {
+  color: rgba(0, 255, 65, 0.35);
+  font-style: italic;
+}
+
+.dave-feedback-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dave-feedback-counter {
+  text-align: right;
+  padding: 2px 12px 6px;
+  font-size: 0.75rem;
+  color: rgba(0, 255, 65, 0.3);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.dave-feedback-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  border-radius: 6px;
+  color: #00ff41;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dave-feedback-send:hover {
+  background: rgba(0, 255, 65, 0.2);
+  border-color: rgba(0, 255, 65, 0.5);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.15);
+}
+
+.dave-feedback-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dave-response-terminal {
+  background: #050805;
+  border: 1px solid rgba(0, 255, 65, 0.15);
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 60px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.dave-response-output {
+  color: #00ff41;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.dave-system-line {
+  color: #2a6a2a;
+  text-shadow: none;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.dave-response-cursor {
+  display: inline;
+  color: #00ff41;
+  font-family: 'Courier New', Courier, monospace;
+  animation: dav9000-cursorBlink 0.8s step-end infinite;
+}
+
+.dave-feedback-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  animation: daveFeedbackFadeIn 0.4s ease-out;
+}
+
+@keyframes daveFeedbackFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dave-feedback-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: none;
+  font-family: inherit;
+}
+
+.dave-action-github {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dave-action-github:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.dave-action-reset {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+}
+
+.dave-action-reset:hover {
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes daveShake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  50%      { transform: translateX(4px); }
+  75%      { transform: translateX(-2px); }
+}
+
+.dave-mini-terminal.shake {
+  animation: daveShake 0.4s ease-out;
+}
+
+/* Talk to Dave - Light mode */
+body:not(.dark-mode) .dave-mini-terminal {
+  background: #f0f4f0;
+  border-color: rgba(0, 128, 40, 0.2);
+}
+
+body:not(.dark-mode) .dave-feedback-textarea {
+  color: #006620;
+}
+
+body:not(.dark-mode) .dave-feedback-textarea::placeholder {
+  color: rgba(0, 102, 32, 0.4);
+}
+
+body:not(.dark-mode) .dave-feedback-counter {
+  color: rgba(0, 102, 32, 0.3);
+}
+
+body:not(.dark-mode) .dave-feedback-send {
+  background: rgba(0, 128, 40, 0.08);
+  border-color: rgba(0, 128, 40, 0.25);
+  color: #006620;
+}
+
+body:not(.dark-mode) .dave-feedback-send:hover {
+  background: rgba(0, 128, 40, 0.15);
+}
+
+body:not(.dark-mode) .dave-response-terminal {
+  background: #f5f8f5;
+  border-color: rgba(0, 128, 40, 0.15);
+}
+
+body:not(.dark-mode) .dave-response-output {
+  color: #006620;
+  text-shadow: none;
+}
+
+body:not(.dark-mode) .dave-system-line {
+  color: #88aa88;
+}
+
+body:not(.dark-mode) .dave-action-github {
+  color: rgba(0, 0, 0, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode) .dave-action-reset {
+  color: rgba(0, 0, 0, 0.4);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body:not(.dark-mode) .about-tagline {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .dave-help-tooltip {
+    width: calc(100vw - 40px);
+    left: 20px !important;
+    right: 20px;
+  }
+
+  .tooltip-content {
+    padding: 16px;
+    max-height: 80vh;
+  }
+
+  .shortcuts-grid {
+    gap: 12px;
+  }
+
+  .shortcut-category {
+    padding: 10px;
+  }
+}

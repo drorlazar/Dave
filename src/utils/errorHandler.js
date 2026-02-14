@@ -217,25 +217,3 @@ export class ErrorHandler {
 
 // Create singleton instance
 export const errorHandler = new ErrorHandler();
-
-// Utility functions for common error handling patterns
-export function withErrorHandling(fn, context = {}) {
-  return async (...args) => {
-    try {
-      return await fn(...args);
-    } catch (error) {
-      errorHandler.reportError(error, { ...context, args });
-      throw error;
-    }
-  };
-}
-
-export function withErrorRecovery(fn, fallback, context = {}) {
-  return async (...args) => {
-    return errorHandler.tryWithFallback(
-      () => fn(...args),
-      fallback,
-      { ...context, args }
-    );
-  };
-}

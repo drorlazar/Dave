@@ -3,7 +3,7 @@ import { memoryManager } from '../utils/memoryManager.js';
 import { detectFileType } from '../utils/fileTypeDetector.js';
 import { assetHandlerFactory } from '../handlers/AssetHandlerFactory.js';
 import { TextHandler } from '../handlers/TextHandler.js';
-import { errorHandler, withErrorHandling } from '../utils/errorHandler.js';
+import { errorHandler } from '../utils/errorHandler.js';
 import { activeFilters } from '../shared/filters.js';
 import { CloudBrowserModal } from '../cloud/CloudBrowserModal.js';
 import { GDriveAuth } from '../cloud/GDriveAuth.js';
