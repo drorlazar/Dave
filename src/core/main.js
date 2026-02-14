@@ -1,7 +1,6 @@
 // main.js
 import * as AssetLoading from './asset_loading.js';
 import * as UI from './ui.js';
-import FBXViewer from '../viewers/viewer_fbx.js';
 import * as TreeFolderView from '../viewers/tree_folder_view.js';
 import { KeyboardShortcutManager, setupNavigationShortcuts, GridNavigator } from '../utils/keyboardShortcuts.js';
 import { errorHandler } from '../utils/errorHandler.js';

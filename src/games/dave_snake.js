@@ -2,8 +2,7 @@
 // Green on black, Matrix chars as snake segments, Dave comments on gameplay.
 
 import { DaveMode, EMOTION } from '../core/dave_mode.js';
-
-const MATRIX_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?';
+import { MATRIX_CHARS } from '../core/dave_messages.js';
 
 const COMMENTS_FOOD = [
   "Not bad.",

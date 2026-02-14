@@ -1,5 +1,4 @@
 // asset_loading.js
-import FBXViewer from '../viewers/viewer_fbx.js';
 import { memoryManager } from '../utils/memoryManager.js';
 import { detectFileType } from '../utils/fileTypeDetector.js';
 import { assetHandlerFactory } from '../handlers/AssetHandlerFactory.js';
@@ -11,10 +10,7 @@ import { GDriveAuth } from '../cloud/GDriveAuth.js';
 import { SettingsModal } from '../cloud/SettingsModal.js';
 import * as CloudStorage from '../cloud/CloudStorageProvider.js';
 import { getEditorForType, openInEditor } from '../utils/externalEditors.js';
-import { ModelInspectorPanel } from '../viewers/model_inspector.js';
-import { FBXInspectorAdapter } from '../viewers/model_inspector_fbx.js';
 import { destroyDAV9000Terminal, markHadFiles, cancelTakeover } from './dav9000_terminal.js';
-import { GLBInspectorAdapter } from '../viewers/model_inspector_glb.js';
 import {
   getCurrentPage,
   getItemsPerPage,
@@ -34,9 +30,46 @@ import {
   openCustomTextModal,
   showWelcomeMessage
 } from './ui.js';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+// --- Lazy loaders for Three.js-dependent modules ---
+// These are loaded on-demand when 3D content is first encountered,
+// avoiding the ~800KB Three.js download for users who never view 3D files.
+
+let _FBXViewer = null;
+async function getFBXViewer() {
+  if (!_FBXViewer) {
+    const mod = await import('../viewers/viewer_fbx.js');
+    _FBXViewer = mod.default;
+  }
+  return _FBXViewer;
+}
+
+let _ModelInspectorPanel = null;
+async function getModelInspectorPanel() {
+  if (!_ModelInspectorPanel) {
+    const mod = await import('../viewers/model_inspector.js');
+    _ModelInspectorPanel = mod.ModelInspectorPanel;
+  }
+  return _ModelInspectorPanel;
+}
+
+let _FBXInspectorAdapter = null;
+async function getFBXInspectorAdapter() {
+  if (!_FBXInspectorAdapter) {
+    const mod = await import('../viewers/model_inspector_fbx.js');
+    _FBXInspectorAdapter = mod.FBXInspectorAdapter;
+  }
+  return _FBXInspectorAdapter;
+}
+
+let _GLBInspectorAdapter = null;
+async function getGLBInspectorAdapter() {
+  if (!_GLBInspectorAdapter) {
+    const mod = await import('../viewers/model_inspector_glb.js');
+    _GLBInspectorAdapter = mod.GLBInspectorAdapter;
+  }
+  return _GLBInspectorAdapter;
+}
 
 // Text handler instance for legacy code paths
 const textHandler = new TextHandler();
@@ -512,6 +545,7 @@ async function loadTileContent(tile) {
       const viewerDiv = document.createElement("div");
       viewerDiv.className = "three-viewer";
       placeholder.replaceWith(viewerDiv);
+      const FBXViewer = await getFBXViewer();
       const viewer = new FBXViewer(viewerDiv, {
         enableZoom: false, // Disable zoom in grid view
         onError: (error) => {
@@ -915,7 +949,11 @@ async function showFullscreen(model) {
       fullscreenViewer.innerHTML = '';
       fullscreenViewer.appendChild(mv);
       fullscreenViewer.style.display = 'block';
-      // Create inspector adapter and panel for GLB
+      // Create inspector adapter and panel for GLB (lazy loaded)
+      const [GLBInspectorAdapter, ModelInspectorPanel] = await Promise.all([
+        getGLBInspectorAdapter(),
+        getModelInspectorPanel()
+      ]);
       const glbAdapter = new GLBInspectorAdapter(mv);
       const glbInspector = new ModelInspectorPanel(glbAdapter);
 
@@ -938,6 +976,7 @@ async function showFullscreen(model) {
       fullscreenViewer.appendChild(container);
       fullscreenViewer.style.display = 'block';
 
+      const FBXViewer = await getFBXViewer();
       const viewer = new FBXViewer(container, { enableZoom: true }); // Enable zoom in fullscreen
       memoryManager.registerFbxViewer(viewer);
 
@@ -961,7 +1000,11 @@ async function showFullscreen(model) {
 
       viewer.loadModel(fileUrl);
 
-      // Create inspector adapter and panel for FBX
+      // Create inspector adapter and panel for FBX (lazy loaded)
+      const [FBXInspectorAdapter, ModelInspectorPanel] = await Promise.all([
+        getFBXInspectorAdapter(),
+        getModelInspectorPanel()
+      ]);
       const fbxAdapter = new FBXInspectorAdapter(viewer);
       const inspector = new ModelInspectorPanel(fbxAdapter);
 

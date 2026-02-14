@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1a2e">
   <title>Dave - Dror's Assets Viewing Experience</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
 
@@ -47,21 +48,36 @@
     }
   </script>
 
-  <!-- Font Awesome - Icon library for UI elements -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+  <!-- Critical CSS - needed for first paint -->
   <link rel="stylesheet" href="src/styles/styles.css">
   <link rel="stylesheet" href="src/styles/tree_folder_view.css">
-  <link rel="stylesheet" href="src/styles/cloud_storage.css">
-  <link rel="stylesheet" href="src/styles/settings_modal.css">
-  <link rel="stylesheet" href="src/styles/model_inspector.css">
-  <link rel="stylesheet" href="src/styles/easter_egg.css">
-  <link rel="stylesheet" href="src/styles/matrix_theme.css">
-  <link rel="stylesheet" href="src/styles/dav9000_terminal.css">
-  <link rel="stylesheet" href="src/styles/dave_mode.css">
-  <link rel="stylesheet" href="src/styles/dave_debug.css">
-  <link rel="stylesheet" href="src/styles/dave_games.css">
-  <link rel="stylesheet" href="src/styles/dave_alive.css">
+
+  <!-- Deferred CSS - loaded asynchronously to avoid render-blocking -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/cloud_storage.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/settings_modal.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/model_inspector.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/easter_egg.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/matrix_theme.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/dav9000_terminal.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/dave_mode.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/dave_debug.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/dave_games.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="src/styles/dave_alive.css" media="print" onload="this.media='all'">
+  <!-- Fallback for users with JavaScript disabled -->
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="src/styles/cloud_storage.css">
+    <link rel="stylesheet" href="src/styles/settings_modal.css">
+    <link rel="stylesheet" href="src/styles/model_inspector.css">
+    <link rel="stylesheet" href="src/styles/easter_egg.css">
+    <link rel="stylesheet" href="src/styles/matrix_theme.css">
+    <link rel="stylesheet" href="src/styles/dav9000_terminal.css">
+    <link rel="stylesheet" href="src/styles/dave_mode.css">
+    <link rel="stylesheet" href="src/styles/dave_debug.css">
+    <link rel="stylesheet" href="src/styles/dave_games.css">
+    <link rel="stylesheet" href="src/styles/dave_alive.css">
+  </noscript>
 
   <!-- Google Identity Services - for Google Drive OAuth (client-side) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -69,9 +85,10 @@
 <script src="https://cdn.counter.dev/script.js" data-id="b3d284cd-1f4f-48d9-900c-c63b1d8fa0ca" data-utcoffset="2" async defer></script>
 </head>
 <body class="dark-mode">
+  <a href="#viewerContainer" class="skip-link">Skip to content</a>
   <script>if(localStorage.getItem('dave_theme')==='matrix')document.body.classList.add('matrix-theme');</script>
   <!-- Top bar with header and all UI controls -->
-  <div id="topBar">
+  <div id="topBar" role="banner">
     <div class="logo-container">
       <div class="logo-main">D.A.V.E</div>
       <div class="logo-subtitle">Dror's Assets Viewing Experience</div>
@@ -79,7 +96,7 @@
     <div class="searchControls">
       <div class="search-wrapper">
         <i class="fa fa-search search-icon"></i>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search or paste links here..." data-tooltip="Press Ctrl+F to focus">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search or paste links here..." data-tooltip="Press Ctrl+F to focus" aria-label="Search files">
         <button class="search-clear" title="Clear search"><i class="fa fa-times"></i></button>
       </div>
     </div>
@@ -116,16 +133,16 @@
         </div>
       </div>
     </div>
-    <div class="pageControls">
-      <button id="prevPage" class="btn prevPage" disabled data-tooltip="Previous Page (Left Arrow)">
+    <div class="pageControls" role="navigation" aria-label="Pagination">
+      <button id="prevPage" class="btn prevPage" disabled data-tooltip="Previous Page (Left Arrow)" aria-label="Previous page">
         <i class="fa fa-chevron-left"></i>
       </button>
       <span id="pageInfo" class="pageInfo">Page 0 of 0</span>
-      <button id="nextPage" class="btn nextPage" disabled data-tooltip="Next Page (Right Arrow)">
+      <button id="nextPage" class="btn nextPage" disabled data-tooltip="Next Page (Right Arrow)" aria-label="Next page">
         <i class="fa fa-chevron-right"></i>
       </button>
       <div class="dropdown">
-        <button id="itemsPerPageBtn" class="btn dropdown-btn">20 Items <i class="fa fa-chevron-down"></i></button>
+        <button id="itemsPerPageBtn" class="btn dropdown-btn" aria-label="Items per page">20 Items <i class="fa fa-chevron-down"></i></button>
         <div id="itemsDropdown" class="dropdown-content">
           <label data-value="20" class="items-option"><i class="fa fa-check items-check"></i>20 Items</label>
           <label data-value="50" class="items-option"><i class="fa fa-check items-check"></i>50 Items</label>
@@ -157,7 +174,7 @@
         </div>
       </div>
       <div class="dropdown">
-        <button id="sortBtn" class="btn dropdown-btn"><i class="fa fa-sort"></i> <i class="fa fa-chevron-down"></i></button>
+        <button id="sortBtn" class="btn dropdown-btn" aria-label="Sort order"><i class="fa fa-sort"></i> <i class="fa fa-chevron-down"></i></button>
         <div id="sortDropdown" class="dropdown-content">
           <label data-value="name" class="sort-option" ><i class="fa fa-check"></i>Name</label>
           <label data-value="size" class="sort-option"><i class="fa fa-check"></i>Size</label>
@@ -211,7 +228,7 @@
         </div>
       </div>
       <div class="dropdown" id="settingsDropdown">
-        <button class="dropdown-btn" title="Settings">
+        <button class="dropdown-btn" title="Settings" aria-label="Settings">
           <i class="fa fa-gear"></i>
         </button>
         <div class="dropdown-content settings-dropdown-content">
@@ -262,7 +279,7 @@
 
   <!-- Tree Folder View Panel -->
   <!-- Side tab to toggle tree panel -->
-  <button id="treeFolderToggle" class="tree-side-tab tree-side-tab-left" title="Toggle Folder Tree View">
+  <button id="treeFolderToggle" class="tree-side-tab tree-side-tab-left" title="Toggle Folder Tree View" aria-label="Toggle folder tree">
     <i class="fa fa-folder-tree"></i>
   </button>
 
@@ -348,11 +365,11 @@
     </button>
   </div>
 
-  <div id="viewerContainer"></div>
+  <div id="viewerContainer" role="main"></div>
 
   <!-- Fullscreen overlay -->
-  <div id="fullscreenOverlay" style="opacity: 0">
-    <button id="returnButton" title="Return to grid">
+  <div id="fullscreenOverlay" role="dialog" aria-modal="true" style="opacity: 0">
+    <button id="returnButton" title="Return to grid" aria-label="Close fullscreen">
       <i class="fa fa-arrow-left"></i>
     </button>
     <div id="fullscreenContent">
@@ -493,7 +510,7 @@
 
 
   <!-- Custom Text Modal for Font Preview -->
-  <div id="customTextModal" class="modal" style="display:none;">
+  <div id="customTextModal" class="modal" role="dialog" aria-modal="true" style="display:none;">
     <div class="modal-content">
       <span id="customTextModalCloseButton" class="close-button" title="Close">&times;</span>
       <h2>Font Preview Settings</h2>

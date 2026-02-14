@@ -1,5 +1,23 @@
 /* matrix_theme.css - Matrix theme Easter egg styles */
 
+/* ── Theme variable overrides ──
+   Sets CSS custom properties so elements using var(--theme-*) in styles.css
+   automatically pick up matrix colors without needing !important overrides.
+   This covers: body text, accents, borders, surfaces, buttons, dropdowns,
+   search input, slider thumbs, settings toggles, tree side tabs, etc. */
+body.matrix-theme {
+  --theme-bg: #0a0a0a;
+  --theme-surface: #0a100a;
+  --theme-text: #00ff41;
+  --theme-accent: #00ff41;
+  --theme-border: #0a3a0a;
+  --theme-hover: #1a2a1a;
+  --theme-muted: #00802080;
+  --theme-divider: #0a3a0a;
+  --theme-input-bg: #0d1a0d;
+  --theme-danger: #ff4444;
+}
+
 /* ── CRT scanline overlay ── */
 body.matrix-theme::after {
   content: '';
@@ -26,10 +44,11 @@ body.matrix-theme::before {
   z-index: 9997;
 }
 
-/* ── Global text glow + monospace ── */
+/* ── Global text glow + monospace ──
+   font-family needs !important to override the hardcoded body font.
+   color is handled by --theme-text above. */
 body.matrix-theme {
   font-family: 'Consolas', 'Courier New', 'Lucida Console', monospace !important;
-  color: #00ff41 !important;
   text-shadow: 0 0 4px rgba(0, 255, 65, 0.4);
 }
 
@@ -73,9 +92,10 @@ body.matrix-theme ::selection {
   color: #00ff41;
 }
 
-/* ── Logo: bright green + glow + flicker ── */
+/* ── Logo: bright green + glow + flicker ──
+   .logo-main color inherits from --theme-text.
+   .logo-subtitle uses a distinct muted green, needs !important. */
 body.matrix-theme .logo-main {
-  color: #00ff41 !important;
   text-shadow: 0 0 8px #00ff41, 0 0 20px rgba(0, 255, 65, 0.5);
   animation: matrix-flicker 4s infinite;
 }
@@ -94,31 +114,34 @@ body.matrix-theme .logo-subtitle {
   97% { opacity: 1; }
 }
 
-/* ── TopBar ── */
+/* ── TopBar ──
+   Semi-transparent bg needed for rain to show through, overrides inherited bg.
+   border-bottom-color handled by --theme-border. */
 body.matrix-theme #topBar {
   background: rgba(5, 10, 5, 0.92) !important;
   backdrop-filter: blur(6px);
-  border-bottom-color: #0a3a0a !important;
 }
 
-/* ── Search input ── */
+/* ── Search input ──
+   background is slightly different from --theme-surface, set explicitly.
+   color + border-color handled by --theme-text and --theme-border.
+   focus border-color handled by --theme-accent. */
 body.matrix-theme .search-input {
-  background: #0d1a0d !important;
-  color: #00ff41 !important;
-  border-color: #0a3a0a !important;
+  background: #0d1a0d;
 }
 body.matrix-theme .search-input::placeholder {
   color: #00802060 !important;
 }
 body.matrix-theme .search-input:focus {
-  border-color: #00ff41 !important;
   box-shadow: 0 0 8px rgba(0, 255, 65, 0.3) !important;
 }
 body.matrix-theme .search-icon {
   color: #00802080 !important;
 }
 
-/* ── Model tiles (semi-transparent so rain shows through) ── */
+/* ── Model tiles (semi-transparent so rain shows through) ──
+   .model-card class kept for potential dynamic usage.
+   These need !important since .model-card is not in styles.css base rules. */
 body.matrix-theme .model-card {
   background: rgba(13, 26, 13, 0.85) !important;
   border-color: #0a3a0a !important;
@@ -135,12 +158,13 @@ body.matrix-theme .file-type {
   color: #00802080 !important;
 }
 
-/* ── Buttons ── */
+/* ── Buttons ──
+   color + border-color handled by --theme-text and --theme-border.
+   background: transparent overrides --theme-surface via specificity.
+   Hover states need !important since base uses hardcoded colors. */
 body.matrix-theme .btn,
 body.matrix-theme .dropdown-btn {
-  color: #00ff41 !important;
-  border-color: #0a3a0a !important;
-  background: transparent !important;
+  background: transparent;
 }
 body.matrix-theme .btn:hover,
 body.matrix-theme .dropdown-btn:hover {
@@ -149,35 +173,27 @@ body.matrix-theme .dropdown-btn:hover {
   background: rgba(0, 255, 65, 0.05) !important;
 }
 
-/* ── Dropdowns ── */
-body.matrix-theme .dropdown-content {
-  background: #0a100a !important;
-  border-color: #0a3a0a !important;
-}
+/* ── Dropdowns ──
+   background + border-color handled by --theme-surface and --theme-border.
+   Hover states need !important since base uses hardcoded #444. */
 body.matrix-theme .dropdown-content label:hover,
 body.matrix-theme .dropdown-content .dropdown-setting-row:hover {
   background: rgba(0, 255, 65, 0.08) !important;
 }
 body.matrix-theme .settings-dropdown-content {
-  background: #0a100a !important;
+  background: #0a100a;
 }
 
-/* ── Page info ── */
+/* ── Page info (distinct muted green, not --theme-text) ── */
 body.matrix-theme .pageInfo {
   color: #00cc33 !important;
 }
 
-/* ── Size slider ── */
-body.matrix-theme .size-slider::-webkit-slider-thumb {
-  background: #00ff41 !important;
-}
+/* ── Size slider ──
+   Thumb background handled by --theme-accent.
+   Track needs !important since base uses hardcoded #555. */
 body.matrix-theme .size-slider::-webkit-slider-runnable-track {
   background: #0a3a0a !important;
-}
-
-/* ── Settings toggles ── */
-body.matrix-theme .settings-toggle-indicator {
-  color: #00ff41 !important;
 }
 
 /* ── Viewer container (transparent so rain shows behind tiles) ── */
@@ -185,13 +201,14 @@ body.matrix-theme #viewerContainer {
   background: transparent !important;
 }
 
-/* ── Empty state / welcome ── */
+/* ── Empty state / welcome (distinct muted green) ── */
 body.matrix-theme .empty-state {
   color: #00cc33 !important;
   text-shadow: 0 0 6px rgba(0, 255, 65, 0.3);
 }
 
-/* ── Fullscreen overlay ── */
+/* ── Fullscreen overlay ──
+   These override hardcoded colors (rgba black, white), need !important. */
 body.matrix-theme #fullscreenOverlay {
   background: #050a05 !important;
 }
@@ -205,24 +222,23 @@ body.matrix-theme .fullscreen-filename {
   color: #00ff41 !important;
 }
 
-/* ── Cloud path bar ── */
+/* ── Cloud path bar ──
+   Base uses hardcoded colors (#1a1a2e, #333), needs !important. */
 body.matrix-theme .cloud-path-bar {
   background: #0a100a !important;
   border-color: #0a3a0a !important;
 }
 
-/* ── Tree folder panel ── */
+/* ── Tree folder panel ──
+   background overrides --theme-bg with a slightly different shade, needs !important.
+   border-color handled by --theme-border.
+   .tree-side-tab fully handled by --theme-surface, --theme-text, --theme-border. */
 body.matrix-theme .tree-folder-panel {
   background: #0a100a !important;
-  border-color: #0a3a0a !important;
-}
-body.matrix-theme .tree-side-tab {
-  background: #0a100a !important;
-  color: #00ff41 !important;
-  border-color: #0a3a0a !important;
 }
 
-/* ── ZIP/custom SVG icons ── */
+/* ── ZIP/custom SVG icons ──
+   No variables exist for these, need !important. */
 body.matrix-theme .custom-fa-icon {
   color: #00ff41 !important;
 }
@@ -234,12 +250,14 @@ body.matrix-theme .custom-fa-icon .text-overlay-fa {
   fill: #0a0a0a !important;
 }
 
-/* ── Collapsible headers in settings ── */
+/* ── Collapsible headers in settings ──
+   Base uses hardcoded #ddd, needs !important. */
 body.matrix-theme .settings-dd-section-header {
   color: #00ff41 !important;
 }
 
-/* ── Dividers ── */
+/* ── Dividers ──
+   Base uses background-color: #555, not border. Kept for safety. */
 body.matrix-theme .dropdown-divider {
   border-color: #0a3a0a !important;
 }

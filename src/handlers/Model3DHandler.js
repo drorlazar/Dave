@@ -1,8 +1,17 @@
 // Model3DHandler.js - Handler for 3D model formats
 
 import { BaseAssetHandler } from './BaseAssetHandler.js';
-import FBXViewer from '../viewers/viewer_fbx.js';
 import { memoryManager } from '../utils/memoryManager.js';
+
+// Lazy loader for FBXViewer - avoids pulling in Three.js (~800KB) at startup
+let _FBXViewer = null;
+async function getFBXViewer() {
+  if (!_FBXViewer) {
+    const mod = await import('../viewers/viewer_fbx.js');
+    _FBXViewer = mod.default;
+  }
+  return _FBXViewer;
+}
 
 export class Model3DHandler extends BaseAssetHandler {
   constructor() {
@@ -69,6 +78,7 @@ export class Model3DHandler extends BaseAssetHandler {
     container.innerHTML = '';
     container.appendChild(viewerDiv);
 
+    const FBXViewer = await getFBXViewer();
     const viewer = new FBXViewer(viewerDiv, { enableZoom: false });
     container.fbxViewerInstance = viewer;
     memoryManager.registerFbxViewer(viewer);
@@ -149,6 +159,7 @@ export class Model3DHandler extends BaseAssetHandler {
     container.appendChild(viewerContainer);
     container.style.display = 'block';
 
+    const FBXViewer = await getFBXViewer();
     const viewer = new FBXViewer(viewerContainer, { enableZoom: true });
     memoryManager.registerFbxViewer(viewer);
     viewer.loadModel(fileUrl);
