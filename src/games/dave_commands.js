@@ -169,6 +169,7 @@ class _DaveCommands {
     this._dropdownVisible = false;
     this._lastAutoBehavior = 0;
     this._autoCooldownMs = 60000; // 1 min between auto behaviors
+    this._autoBehaviorInterval = null;
   }
 
   init() {
@@ -251,7 +252,7 @@ class _DaveCommands {
 
     // Idle: listen for Dave's own idle cycle
     // We intercept by checking if Dave is idle periodically
-    setInterval(() => {
+    this._autoBehaviorInterval = setInterval(() => {
       if (!DaveMode._enabled) return;
       if (DaveMode._presenceEl?.classList.contains('dave-sleeping')) {
         this._tryAutoBehavior('idle');
@@ -864,7 +865,7 @@ class _DaveCommands {
 
     setTimeout(() => {
       p.classList.remove('dave-yawn-stretch');
-      p.classList.add('dave-sleep-mode');
+      p.classList.add('dave-sleeping');
 
       // FULLY stop cursor-follow: remove the global mousemove listener
       // so it can't re-add inline transforms that fight the sleep CSS.
@@ -872,7 +873,7 @@ class _DaveCommands {
       DaveMode._stopCursorFollow(); // Remove the mousemove listener entirely
 
       const zzzInterval = setInterval(() => {
-        if (!p.classList.contains('dave-sleep-mode')) { clearInterval(zzzInterval); return; }
+        if (!p.classList.contains('dave-sleeping')) { clearInterval(zzzInterval); return; }
         const rect = p.getBoundingClientRect();
         const z = document.createElement('span');
         z.className = 'dave-sleep-zzz';
@@ -890,7 +891,7 @@ class _DaveCommands {
       p.addEventListener('click', this._sleepClickHandler, { once: true });
 
       this._sleepTimer = setTimeout(() => {
-        if (p.classList.contains('dave-sleep-mode')) {
+        if (p.classList.contains('dave-sleeping')) {
           this._wakeDave(p, zzzInterval);
         }
       }, 30000);
@@ -905,7 +906,7 @@ class _DaveCommands {
       p.removeEventListener('click', this._sleepClickHandler);
       this._sleepClickHandler = null;
     }
-    p.classList.remove('dave-sleep-mode');
+    p.classList.remove('dave-sleeping');
 
     // Restart cursor-follow that was stopped during sleep
     DaveMode._startCursorFollow();
@@ -1006,6 +1007,20 @@ class _DaveCommands {
       this._overlayEl.classList.remove('active');
     }
     DaveMode._setEmotion(EMOTION.NEUTRAL);
+  }
+
+  // ============================================================
+  //  Cleanup
+  // ============================================================
+
+  destroy() {
+    clearInterval(this._autoBehaviorInterval);
+    this._autoBehaviorInterval = null;
+    clearTimeout(this._sleepTimer);
+    this._sleepTimer = null;
+    clearTimeout(this._raveTimer);
+    this._raveTimer = null;
+    this._closeGame();
   }
 }
 

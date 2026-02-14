@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dave - Dror's Assets Viewing Experience</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
-  <link rel="stylesheet" href="src/styles/model_inspector.css">
+
+  <!-- Preconnect to CDN origins for faster loading -->
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
   <script>
     // Apply saved theme before render to prevent flash of wrong colors
@@ -46,6 +49,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <link rel="stylesheet" href="src/styles/styles.css">
+  <link rel="stylesheet" href="src/styles/model_inspector.css">
   <link rel="stylesheet" href="src/styles/easter_egg.css">
   <link rel="stylesheet" href="src/styles/matrix_theme.css">
   <link rel="stylesheet" href="src/styles/dav9000_terminal.css">
@@ -57,7 +61,7 @@
   <!-- Google Identity Services - for Google Drive OAuth (client-side) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<script src="https://cdn.counter.dev/script.js" data-id="b3d284cd-1f4f-48d9-900c-c63b1d8fa0ca" data-utcoffset="2"></script>
+<script src="https://cdn.counter.dev/script.js" data-id="b3d284cd-1f4f-48d9-900c-c63b1d8fa0ca" data-utcoffset="2" async defer></script>
 </head>
 <body class="dark-mode">
   <script>if(localStorage.getItem('dave_theme')==='matrix')document.body.classList.add('matrix-theme');</script>

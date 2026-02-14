@@ -501,7 +501,7 @@ async function loadTileContent(tile) {
       if (!customElements.get('model-viewer')) {
         const script = document.createElement('script');
         script.type = 'module';
-        script.src = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
+        script.src = 'https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
         document.head.appendChild(script);
         await new Promise(resolve => script.onload = resolve);
       }
@@ -562,18 +562,21 @@ async function loadTileContent(tile) {
 
       let isDragging = false;
 
+      function onScrubMove(e) {
+        if (!isDragging) return;
+        updateVideoTime(e);
+      }
+      function onScrubUp() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onScrubMove);
+        document.removeEventListener('mouseup', onScrubUp);
+      }
+
       scrubBarContainer.addEventListener('mousedown', (e) => {
         isDragging = true;
         updateVideoTime(e);
-      });
-
-      document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        updateVideoTime(e);
-      });
-
-      document.addEventListener('mouseup', () => {
-        isDragging = false;
+        document.addEventListener('mousemove', onScrubMove);
+        document.addEventListener('mouseup', onScrubUp);
       });
 
       function updateVideoTime(e) {
@@ -901,7 +904,7 @@ async function showFullscreen(model) {
       if (!customElements.get('model-viewer')) {
         const script = document.createElement('script');
         script.type = 'module';
-        script.src = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
+        script.src = 'https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
         document.head.appendChild(script);
         await new Promise(resolve => script.onload = resolve);
       }

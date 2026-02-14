@@ -1803,7 +1803,7 @@ class _DaveMode {
     lead.style.textShadow = `0 0 8px ${color}, 0 0 16px ${color}`;
     document.body.appendChild(lead);
 
-    let posX = startX, posY = startY;
+    let offX = 0, offY = 0;
     const born = performance.now();
     let lastShed = born;
     const dt = 1 / 60;
@@ -1818,17 +1818,16 @@ class _DaveMode {
         vx *= drag;
         vy *= drag;
         vy += grav * dt;
-        posX += vx * dt;
-        posY += vy * dt;
+        offX += vx * dt;
+        offY += vy * dt;
       } else {
         // Simple linear fall straight down
         const dist = progress * fallDist;
-        posX = startX + Math.sin(elapsed * 0.01) * 1.5;
-        posY = startY + dist;
+        offX = Math.sin(elapsed * 0.01) * 1.5;
+        offY = dist;
       }
 
-      lead.style.left = posX + 'px';
-      lead.style.top = posY + 'px';
+      lead.style.transform = `translate(${offX}px, ${offY}px)`;
 
       // Fade in last 25%
       if (progress > fadeStart) {
@@ -1839,7 +1838,7 @@ class _DaveMode {
       // Shed trail char periodically
       if (now - lastShed >= shedInterval) {
         lastShed = now;
-        this._spawnTearTrailChar(posX, posY, color, trailLife);
+        this._spawnTearTrailChar(startX + offX, startY + offY, color, trailLife);
       }
 
       if (progress < 1 && lead.parentNode) {
@@ -1953,7 +1952,7 @@ class _DaveMode {
       spark.style.textShadow = `0 0 8px ${sparkColor}, 0 0 16px ${sparkColor}`;
       document.body.appendChild(spark);
 
-      let posX = cx, posY = cy;
+      let offX = 0, offY = 0;
       const born = performance.now();
       let lastTrailTime = born;
       let crackled = false;
@@ -1970,10 +1969,9 @@ class _DaveMode {
         // Apply gravity
         vy += gravity * fps60dt;
 
-        posX += vx * fps60dt;
-        posY += vy * fps60dt;
-        spark.style.left = posX + 'px';
-        spark.style.top = posY + 'px';
+        offX += vx * fps60dt;
+        offY += vy * fps60dt;
+        spark.style.transform = `translate(${offX}px, ${offY}px)`;
 
         // Color shift: white(0-15%) → bright color(15-50%) → dimmed(50-100%)
         if (progress < 0.15) {
@@ -2002,13 +2000,13 @@ class _DaveMode {
         // Trail: leave ghost afterimage every 80ms
         if (hasTrail && now - lastTrailTime > 80 && progress < 0.7) {
           lastTrailTime = now;
-          this._spawnFireworkTrail(posX, posY, sparkColor, progress);
+          this._spawnFireworkTrail(cx + offX, cy + offY, sparkColor, progress);
         }
 
         // Crackle: secondary micro-burst at 85% life
         if (hasCrackle && !crackled && progress > 0.85) {
           crackled = true;
-          this._spawnCrackle(posX, posY, sparkColor);
+          this._spawnCrackle(cx + offX, cy + offY, sparkColor);
         }
 
         requestAnimationFrame(tick);

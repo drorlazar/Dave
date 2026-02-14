@@ -55,8 +55,8 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #00ff41;
-  box-shadow: 0 0 4px #00ff41;
+  background: var(--dave-green);
+  box-shadow: 0 0 4px var(--dave-green);
   animation: dav9000-blink 3s ease-in-out infinite;
 }
 
@@ -134,7 +134,7 @@
 
 /* ---------- lines ---------- */
 .dav9000-line {
-  color: #00ff41;
+  color: var(--dave-green);
   font-size: 13px;
   line-height: 1.5;
   margin-bottom: 2px;
@@ -164,7 +164,7 @@
 /* ---------- cursor ---------- */
 .dav9000-cursor {
   display: inline;
-  color: #00ff41;
+  color: var(--dave-green);
   font-size: 13px;
   font-family: 'Courier New', Courier, monospace;
   animation: dav9000-cursorBlink 0.8s step-end infinite;
