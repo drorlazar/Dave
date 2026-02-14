@@ -302,12 +302,14 @@
 }
 
 /* Iris grows to fill the enlarged eye */
+/* !important needed to override .dave-presence[data-emotion] .dave-presence-iris
+   which sets background/box-shadow per emotion color */
 .dave-presence-iris.dave-iris-enlarged {
   width: 22px;
   height: 22px;
-  animation: none;
-  background: transparent;
-  box-shadow: none;
+  animation: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
   transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
               height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
               background 0.3s ease,
