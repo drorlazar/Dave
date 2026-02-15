@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 2560px; height: 1440px;
+    background: #0a0a0f;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #e0e0e0;
+    overflow: hidden; position: relative;
+    padding: 80px;
+  }
+  .scanline { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px); pointer-events: none; z-index: 10; }
+  h1 { font-size: 56px; color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.3); margin-bottom: 10px; letter-spacing: 4px; }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 50px; }
+
+  .a11y-stats {
+    display: flex; gap: 30px; margin-bottom: 50px;
+  }
+  .a11y-card {
+    flex: 1;
+    background: rgba(0,255,65,0.04);
+    border: 1px solid rgba(0,255,65,0.15);
+    border-radius: 12px;
+    padding: 35px;
+    text-align: center;
+  }
+  .a11y-card .icon { font-size: 48px; margin-bottom: 15px; color: #00ff41; opacity: 0.7; }
+  .a11y-card .number { font-size: 64px; color: #00ff41; font-weight: 700; }
+  .a11y-card .label { font-size: 18px; color: #888; margin-top: 10px; letter-spacing: 1px; }
+  .a11y-card.new { border-color: rgba(0,150,255,0.4); }
+  .a11y-card.new .number { color: #0096ff; }
+
+  .two-col { display: flex; gap: 50px; }
+  .col { flex: 1; }
+  .col h3 { font-size: 24px; color: #00ff41; margin-bottom: 20px; letter-spacing: 2px; }
+
+  .feature-item {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .feature-check {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .feature-check.yes { background: rgba(0,255,65,0.15); color: #00ff41; border: 1px solid rgba(0,255,65,0.3); }
+  .feature-check.no { background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.2); }
+  .feature-check.partial { background: rgba(255,140,0,0.1); color: #ff8c00; border: 1px solid rgba(255,140,0,0.2); }
+  .feature-text { font-size: 20px; color: #ccc; }
+  .feature-text .desc { font-size: 16px; color: #666; margin-top: 4px; }
+
+  .aria-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .aria-item {
+    background: rgba(0,255,65,0.05);
+    border: 1px solid rgba(0,255,65,0.1);
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 16px; color: #aaa;
+  }
+  .aria-item .attr { color: #00ff41; font-weight: 700; }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">07/12</div>
+  <h1>ACCESSIBILITY STATUS</h1>
+  <div class="subtitle">ARIA attributes, keyboard navigation, semantic structure</div>
+
+  <div class="a11y-stats">
+    <div class="a11y-card new">
+      <div class="icon">[ ]</div>
+      <div class="number">10</div>
+      <div class="label">ARIA-LABEL ATTRIBUTES</div>
+    </div>
+    <div class="a11y-card new">
+      <div class="icon">&lt;/&gt;</div>
+      <div class="number">6</div>
+      <div class="label">ROLE ATTRIBUTES</div>
+    </div>
+    <div class="a11y-card new">
+      <div class="icon">TAB</div>
+      <div class="number">1</div>
+      <div class="label">SKIP-LINK</div>
+    </div>
+    <div class="a11y-card new">
+      <div class="icon">*</div>
+      <div class="number">12</div>
+      <div class="label">DATA-TOOLTIP</div>
+    </div>
+    <div class="a11y-card">
+      <div class="icon">40</div>
+      <div class="number">40</div>
+      <div class="label">BUTTONS</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="col">
+      <h3>ACCESSIBILITY FEATURES</h3>
+      <div class="feature-item">
+        <div class="feature-check yes">+</div>
+        <div class="feature-text">Skip-to-content link<div class="desc">Hidden until Tab focused, jumps to #viewerContainer</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-check yes">+</div>
+        <div class="feature-text">:focus-visible outlines<div class="desc">2px solid accent with 2px offset on keyboard focus</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-check yes">+</div>
+        <div class="feature-text">Landmark roles<div class="desc">banner, main, navigation, dialog on key regions</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-check yes">+</div>
+        <div class="feature-text">aria-modal on overlays<div class="desc">Fullscreen overlay + custom text modal</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-check yes">+</div>
+        <div class="feature-text">Keyboard navigation system<div class="desc">Arrow keys, Ctrl+F search, ESC close, ? help</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-check partial">~</div>
+        <div class="feature-text">Color contrast<div class="desc">#00ff41 on dark passes WCAG AA for large text only</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-check no">-</div>
+        <div class="feature-text">Screen reader testing<div class="desc">Not yet tested with NVDA/VoiceOver</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <h3>ARIA-LABEL INVENTORY</h3>
+      <div class="aria-list">
+        <div class="aria-item"><span class="attr">aria-label</span> = "Search files"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "Previous page"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "Next page"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "Items per page"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "Sort order"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "Settings"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "Toggle folder tree"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "Close fullscreen"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "Pagination"</div>
+        <div class="aria-item"><span class="attr">aria-label</span> = "File structure"</div>
+      </div>
+
+      <h3 style="margin-top:30px">ROLE INVENTORY</h3>
+      <div class="aria-list">
+        <div class="aria-item"><span class="attr">role</span> = "banner"</div>
+        <div class="aria-item"><span class="attr">role</span> = "main"</div>
+        <div class="aria-item"><span class="attr">role</span> = "navigation"</div>
+        <div class="aria-item"><span class="attr">role</span> = "dialog" (x2)</div>
+        <div class="aria-item"><span class="attr">role</span> = "tree"</div>
+        <div class="aria-item"><span class="attr">aria-modal</span> = "true" (x2)</div>
+      </div>
+    </div>
+  </div>
+</body></html>

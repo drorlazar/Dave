@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 2560px; height: 1440px; background: #0a0a0f; font-family: 'Consolas', 'Courier New', monospace; color: #e0e0e0; overflow: hidden; position: relative; padding: 80px; }
+  .scanline { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px); pointer-events: none; z-index: 10; }
+  h1 { font-size: 56px; color: #ff8c00; text-shadow: 0 0 20px rgba(255,140,0,0.3); margin-bottom: 10px; letter-spacing: 4px; }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 40px; }
+
+  .debt-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+  .debt-card {
+    background: rgba(255,140,0,0.03);
+    border: 1px solid rgba(255,140,0,0.15);
+    border-radius: 12px;
+    padding: 30px;
+    position: relative;
+  }
+  .debt-card.critical {
+    border-color: rgba(255,68,68,0.25);
+    background: rgba(255,68,68,0.04);
+  }
+  .debt-card.minor {
+    border-color: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+  }
+  .debt-card h3 { font-size: 24px; color: #ff8c00; margin-bottom: 12px; letter-spacing: 1px; }
+  .debt-card.critical h3 { color: #ff4444; }
+  .debt-card.minor h3 { color: #888; }
+  .debt-card .severity {
+    position: absolute; top: 20px; right: 20px;
+    padding: 4px 14px; border-radius: 4px;
+    font-size: 13px; font-weight: 700; letter-spacing: 1px;
+  }
+  .severity.high { background: rgba(255,68,68,0.15); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); }
+  .severity.med { background: rgba(255,140,0,0.15); color: #ff8c00; border: 1px solid rgba(255,140,0,0.3); }
+  .severity.low { background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); }
+  .severity.info { background: rgba(0,150,255,0.1); color: #0096ff; border: 1px solid rgba(0,150,255,0.2); }
+
+  .debt-detail { font-size: 18px; color: #aaa; line-height: 1.8; }
+  .debt-detail .num { color: #ff8c00; font-weight: 700; }
+  .debt-detail .code { color: #ff8c00; background: rgba(255,140,0,0.08); padding: 2px 8px; border-radius: 3px; font-size: 16px; }
+  .debt-detail .fixed { color: #00ff41; }
+
+  .summary-bar {
+    margin-top: 30px;
+    display: flex; gap: 30px;
+    justify-content: center;
+  }
+  .summary-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 20px 35px;
+    text-align: center;
+  }
+  .summary-item .val { font-size: 36px; font-weight: 700; }
+  .summary-item .val.red { color: #ff4444; }
+  .summary-item .val.orange { color: #ff8c00; }
+  .summary-item .val.green { color: #00ff41; }
+  .summary-item .label { font-size: 14px; color: #666; margin-top: 6px; letter-spacing: 1px; }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">10/12</div>
+  <h1>DEAD CODE & TECH DEBT</h1>
+  <div class="subtitle">Known issues, disabled systems, architectural decisions</div>
+
+  <div class="debt-grid">
+    <div class="debt-card">
+      <h3>HANDLER SYSTEM (DISABLED)</h3>
+      <div class="severity med">STRATEGIC</div>
+      <div class="debt-detail">
+        <span class="code">const useNewHandler = false</span> at 2 locations<br><br>
+        <span class="num">1,635</span> lines across 9 handler files<br>
+        Factory pattern ready but disabled<br><br>
+        TextHandler IS actively used (433 lines)<br>
+        Other 8 handlers are dormant<br><br>
+        Decision: Enable migration OR remove
+      </div>
+    </div>
+
+    <div class="debt-card">
+      <h3>!IMPORTANT DEBT</h3>
+      <div class="severity med">MEDIUM</div>
+      <div class="debt-detail">
+        <span class="num">142</span> total !important declarations<br><br>
+        Top offenders:<br>
+        matrix_theme.css: <span class="num">47</span> (theme override necessity)<br>
+        dave_mode.css: <span class="num">33</span> (personality layer)<br>
+        dave_games.css: <span class="num">21</span> (game overlay)<br>
+        styles.css: <span class="num">20</span> (base styles)<br><br>
+        <span class="fixed">-7 from Audit #2</span> via CSS variable conversion
+      </div>
+    </div>
+
+    <div class="debt-card">
+      <h3>HARDCODED Z-INDEX VALUES</h3>
+      <div class="severity med">MEDIUM</div>
+      <div class="debt-detail">
+        <span class="num">86</span> hardcoded z-index values remain<br>
+        <span class="fixed">14 converted to var(--z-*)</span> in styles.css<br><br>
+        Remaining are in other CSS files:<br>
+        dave_alive.css: <span class="num">19</span><br>
+        dave_mode.css: <span class="num">15</span><br>
+        easter_egg.css: <span class="num">12</span><br>
+        dave_games.css: <span class="num">9</span><br><br>
+        Layer map defined, adoption ongoing
+      </div>
+    </div>
+
+    <div class="debt-card">
+      <h3>HARDCODED COLORS</h3>
+      <div class="severity low">LOW</div>
+      <div class="debt-detail">
+        <span class="num">29</span> hardcoded #00ff41 in CSS<br>
+        <span class="num">38</span> hardcoded #00ff41 in JS<br>
+        <span class="fixed">75 uses of var(--dave-green)</span><br><br>
+        CSS: matrix_theme (22), tooltip (4), mode (3)<br>
+        JS: Games canvas (20), fallbacks (4), config (2)<br><br>
+        All JS uses are appropriate (canvas, fallback)
+      </div>
+    </div>
+
+    <div class="debt-card minor">
+      <h3>UNUSED MEMORY MANAGER METHODS</h3>
+      <div class="severity low">LOW</div>
+      <div class="debt-detail">
+        ~60 lines of unused blob URL management<br>
+        registerBlobUrl, revokeBlobUrl, revokeAllBlobUrls<br>
+        registerModelViewer, disposeModelViewer<br>
+        queueForDisposal, processDisposalQueue<br><br>
+        Active methods: registerFbxViewer, disposeFbxViewer,<br>
+        disposeAllFbxViewers, cleanupTile, destroy
+      </div>
+    </div>
+
+    <div class="debt-card minor">
+      <h3>BODY:NOT(.DARK-MODE) PATTERN</h3>
+      <div class="severity info">BY DESIGN</div>
+      <div class="debt-detail">
+        <span class="num">343</span> rules using body:not(.dark-mode)<br><br>
+        This is the theme architecture choice:<br>
+        dark mode = default, light = override<br><br>
+        Would need full CSS variable migration<br>
+        to eliminate. Low priority.
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <div class="summary-item"><div class="val red">1,635</div><div class="label">DORMANT HANDLER LINES</div></div>
+    <div class="summary-item"><div class="val orange">142</div><div class="label">!IMPORTANT DECLARATIONS</div></div>
+    <div class="summary-item"><div class="val orange">86</div><div class="label">HARDCODED Z-INDEX</div></div>
+    <div class="summary-item"><div class="val green">0</div><div class="label">DEAD IMPORTS</div></div>
+    <div class="summary-item"><div class="val green">0</div><div class="label">ORPHANED FILES</div></div>
+  </div>
+</body></html>

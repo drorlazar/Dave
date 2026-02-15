@@ -671,6 +671,21 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.4.0', date: 'Feb 15, 2026', title: 'Project Health Audit #4 — Deep Overhaul',
+        features: [
+          'CSS monolith split: styles.css reduced from 5,780 to 2,868 lines (-50.4%), 3 new CSS files extracted',
+          'CSS custom properties: 33 variables (10 theme + 12 z-index layer map + 11 other), 210 var(--theme-*) usages',
+          'Three.js lazy loading: ~800KB deferred until 3D content is first encountered via dynamic import()',
+          '13 CSS files deferred via media="print" onload pattern (15 blocking reduced to 2)',
+          'Font Awesome upgraded from 6.0.0-beta3 to 6.7.2',
+          'Accessibility: 10 aria-labels, 6 landmark roles, skip-link, focus-visible outlines',
+          'rAF tracking via Set-based _activeRAFs for bulk cancel on cleanup',
+          'Worker path uses import.meta.url for deployment-agnostic resolution',
+          'dave_mode.js reduced from 2,273 to 1,923 lines via message data extraction',
+          'Overall health score: 7.6 → 8.5 (+0.9 across 3 audit iterations)',
+        ]
+      },
+      {
         version: '2.3.0', date: 'Feb 14, 2026', title: 'Site Health Audit & Fixes',
         features: [
           'Fixed Dave alive effects rendering above modals (z-index 99994 reduced to 2400-2600)',

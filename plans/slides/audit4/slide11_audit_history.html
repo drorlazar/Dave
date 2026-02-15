@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 2560px; height: 1440px; background: #0a0a0f; font-family: 'Consolas', 'Courier New', monospace; color: #e0e0e0; overflow: hidden; position: relative; padding: 80px; }
+  .scanline { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px); pointer-events: none; z-index: 10; }
+  h1 { font-size: 56px; color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.3); margin-bottom: 10px; letter-spacing: 4px; }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 50px; }
+
+  .score-timeline {
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 80px; margin-bottom: 60px;
+    height: 400px;
+    padding: 0 100px;
+  }
+  .score-col {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 15px;
+  }
+  .score-bar-container {
+    width: 180px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    height: 320px;
+  }
+  .score-bar {
+    width: 100%;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .score-bar .val {
+    font-size: 48px; font-weight: 700; color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .score-label {
+    font-size: 22px; color: #888; letter-spacing: 1px;
+  }
+  .score-date { font-size: 16px; color: #555; }
+
+  .delta-row {
+    display: flex; justify-content: center; gap: 60px; margin-bottom: 50px;
+  }
+  .delta-card {
+    background: rgba(0,255,65,0.04);
+    border: 1px solid rgba(0,255,65,0.15);
+    border-radius: 8px;
+    padding: 20px 40px;
+    text-align: center;
+  }
+  .delta-card .change { font-size: 36px; font-weight: 700; color: #00ff41; }
+  .delta-card .label { font-size: 16px; color: #666; margin-top: 6px; }
+
+  .comparison-table {
+    width: 90%; margin: 0 auto;
+    border-collapse: collapse;
+  }
+  .comparison-table th {
+    text-align: left; font-size: 18px; color: #555;
+    padding: 10px 20px; border-bottom: 2px solid rgba(0,255,65,0.15);
+    letter-spacing: 1px;
+  }
+  .comparison-table th.num { text-align: right; }
+  .comparison-table td {
+    font-size: 18px; padding: 8px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: #aaa;
+  }
+  .comparison-table td.num { text-align: right; color: #00ff41; }
+  .comparison-table td.improved { color: #00ff41; font-weight: 700; }
+  .comparison-table td.same { color: #888; }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">11/12</div>
+  <h1>AUDIT HISTORY</h1>
+  <div class="subtitle">Score progression across 3 audits</div>
+
+  <div class="score-timeline">
+    <div class="score-col">
+      <div class="score-bar-container">
+        <div class="score-bar" style="height:240px; background: linear-gradient(180deg, #ff8c00, #663500);">
+          <div class="val">7.6</div>
+        </div>
+      </div>
+      <div class="score-label">AUDIT #2</div>
+      <div class="score-date">Feb 14, 2026</div>
+    </div>
+    <div class="score-col">
+      <div class="score-bar-container">
+        <div class="score-bar" style="height:280px; background: linear-gradient(180deg, #00cc33, #004d13);">
+          <div class="val">8.4</div>
+        </div>
+      </div>
+      <div class="score-label">AUDIT #3</div>
+      <div class="score-date">Feb 14, 2026</div>
+    </div>
+    <div class="score-col">
+      <div class="score-bar-container">
+        <div class="score-bar" style="height:290px; background: linear-gradient(180deg, #00ff41, #004d13); box-shadow: 0 0 30px rgba(0,255,65,0.3);">
+          <div class="val">8.5</div>
+        </div>
+      </div>
+      <div class="score-label">AUDIT #4</div>
+      <div class="score-date">Feb 15, 2026</div>
+    </div>
+  </div>
+
+  <div class="delta-row">
+    <div class="delta-card"><div class="change">+0.8</div><div class="label">AUDIT #2 --> #3</div></div>
+    <div class="delta-card"><div class="change">+0.1</div><div class="label">AUDIT #3 --> #4</div></div>
+    <div class="delta-card"><div class="change">+0.9</div><div class="label">TOTAL IMPROVEMENT</div></div>
+  </div>
+
+  <table class="comparison-table">
+    <tr><th>METRIC</th><th class="num">AUDIT #2</th><th class="num">AUDIT #3</th><th class="num">AUDIT #4</th><th class="num">CHANGE</th></tr>
+    <tr><td>styles.css lines</td><td class="num">5,780</td><td class="num">2,868</td><td class="num">2,868</td><td class="improved">-50.4%</td></tr>
+    <tr><td>dave_mode.js lines</td><td class="num">2,273</td><td class="num">1,923</td><td class="num">1,923</td><td class="improved">-15.4%</td></tr>
+    <tr><td>CSS files</td><td class="num">11</td><td class="num">14</td><td class="num">14</td><td class="improved">+3 extracted</td></tr>
+    <tr><td>CSS custom properties</td><td class="num">~16</td><td class="num">33</td><td class="num">33</td><td class="improved">+106%</td></tr>
+    <tr><td>var(--theme-*) usage</td><td class="num">~50</td><td class="num">210</td><td class="num">210</td><td class="improved">+320%</td></tr>
+    <tr><td>!important count</td><td class="num">149</td><td class="num">142</td><td class="num">142</td><td class="improved">-4.7%</td></tr>
+    <tr><td>Three.js loading</td><td class="num">Eager</td><td class="num">Lazy</td><td class="num same">Lazy</td><td class="improved">Deferred</td></tr>
+    <tr><td>Font Awesome</td><td class="num">6.0-beta3</td><td class="num">6.7.2</td><td class="num same">6.7.2</td><td class="improved">Upgraded</td></tr>
+    <tr><td>aria-label attrs</td><td class="num">0</td><td class="num">10</td><td class="num same">10</td><td class="improved">New</td></tr>
+    <tr><td>Deferred CSS files</td><td class="num">0</td><td class="num">13</td><td class="num same">13</td><td class="improved">New</td></tr>
+  </table>
+</body></html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 2560px; height: 1440px; background: #0a0a0f; font-family: 'Consolas', 'Courier New', monospace; color: #e0e0e0; overflow: hidden; position: relative; padding: 80px; }
+  .scanline { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px); pointer-events: none; z-index: 10; }
+  h1 { font-size: 56px; color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.3); margin-bottom: 10px; letter-spacing: 4px; }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 50px; }
+
+  .cloud-stats {
+    display: flex; gap: 30px; margin-bottom: 50px;
+  }
+  .cloud-stat {
+    flex: 1;
+    background: rgba(0,255,65,0.04);
+    border: 1px solid rgba(0,255,65,0.15);
+    border-radius: 12px;
+    padding: 30px; text-align: center;
+  }
+  .cloud-stat .number { font-size: 52px; color: #00ff41; font-weight: 700; }
+  .cloud-stat .label { font-size: 18px; color: #888; margin-top: 8px; }
+
+  .arch-diagram {
+    display: flex; gap: 40px; align-items: stretch;
+  }
+  .provider-box {
+    flex: 1;
+    background: rgba(0,255,65,0.03);
+    border: 1px solid rgba(0,255,65,0.12);
+    border-radius: 12px;
+    padding: 30px;
+  }
+  .provider-box h3 { font-size: 26px; color: #00ff41; margin-bottom: 15px; letter-spacing: 2px; }
+  .provider-box .detail { font-size: 18px; color: #aaa; line-height: 2; }
+  .provider-box .detail .code { color: #00ff41; font-size: 16px; background: rgba(0,255,65,0.08); padding: 2px 8px; border-radius: 3px; }
+  .provider-box .file-list { margin-top: 15px; }
+  .provider-box .file-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 17px; }
+  .provider-box .file-item .name { color: #ccc; }
+  .provider-box .file-item .size { color: #00ff41; opacity: 0.7; }
+
+  .abstraction-bar {
+    margin-top: 40px;
+    display: flex; gap: 20px; align-items: center;
+    justify-content: center;
+  }
+  .abs-node {
+    background: rgba(0,255,65,0.06);
+    border: 1px solid rgba(0,255,65,0.2);
+    padding: 18px 30px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .abs-node .name { font-size: 20px; color: #00ff41; }
+  .abs-node .desc { font-size: 14px; color: #666; margin-top: 4px; }
+  .abs-arrow { font-size: 28px; color: rgba(0,255,65,0.3); }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">09/12</div>
+  <h1>CLOUD STORAGE ARCHITECTURE</h1>
+  <div class="subtitle">Fully client-side -- works on GitHub Pages, no server required</div>
+
+  <div class="cloud-stats">
+    <div class="cloud-stat"><div class="number">2,754</div><div class="label">TOTAL LINES (7 FILES)</div></div>
+    <div class="cloud-stat"><div class="number">2</div><div class="label">PROVIDERS (S3 + GDRIVE)</div></div>
+    <div class="cloud-stat"><div class="number">0</div><div class="label">SERVER DEPENDENCIES</div></div>
+    <div class="cloud-stat"><div class="number">79</div><div class="label">LOCALSTORAGE ACCESS POINTS</div></div>
+  </div>
+
+  <div class="arch-diagram">
+    <div class="provider-box">
+      <h3>AWS S3</h3>
+      <div class="detail">
+        SigV4 signing via <span class="code">Web Crypto API</span><br>
+        Pre-signed URLs for media streaming<br>
+        CORS required on bucket config<br>
+        Credentials in <span class="code">localStorage</span>
+      </div>
+      <div class="file-list">
+        <div class="file-item"><div class="name">S3Client.js</div><div class="size">317 lines</div></div>
+      </div>
+    </div>
+    <div class="provider-box">
+      <h3>GOOGLE DRIVE</h3>
+      <div class="detail">
+        Google Identity Services (GIS) OAuth<br>
+        Drive REST API v3 for file listing<br>
+        <span class="code">Web application</span> OAuth client type<br>
+        Token refresh via GIS library
+      </div>
+      <div class="file-list">
+        <div class="file-item"><div class="name">GDriveClient.js</div><div class="size">388 lines</div></div>
+        <div class="file-item"><div class="name">GDriveAuth.js</div><div class="size">75 lines</div></div>
+      </div>
+    </div>
+    <div class="provider-box">
+      <h3>SHARED INFRA</h3>
+      <div class="detail">
+        Abstraction layer for all consumers<br>
+        Credential persistence + encryption<br>
+        Folder browser with breadcrumbs<br>
+        Settings UI with profile cards
+      </div>
+      <div class="file-list">
+        <div class="file-item"><div class="name">SettingsModal.js</div><div class="size">826 lines</div></div>
+        <div class="file-item"><div class="name">CloudBrowserModal.js</div><div class="size">621 lines</div></div>
+        <div class="file-item"><div class="name">CloudStorageProvider.js</div><div class="size">348 lines</div></div>
+        <div class="file-item"><div class="name">CredentialStore.js</div><div class="size">179 lines</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="abstraction-bar">
+    <div class="abs-node"><div class="name">Search Input / Drag-Drop</div><div class="desc">URL paste or file drop</div></div>
+    <div class="abs-arrow">--></div>
+    <div class="abs-node"><div class="name">handleCloudUrl()</div><div class="desc">Global entry point</div></div>
+    <div class="abs-arrow">--></div>
+    <div class="abs-node"><div class="name">CloudStorageProvider</div><div class="desc">Route to S3 or GDrive</div></div>
+    <div class="abs-arrow">--></div>
+    <div class="abs-node"><div class="name">S3Client / GDriveClient</div><div class="desc">Signed requests</div></div>
+    <div class="abs-arrow">--></div>
+    <div class="abs-node"><div class="name">modelFiles[]</div><div class="desc">Same pipeline as local</div></div>
+  </div>
+</body></html>

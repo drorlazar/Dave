@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 2560px; height: 1440px;
+    background: #0a0a0f;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #e0e0e0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 50%, rgba(0,255,65,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 50%, rgba(0,255,65,0.04) 0%, transparent 50%);
+  }
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,65,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,65,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .scanline {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+  }
+  .content {
+    position: relative; z-index: 1;
+    text-align: center;
+  }
+  .eye-container {
+    width: 200px; height: 200px;
+    margin: 0 auto 60px;
+    position: relative;
+  }
+  .eye-outer {
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #0a1a0a 40%, #0a0a0f 70%);
+    border: 3px solid #00ff41;
+    box-shadow: 0 0 40px rgba(0,255,65,0.3), inset 0 0 30px rgba(0,255,65,0.1);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .iris {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #00ff41, #004d13);
+    box-shadow: 0 0 25px rgba(0,255,65,0.6);
+  }
+  .pupil {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: #000;
+    margin: 25px auto;
+  }
+  h1 {
+    font-size: 96px;
+    font-weight: 700;
+    color: #00ff41;
+    text-shadow: 0 0 30px rgba(0,255,65,0.5), 0 0 60px rgba(0,255,65,0.2);
+    letter-spacing: 12px;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 52px;
+    font-weight: 400;
+    color: #888;
+    letter-spacing: 4px;
+    margin-bottom: 50px;
+  }
+  .subtitle {
+    font-size: 36px;
+    color: #00ff41;
+    opacity: 0.7;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+  }
+  .date {
+    font-size: 28px;
+    color: #555;
+    letter-spacing: 6px;
+  }
+  .version-badge {
+    display: inline-block;
+    padding: 8px 24px;
+    border: 1px solid rgba(0,255,65,0.3);
+    border-radius: 4px;
+    color: #00ff41;
+    font-size: 22px;
+    margin-top: 30px;
+    letter-spacing: 3px;
+  }
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.tl { top: 40px; left: 50px; }
+  .corner.tr { top: 40px; right: 50px; }
+  .corner.bl { bottom: 40px; left: 50px; }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="scanline"></div>
+  <div class="corner tl">SYS.AUDIT.v4</div>
+  <div class="corner tr">2560x1440</div>
+  <div class="corner bl">feature/audit2-fixes</div>
+  <div class="corner br">01/12</div>
+  <div class="content">
+    <div class="eye-container">
+      <div class="eye-outer">
+        <div class="iris"><div class="pupil"></div></div>
+      </div>
+    </div>
+    <h1>D.A.V.E</h1>
+    <h2>PROJECT HEALTH AUDIT #4</h2>
+    <div class="subtitle">Dror's Assets Viewing Experience</div>
+    <div class="date">FEBRUARY 15, 2026</div>
+    <div class="version-badge">36,479 LINES  |  47 JS  |  14 CSS  |  571 HTML</div>
+  </div>
+</body></html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 2560px; height: 1440px;
+    background: #0a0a0f;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #e0e0e0;
+    overflow: hidden; position: relative;
+    padding: 80px;
+  }
+  .scanline {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+    pointer-events: none; z-index: 10;
+  }
+  h1 {
+    font-size: 56px; color: #00ff41;
+    text-shadow: 0 0 20px rgba(0,255,65,0.3);
+    margin-bottom: 10px; letter-spacing: 4px;
+  }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 50px; }
+
+  .big-stats {
+    display: flex; gap: 40px; margin-bottom: 50px;
+  }
+  .stat-card {
+    flex: 1;
+    background: rgba(0,255,65,0.04);
+    border: 1px solid rgba(0,255,65,0.15);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+  }
+  .stat-card .number {
+    font-size: 72px; font-weight: 700; color: #00ff41;
+    text-shadow: 0 0 20px rgba(0,255,65,0.3);
+  }
+  .stat-card .label {
+    font-size: 22px; color: #888; margin-top: 10px; letter-spacing: 2px;
+  }
+  .stat-card.accent {
+    border-color: rgba(0,255,65,0.4);
+    background: rgba(0,255,65,0.08);
+  }
+
+  .tables-row { display: flex; gap: 40px; }
+  .table-section { flex: 1; }
+  .table-section h3 {
+    font-size: 24px; color: #00ff41; margin-bottom: 15px; letter-spacing: 2px;
+  }
+  table {
+    width: 100%; border-collapse: collapse;
+  }
+  th {
+    text-align: left; font-size: 16px; color: #555;
+    padding: 8px 12px; border-bottom: 1px solid rgba(0,255,65,0.15);
+    letter-spacing: 1px;
+  }
+  td {
+    font-size: 18px; padding: 7px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  td.name { color: #ccc; }
+  td.lines { color: #00ff41; text-align: right; }
+  .bar-container {
+    width: 100%; height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px; overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff41, #004d13);
+    border-radius: 4px;
+  }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">03/12</div>
+  <h1>CODEBASE METRICS</h1>
+  <div class="subtitle">Total lines, file counts, distribution</div>
+
+  <div class="big-stats">
+    <div class="stat-card accent">
+      <div class="number">36,479</div>
+      <div class="label">TOTAL SOURCE LINES</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">23,686</div>
+      <div class="label">JAVASCRIPT (47 FILES)</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">12,222</div>
+      <div class="label">CSS (14 FILES)</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">571</div>
+      <div class="label">HTML (1 FILE)</div>
+    </div>
+  </div>
+
+  <div class="tables-row">
+    <div class="table-section">
+      <h3>TOP 10 JAVASCRIPT FILES</h3>
+      <table>
+        <tr><th>FILE</th><th>LINES</th><th></th></tr>
+        <tr><td class="name">dave_alive.js</td><td class="lines">2,183</td><td><div class="bar-container"><div class="bar-fill" style="width:100%"></div></div></td></tr>
+        <tr><td class="name">dave_mode.js</td><td class="lines">1,923</td><td><div class="bar-container"><div class="bar-fill" style="width:88%"></div></div></td></tr>
+        <tr><td class="name">asset_loading.js</td><td class="lines">1,791</td><td><div class="bar-container"><div class="bar-fill" style="width:82%"></div></div></td></tr>
+        <tr><td class="name">model_inspector.js</td><td class="lines">1,585</td><td><div class="bar-container"><div class="bar-fill" style="width:73%"></div></div></td></tr>
+        <tr><td class="name">tree_folder_view.js</td><td class="lines">1,545</td><td><div class="bar-container"><div class="bar-fill" style="width:71%"></div></div></td></tr>
+        <tr><td class="name">ui.js</td><td class="lines">1,452</td><td><div class="bar-container"><div class="bar-fill" style="width:67%"></div></div></td></tr>
+        <tr><td class="name">dav9000_terminal.js</td><td class="lines">1,325</td><td><div class="bar-container"><div class="bar-fill" style="width:61%"></div></div></td></tr>
+        <tr><td class="name">dave_commands.js</td><td class="lines">1,027</td><td><div class="bar-container"><div class="bar-fill" style="width:47%"></div></div></td></tr>
+        <tr><td class="name">dave_debug.js</td><td class="lines">865</td><td><div class="bar-container"><div class="bar-fill" style="width:40%"></div></div></td></tr>
+        <tr><td class="name">SettingsModal.js</td><td class="lines">826</td><td><div class="bar-container"><div class="bar-fill" style="width:38%"></div></div></td></tr>
+      </table>
+    </div>
+    <div class="table-section">
+      <h3>TOP 10 CSS FILES</h3>
+      <table>
+        <tr><th>FILE</th><th>LINES</th><th></th></tr>
+        <tr><td class="name">styles.css</td><td class="lines">2,868</td><td><div class="bar-container"><div class="bar-fill" style="width:100%"></div></div></td></tr>
+        <tr><td class="name">model_inspector.css</td><td class="lines">2,152</td><td><div class="bar-container"><div class="bar-fill" style="width:75%"></div></div></td></tr>
+        <tr><td class="name">dave_mode.css</td><td class="lines">878</td><td><div class="bar-container"><div class="bar-fill" style="width:31%"></div></div></td></tr>
+        <tr><td class="name">dave_alive.css</td><td class="lines">821</td><td><div class="bar-container"><div class="bar-fill" style="width:29%"></div></div></td></tr>
+        <tr><td class="name">settings_modal.css</td><td class="lines">727</td><td><div class="bar-container"><div class="bar-fill" style="width:25%"></div></div></td></tr>
+        <tr><td class="name">easter_egg.css</td><td class="lines">717</td><td><div class="bar-container"><div class="bar-fill" style="width:25%"></div></div></td></tr>
+        <tr><td class="name">tree_folder_view.css</td><td class="lines">692</td><td><div class="bar-container"><div class="bar-fill" style="width:24%"></div></div></td></tr>
+        <tr><td class="name">dave_tooltip.css</td><td class="lines">643</td><td><div class="bar-container"><div class="bar-fill" style="width:22%"></div></div></td></tr>
+        <tr><td class="name">dave_games.css</td><td class="lines">568</td><td><div class="bar-container"><div class="bar-fill" style="width:20%"></div></div></td></tr>
+        <tr><td class="name">cloud_storage.css</td><td class="lines">553</td><td><div class="bar-container"><div class="bar-fill" style="width:19%"></div></div></td></tr>
+      </table>
+    </div>
+  </div>
+</body></html>

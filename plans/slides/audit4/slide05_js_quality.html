@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 2560px; height: 1440px;
+    background: #0a0a0f;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #e0e0e0;
+    overflow: hidden; position: relative;
+    padding: 80px;
+  }
+  .scanline { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px); pointer-events: none; z-index: 10; }
+  h1 { font-size: 56px; color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.3); margin-bottom: 10px; letter-spacing: 4px; }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 40px; }
+
+  .gauge-row {
+    display: flex; gap: 40px; margin-bottom: 50px;
+  }
+  .gauge {
+    flex: 1;
+    background: rgba(0,255,65,0.04);
+    border: 1px solid rgba(0,255,65,0.15);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+  }
+  .gauge h3 { font-size: 18px; color: #888; margin-bottom: 10px; letter-spacing: 1px; }
+  .gauge .versus {
+    display: flex; align-items: center; justify-content: center; gap: 15px;
+    margin-bottom: 10px;
+  }
+  .gauge .num-green { font-size: 52px; color: #00ff41; font-weight: 700; }
+  .gauge .num-red { font-size: 52px; color: #ff4444; font-weight: 700; }
+  .gauge .vs-label { font-size: 20px; color: #555; }
+  .gauge .ratio {
+    font-size: 16px; color: #666; margin-top: 5px;
+  }
+  .gauge .bar-track { width: 100%; height: 12px; background: #1a0000; border-radius: 6px; overflow: hidden; margin-top: 10px; }
+  .gauge .bar-left { height: 100%; background: linear-gradient(90deg, #00ff41, #004d13); }
+
+  .two-col { display: flex; gap: 40px; }
+  .col { flex: 1; }
+  .col h3 { font-size: 22px; color: #00ff41; margin-bottom: 15px; letter-spacing: 2px; }
+
+  .stat-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 19px;
+  }
+  .stat-label { flex: 1; color: #aaa; }
+  .stat-value { color: #00ff41; font-weight: 700; width: 60px; text-align: right; }
+
+  .class-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .class-item {
+    background: rgba(0,255,65,0.05);
+    border: 1px solid rgba(0,255,65,0.1);
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-size: 16px;
+    color: #aaa;
+  }
+  .class-item span { color: #00ff41; float: right; }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">05/12</div>
+  <h1>JAVASCRIPT QUALITY</h1>
+  <div class="subtitle">Event management, cleanup discipline, class architecture</div>
+
+  <div class="gauge-row">
+    <div class="gauge">
+      <h3>EVENT LISTENERS</h3>
+      <div class="versus">
+        <div class="num-green">297</div>
+        <div class="vs-label">add</div>
+        <div class="num-red">60</div>
+        <div class="vs-label">remove</div>
+      </div>
+      <div class="ratio">20% explicit removal ratio</div>
+      <div class="bar-track"><div class="bar-left" style="width:20%"></div></div>
+    </div>
+    <div class="gauge">
+      <h3>ANIMATION FRAMES</h3>
+      <div class="versus">
+        <div class="num-green">53</div>
+        <div class="vs-label">request</div>
+        <div class="num-red">17</div>
+        <div class="vs-label">cancel</div>
+      </div>
+      <div class="ratio">32% + Set-based bulk cancel via _activeRAFs</div>
+      <div class="bar-track"><div class="bar-left" style="width:32%"></div></div>
+    </div>
+    <div class="gauge">
+      <h3>TIMERS</h3>
+      <div class="versus">
+        <div class="num-green">41</div>
+        <div class="vs-label">clearInt</div>
+        <div class="num-green">50</div>
+        <div class="vs-label">clearTmt</div>
+      </div>
+      <div class="ratio">91 total cleanup calls -- strong</div>
+      <div class="bar-track"><div class="bar-left" style="width:85%"></div></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="col">
+      <h3>SYSTEM METRICS</h3>
+      <div class="stat-row"><div class="stat-label">ES6 class definitions</div><div class="stat-value">36</div></div>
+      <div class="stat-row"><div class="stat-label">destroy() methods</div><div class="stat-value">8</div></div>
+      <div class="stat-row"><div class="stat-label">Dynamic import() calls</div><div class="stat-value">13</div></div>
+      <div class="stat-row"><div class="stat-label">.bind(this) references</div><div class="stat-value">7</div></div>
+      <div class="stat-row"><div class="stat-label">localStorage access points</div><div class="stat-value">79</div></div>
+      <div class="stat-row"><div class="stat-label">Custom events (dave:*)</div><div class="stat-value">14</div></div>
+      <div class="stat-row"><div class="stat-label">Web Workers</div><div class="stat-value">1</div></div>
+      <div class="stat-row"><div class="stat-label">CDN dependencies</div><div class="stat-value">4</div></div>
+
+      <h3 style="margin-top:30px">EVENT LISTENER HOTSPOTS</h3>
+      <div class="stat-row"><div class="stat-label">model_inspector.js</div><div class="stat-value" style="color:#ff8c00">46</div></div>
+      <div class="stat-row"><div class="stat-label">ui.js</div><div class="stat-value" style="color:#ff8c00">39</div></div>
+      <div class="stat-row"><div class="stat-label">asset_loading.js</div><div class="stat-value">28</div></div>
+      <div class="stat-row"><div class="stat-label">tree_folder_view.js</div><div class="stat-value">27</div></div>
+      <div class="stat-row"><div class="stat-label">dave_debug.js</div><div class="stat-value">25</div></div>
+    </div>
+    <div class="col">
+      <h3>CLASS ARCHITECTURE (36 CLASSES)</h3>
+      <div class="class-grid">
+        <div class="class-item">_DaveMode <span>core</span></div>
+        <div class="class-item">DaveAlive <span>core</span></div>
+        <div class="class-item">DaveTrailEngine <span>core</span></div>
+        <div class="class-item">TypewriterEngine <span>core</span></div>
+        <div class="class-item">AliveEngine <span>core</span></div>
+        <div class="class-item">DAV9000Terminal <span>core</span></div>
+        <div class="class-item">DaveCommands <span>games</span></div>
+        <div class="class-item">DaveSnake <span>games</span></div>
+        <div class="class-item">DaveBreakout <span>games</span></div>
+        <div class="class-item">DaveMusicMode <span>games</span></div>
+        <div class="class-item">ModelInspectorPanel <span>viewer</span></div>
+        <div class="class-item">GLBInspectorAdapter <span>viewer</span></div>
+        <div class="class-item">FBXInspectorAdapter <span>viewer</span></div>
+        <div class="class-item">FBXViewer <span>viewer</span></div>
+        <div class="class-item">CloudBrowserModal <span>cloud</span></div>
+        <div class="class-item">SettingsModal <span>cloud</span></div>
+        <div class="class-item">S3Client <span>cloud</span></div>
+        <div class="class-item">GDriveClient <span>cloud</span></div>
+        <div class="class-item">CredentialStore <span>cloud</span></div>
+        <div class="class-item">ErrorHandler <span>util</span></div>
+        <div class="class-item">MemoryManager <span>util</span></div>
+        <div class="class-item">GridNavigator <span>util</span></div>
+        <div class="class-item">KeyboardShortcutMgr <span>util</span></div>
+        <div class="class-item">BaseAssetHandler <span>handler</span></div>
+        <div class="class-item">+ 12 more handlers <span>handler</span></div>
+      </div>
+    </div>
+  </div>
+</body></html>

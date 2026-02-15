@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 2560px; height: 1440px; background: #0a0a0f; font-family: 'Consolas', 'Courier New', monospace; color: #e0e0e0; overflow: hidden; position: relative; padding: 80px; }
+  body::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 80% 80%, rgba(0,255,65,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 20%, rgba(0,255,65,0.03) 0%, transparent 40%);
+  }
+  .scanline { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px); pointer-events: none; z-index: 10; }
+  h1 { font-size: 56px; color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.3); margin-bottom: 10px; letter-spacing: 4px; position: relative; z-index: 1; }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 40px; position: relative; z-index: 1; }
+
+  .rec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    position: relative; z-index: 1;
+  }
+  .rec-card {
+    background: rgba(0,255,65,0.03);
+    border: 1px solid rgba(0,255,65,0.12);
+    border-radius: 12px;
+    padding: 30px;
+    position: relative;
+  }
+  .rec-card h3 { font-size: 24px; margin-bottom: 12px; letter-spacing: 1px; }
+  .rec-card .priority {
+    position: absolute; top: 20px; right: 20px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+  }
+  .priority.p1 { background: rgba(0,255,65,0.2); color: #00ff41; border: 2px solid #00ff41; }
+  .priority.p2 { background: rgba(0,150,255,0.15); color: #0096ff; border: 2px solid #0096ff; }
+  .priority.p3 { background: rgba(255,255,255,0.05); color: #888; border: 2px solid #555; }
+  .rec-card.feature h3 { color: #00ff41; }
+  .rec-card.cleanup h3 { color: #0096ff; }
+  .rec-card.infra h3 { color: #ff8c00; }
+
+  .rec-detail { font-size: 18px; color: #aaa; line-height: 1.7; }
+  .rec-detail .highlight { color: #00ff41; font-weight: 700; }
+  .rec-detail .code { color: #00ff41; background: rgba(0,255,65,0.08); padding: 2px 8px; border-radius: 3px; font-size: 16px; }
+
+  .score-final {
+    margin-top: 30px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 40px;
+    position: relative; z-index: 1;
+  }
+  .score-box {
+    text-align: center;
+    background: rgba(0,255,65,0.06);
+    border: 2px solid rgba(0,255,65,0.3);
+    border-radius: 16px;
+    padding: 30px 60px;
+  }
+  .score-box .big { font-size: 96px; color: #00ff41; font-weight: 700; text-shadow: 0 0 30px rgba(0,255,65,0.4); }
+  .score-box .label { font-size: 22px; color: #888; letter-spacing: 3px; margin-top: 5px; }
+  .score-breakdown {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .sb-item {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 18px;
+  }
+  .sb-item .cat { color: #888; width: 200px; }
+  .sb-item .val { color: #00ff41; font-weight: 700; }
+  .sb-bar { width: 120px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+  .sb-fill { height: 100%; background: #00ff41; border-radius: 3px; }
+
+  .tagline {
+    text-align: center;
+    font-size: 22px;
+    color: #555;
+    margin-top: 20px;
+    font-style: italic;
+    position: relative; z-index: 1;
+  }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">12/12</div>
+  <h1>RECOMMENDATIONS & SCORE</h1>
+  <div class="subtitle">Next sprint priorities + overall health assessment</div>
+
+  <div class="rec-grid">
+    <div class="rec-card feature">
+      <h3>FIRST-TIME USER EXPERIENCE</h3>
+      <div class="priority p1">1</div>
+      <div class="rec-detail">
+        <span class="highlight">PRD in progress</span> -- next major feature<br>
+        Onboarding flow for new users<br>
+        Dave-guided introduction to the app<br>
+        Leverage existing personality system
+      </div>
+    </div>
+
+    <div class="rec-card cleanup">
+      <h3>HANDLER SYSTEM DECISION</h3>
+      <div class="priority p2">2</div>
+      <div class="rec-detail">
+        <span class="code">useNewHandler = false</span> at 2 locations<br>
+        <span class="highlight">1,635 lines</span> of dormant code<br>
+        Either complete migration or remove<br>
+        TextHandler stays regardless
+      </div>
+    </div>
+
+    <div class="rec-card infra">
+      <h3>Z-INDEX VARIABLE ADOPTION</h3>
+      <div class="priority p2">2</div>
+      <div class="rec-detail">
+        Layer map defined with <span class="highlight">12</span> levels<br>
+        Only <span class="highlight">14</span> of 100 z-index values converted<br>
+        Remaining 86 in: dave_alive (19),<br>
+        dave_mode (15), easter_egg (12)
+      </div>
+    </div>
+
+    <div class="rec-card cleanup">
+      <h3>!IMPORTANT REDUCTION</h3>
+      <div class="priority p3">3</div>
+      <div class="rec-detail">
+        <span class="highlight">142</span> declarations remain<br>
+        matrix_theme.css (47) -- needs full<br>
+        CSS variable override conversion<br>
+        dave_mode.css (33) -- personality layer
+      </div>
+    </div>
+
+    <div class="rec-card infra">
+      <h3>MODEL INSPECTOR CSS EXTRACTION</h3>
+      <div class="priority p3">3</div>
+      <div class="rec-detail">
+        <span class="highlight">2,152 lines</span> -- 2nd largest CSS file<br>
+        Could split into toolbar, panel,<br>
+        sections, and export subsections<br>
+        Would further reduce largest files
+      </div>
+    </div>
+
+    <div class="rec-card cleanup">
+      <h3>MEMORY MANAGER CLEANUP</h3>
+      <div class="priority p3">3</div>
+      <div class="rec-detail">
+        ~60 lines of unused methods<br>
+        registerBlobUrl, revokeBlobUrl,<br>
+        queueForDisposal -- never called<br>
+        Low-risk cleanup opportunity
+      </div>
+    </div>
+  </div>
+
+  <div class="score-final">
+    <div class="score-box">
+      <div class="big">8.5</div>
+      <div class="label">OVERALL HEALTH</div>
+    </div>
+    <div class="score-breakdown">
+      <div class="sb-item"><div class="cat">File Organization</div><div class="sb-bar"><div class="sb-fill" style="width:90%"></div></div><div class="val">9.0</div></div>
+      <div class="sb-item"><div class="cat">Performance</div><div class="sb-bar"><div class="sb-fill" style="width:85%"></div></div><div class="val">8.5</div></div>
+      <div class="sb-item"><div class="cat">Code Hygiene</div><div class="sb-bar"><div class="sb-fill" style="width:82%"></div></div><div class="val">8.2</div></div>
+      <div class="sb-item"><div class="cat">CSS Architecture</div><div class="sb-bar"><div class="sb-fill" style="width:78%"></div></div><div class="val">7.8</div></div>
+      <div class="sb-item"><div class="cat">Accessibility</div><div class="sb-bar"><div class="sb-fill" style="width:72%"></div></div><div class="val">7.2</div></div>
+      <div class="sb-item"><div class="cat">Maintainability</div><div class="sb-bar"><div class="sb-fill" style="width:90%"></div></div><div class="val">9.0</div></div>
+      <div class="sb-item"><div class="cat">Personality System</div><div class="sb-bar"><div class="sb-fill" style="width:95%"></div></div><div class="val">9.5</div></div>
+    </div>
+  </div>
+
+  <div class="tagline">"The house got its renovation. Now it's time to invite guests in."</div>
+</body></html>

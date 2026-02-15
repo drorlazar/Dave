@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 2560px; height: 1440px;
+    background: #0a0a0f;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #e0e0e0;
+    overflow: hidden; position: relative;
+    padding: 80px;
+  }
+  .scanline {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+    pointer-events: none; z-index: 10;
+  }
+  h1 { font-size: 56px; color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.3); margin-bottom: 10px; letter-spacing: 4px; }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 40px; }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+  }
+  .metric-card {
+    background: rgba(0,255,65,0.04);
+    border: 1px solid rgba(0,255,65,0.15);
+    border-radius: 8px;
+    padding: 25px;
+  }
+  .metric-card h3 { font-size: 20px; color: #888; margin-bottom: 10px; letter-spacing: 1px; }
+  .metric-card .value { font-size: 48px; color: #00ff41; font-weight: 700; }
+  .metric-card .detail { font-size: 16px; color: #666; margin-top: 5px; }
+  .metric-card.warn .value { color: #ff8c00; }
+  .metric-card.good .value { color: #00ff41; }
+
+  .two-col { display: flex; gap: 40px; }
+  .col { flex: 1; }
+  .col h3 { font-size: 22px; color: #00ff41; margin-bottom: 15px; letter-spacing: 2px; }
+
+  .bar-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .bar-label { width: 200px; font-size: 16px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; height: 18px; background: rgba(255,255,255,0.04); border-radius: 3px; overflow: hidden; }
+  .bar-fill-red { height: 100%; background: linear-gradient(90deg, #ff4444, #ff8c00); border-radius: 3px; }
+  .bar-fill-green { height: 100%; background: linear-gradient(90deg, #00ff41, #004d13); border-radius: 3px; }
+  .bar-count { width: 50px; text-align: right; font-size: 16px; color: #00ff41; }
+
+  .z-layer {
+    display: flex; align-items: center; gap: 10px;
+    padding: 5px 0;
+    font-size: 17px;
+  }
+  .z-val { color: #00ff41; width: 80px; text-align: right; }
+  .z-name { color: #aaa; }
+  .z-bar { flex: 1; height: 4px; background: rgba(0,255,65,0.08); position: relative; }
+  .z-bar-fill { height: 100%; background: #00ff41; opacity: 0.4; }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">04/12</div>
+  <h1>CSS HEALTH</h1>
+  <div class="subtitle">Custom properties, !important debt, z-index governance</div>
+
+  <div class="metrics-grid">
+    <div class="metric-card good">
+      <h3>CSS CUSTOM PROPERTIES</h3>
+      <div class="value">33</div>
+      <div class="detail">10 theme + 12 z-index + 11 other</div>
+    </div>
+    <div class="metric-card warn">
+      <h3>!IMPORTANT COUNT</h3>
+      <div class="value">142</div>
+      <div class="detail">matrix_theme (47) is #1 offender</div>
+    </div>
+    <div class="metric-card good">
+      <h3>var(--theme-*) USAGE</h3>
+      <div class="value">210</div>
+      <div class="detail">Across 7 CSS files</div>
+    </div>
+    <div class="metric-card good">
+      <h3>var(--dave-green)</h3>
+      <div class="value">75</div>
+      <div class="detail">Centralized color token</div>
+    </div>
+    <div class="metric-card warn">
+      <h3>HARDCODED #00ff41</h3>
+      <div class="value">29</div>
+      <div class="detail">matrix_theme (22), tooltip (4), mode (3)</div>
+    </div>
+    <div class="metric-card good">
+      <h3>@KEYFRAMES</h3>
+      <div class="value">106</div>
+      <div class="detail">Terminal (27), Games (26), Mode (18)</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="col">
+      <h3>!IMPORTANT BY FILE</h3>
+      <div class="bar-row"><div class="bar-label">matrix_theme.css</div><div class="bar-track"><div class="bar-fill-red" style="width:100%"></div></div><div class="bar-count">47</div></div>
+      <div class="bar-row"><div class="bar-label">dave_mode.css</div><div class="bar-track"><div class="bar-fill-red" style="width:70%"></div></div><div class="bar-count">33</div></div>
+      <div class="bar-row"><div class="bar-label">dave_games.css</div><div class="bar-track"><div class="bar-fill-red" style="width:45%"></div></div><div class="bar-count">21</div></div>
+      <div class="bar-row"><div class="bar-label">styles.css</div><div class="bar-track"><div class="bar-fill-red" style="width:43%"></div></div><div class="bar-count">20</div></div>
+      <div class="bar-row"><div class="bar-label">dave_alive.css</div><div class="bar-track"><div class="bar-fill-red" style="width:21%"></div></div><div class="bar-count">10</div></div>
+      <div class="bar-row"><div class="bar-label">cloud_storage.css</div><div class="bar-track"><div class="bar-fill-red" style="width:11%"></div></div><div class="bar-count">5</div></div>
+      <div class="bar-row"><div class="bar-label">tree_folder_view.css</div><div class="bar-track"><div class="bar-fill-red" style="width:9%"></div></div><div class="bar-count">4</div></div>
+      <div class="bar-row"><div class="bar-label">Others (2 files)</div><div class="bar-track"><div class="bar-fill-red" style="width:4%"></div></div><div class="bar-count">2</div></div>
+    </div>
+    <div class="col">
+      <h3>Z-INDEX LAYER MAP (--z-*)</h3>
+      <div class="z-layer"><div class="z-val">100</div><div class="z-name">--z-dropdown</div><div class="z-bar"><div class="z-bar-fill" style="width:1%"></div></div></div>
+      <div class="z-layer"><div class="z-val">200</div><div class="z-name">--z-tree</div><div class="z-bar"><div class="z-bar-fill" style="width:2%"></div></div></div>
+      <div class="z-layer"><div class="z-val">999</div><div class="z-name">--z-notification</div><div class="z-bar"><div class="z-bar-fill" style="width:10%"></div></div></div>
+      <div class="z-layer"><div class="z-val">1000</div><div class="z-name">--z-tooltip</div><div class="z-bar"><div class="z-bar-fill" style="width:10%"></div></div></div>
+      <div class="z-layer"><div class="z-val">1200</div><div class="z-name">--z-fullscreen</div><div class="z-bar"><div class="z-bar-fill" style="width:12%"></div></div></div>
+      <div class="z-layer"><div class="z-val">1500</div><div class="z-name">--z-modal</div><div class="z-bar"><div class="z-bar-fill" style="width:15%"></div></div></div>
+      <div class="z-layer"><div class="z-val">1700</div><div class="z-name">--z-dave-alive</div><div class="z-bar"><div class="z-bar-fill" style="width:17%"></div></div></div>
+      <div class="z-layer"><div class="z-val">2000</div><div class="z-name">--z-dave-presence</div><div class="z-bar"><div class="z-bar-fill" style="width:20%"></div></div></div>
+      <div class="z-layer"><div class="z-val">9000</div><div class="z-name">--z-dave-debug</div><div class="z-bar"><div class="z-bar-fill" style="width:90%"></div></div></div>
+      <div class="z-layer"><div class="z-val">9800</div><div class="z-name">--z-dave-games</div><div class="z-bar"><div class="z-bar-fill" style="width:98%"></div></div></div>
+      <div class="z-layer"><div class="z-val">9997</div><div class="z-name">--z-matrix-overlay</div><div class="z-bar"><div class="z-bar-fill" style="width:99%"></div></div></div>
+      <div class="z-layer"><div class="z-val">10000</div><div class="z-name">--z-dav9000</div><div class="z-bar"><div class="z-bar-fill" style="width:100%"></div></div></div>
+    </div>
+  </div>
+</body></html>

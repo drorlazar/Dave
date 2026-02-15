@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 2560px; height: 1440px;
+    background: #0a0a0f;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #e0e0e0;
+    overflow: hidden; position: relative;
+    padding: 80px;
+  }
+  .scanline { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px); pointer-events: none; z-index: 10; }
+  h1 { font-size: 56px; color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.3); margin-bottom: 10px; letter-spacing: 4px; }
+  .subtitle { font-size: 24px; color: #555; margin-bottom: 50px; }
+
+  .perf-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  .perf-card {
+    background: rgba(0,255,65,0.03);
+    border: 1px solid rgba(0,255,65,0.15);
+    border-radius: 12px;
+    padding: 40px;
+    position: relative;
+  }
+  .perf-card h3 {
+    font-size: 28px; color: #00ff41;
+    margin-bottom: 20px; letter-spacing: 2px;
+  }
+  .perf-card .badge {
+    position: absolute; top: 25px; right: 25px;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .badge.done { background: rgba(0,255,65,0.15); color: #00ff41; border: 1px solid rgba(0,255,65,0.3); }
+  .badge.new { background: rgba(0,150,255,0.15); color: #0096ff; border: 1px solid rgba(0,150,255,0.3); }
+
+  .perf-detail {
+    font-size: 20px; color: #aaa; line-height: 1.8;
+  }
+  .perf-detail .highlight { color: #00ff41; font-weight: 700; }
+  .perf-detail .code {
+    display: inline-block;
+    background: rgba(0,255,65,0.08);
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 18px;
+    color: #00ff41;
+  }
+
+  .before-after {
+    display: flex; gap: 20px; margin-top: 20px;
+  }
+  .ba-box {
+    flex: 1;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .ba-box.before {
+    background: rgba(255,68,68,0.08);
+    border: 1px solid rgba(255,68,68,0.2);
+  }
+  .ba-box.after {
+    background: rgba(0,255,65,0.08);
+    border: 1px solid rgba(0,255,65,0.2);
+  }
+  .ba-box .label { font-size: 14px; color: #666; letter-spacing: 2px; margin-bottom: 8px; }
+  .ba-box .val { font-size: 32px; font-weight: 700; }
+  .ba-box.before .val { color: #ff4444; }
+  .ba-box.after .val { color: #00ff41; }
+
+  .preconnect-list {
+    display: flex; gap: 12px; margin-top: 15px; flex-wrap: wrap;
+  }
+  .preconnect-item {
+    background: rgba(0,255,65,0.06);
+    border: 1px solid rgba(0,255,65,0.15);
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 16px; color: #aaa;
+  }
+  .preconnect-item .domain { color: #00ff41; }
+
+  .corner { position: absolute; font-size: 18px; color: rgba(0,255,65,0.15); }
+  .corner.br { bottom: 40px; right: 50px; }
+</style></head>
+<body>
+  <div class="scanline"></div>
+  <div class="corner br">06/12</div>
+  <h1>PERFORMANCE OPTIMIZATIONS</h1>
+  <div class="subtitle">Lazy loading, CSS deferral, network hints</div>
+
+  <div class="perf-grid">
+    <div class="perf-card">
+      <h3>THREE.JS LAZY LOADING</h3>
+      <div class="badge done">IMPLEMENTED</div>
+      <div class="perf-detail">
+        <span class="highlight">~800KB</span> deferred until 3D content is first encountered<br><br>
+        <span class="highlight">13</span> dynamic <span class="code">import()</span> calls replace static imports<br><br>
+        Modules: FBXViewer, ModelInspectorPanel,<br>
+        GLBInspectorAdapter, FBXInspectorAdapter<br><br>
+        Module-level caching prevents re-downloads
+      </div>
+      <div class="before-after">
+        <div class="ba-box before"><div class="label">BEFORE</div><div class="val">Eager ~800KB</div></div>
+        <div class="ba-box after"><div class="label">AFTER</div><div class="val">On-demand</div></div>
+      </div>
+    </div>
+
+    <div class="perf-card">
+      <h3>CSS DEFERRAL</h3>
+      <div class="badge done">IMPLEMENTED</div>
+      <div class="perf-detail">
+        <span class="highlight">13</span> CSS files deferred via<br>
+        <span class="code">media="print" onload="this.media='all'"</span><br><br>
+        Only <span class="highlight">2</span> render-blocking CSS files remain:<br>
+        styles.css + tree_folder_view.css<br><br>
+        <span class="code">&lt;noscript&gt;</span> fallbacks for JS-disabled users
+      </div>
+      <div class="before-after">
+        <div class="ba-box before"><div class="label">BLOCKING</div><div class="val">15 files</div></div>
+        <div class="ba-box after"><div class="label">BLOCKING</div><div class="val">2 files</div></div>
+      </div>
+    </div>
+
+    <div class="perf-card">
+      <h3>PRECONNECT HINTS</h3>
+      <div class="badge done">IMPLEMENTED</div>
+      <div class="perf-detail">
+        <span class="highlight">4</span> early connection hints for DNS + TLS handshake
+      </div>
+      <div class="preconnect-list">
+        <div class="preconnect-item"><span class="domain">accounts.google.com</span></div>
+        <div class="preconnect-item"><span class="domain">cdn.jsdelivr.net</span></div>
+        <div class="preconnect-item"><span class="domain">cdnjs.cloudflare.com</span></div>
+        <div class="preconnect-item"><span class="domain">unpkg.com</span></div>
+      </div>
+    </div>
+
+    <div class="perf-card">
+      <h3>WORKER PATH RESOLUTION</h3>
+      <div class="badge done">IMPLEMENTED</div>
+      <div class="perf-detail">
+        Worker path uses <span class="code">import.meta.url</span><br>
+        for deployment-agnostic resolution<br><br>
+        Works on localhost, GitHub Pages,<br>
+        and any custom base path<br><br>
+        Worker now posts <span class="code">scanFailed</span><br>
+        status on unrecoverable errors
+      </div>
+      <div class="before-after">
+        <div class="ba-box before"><div class="label">BEFORE</div><div class="val">Hardcoded path</div></div>
+        <div class="ba-box after"><div class="label">AFTER</div><div class="val">Relative URL</div></div>
+      </div>
+    </div>
+  </div>
+</body></html>
