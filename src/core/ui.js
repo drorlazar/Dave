@@ -421,6 +421,8 @@ function initializeElements() {
             saveSelection(modelFiles);
           } else if (action === 'clear') {
             clearSelection();
+          } else if (action === 'selectAll') {
+            selectAllFiles();
           }
           closeAllDropdowns();
         });
