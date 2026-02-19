@@ -5,6 +5,7 @@
 
 import { DaveMode, DAVE_CONFIG, EMOTION } from './dave_mode.js';
 import { DaveAlive } from './dave_alive.js';
+import { DaveFTUE } from './dave_ftue.js';
 
 const STORAGE_KEY = 'dave_debug_settings';
 const PRESETS_KEY = 'dave_debug_presets';
@@ -87,15 +88,13 @@ class _DaveDebug {
         <button class="dave-debug-close">ESC</button>
       </div>
       <div class="dave-debug-body">
-        ${this._sectionHTML('Emotion Tester', 'emotions', false)}
-        ${this._sectionHTML('Timing Controls', 'timing', false)}
-        ${this._sectionHTML('Animation Controls', 'animation', true)}
-        ${this._sectionHTML('Speech Bubble Tester', 'bubble', true)}
-        ${this._sectionHTML('State Inspector', 'state', true)}
-        ${this._sectionHTML('Presets', 'presets', false)}
-        ${this._sectionHTML('Dave Routine', 'routine', true)}
-        ${this._sectionHTML('Alive Behaviors', 'alive', false)}
-        ${this._sectionHTML('Commands', 'commands', true)}
+        ${this._sectionHTML('Visual & Emotion', 'emotions', false)}
+        ${this._sectionHTML('Speech & Communication', 'bubble', true)}
+        ${this._sectionHTML('Animation & Movement', 'animation', true)}
+        ${this._sectionHTML('Behaviors & Commands', 'behaviors', false)}
+        ${this._sectionHTML('Timing & Tuning', 'timing', false)}
+        ${this._sectionHTML('State & Diagnostics', 'state', true)}
+        ${this._sectionHTML('Demos & Tours', 'demos', true)}
       </div>
     `;
     document.body.appendChild(panel);
@@ -121,16 +120,14 @@ class _DaveDebug {
     // Header drag
     this._wireDrag(panel.querySelector('.dave-debug-header'));
 
-    // Build section contents
+    // Build section contents (7 reorganized sections)
     this._buildEmotionSection(panel.querySelector('[data-section="emotions"]'));
-    this._buildTimingSection(panel.querySelector('[data-section="timing"]'));
-    this._buildAnimationSection(panel.querySelector('[data-section="animation"]'));
     this._buildBubbleSection(panel.querySelector('[data-section="bubble"]'));
-    this._buildStateSection(panel.querySelector('[data-section="state"]'));
-    this._buildPresetSection(panel.querySelector('[data-section="presets"]'));
-    this._buildRoutineSection(panel.querySelector('[data-section="routine"]'));
-    this._buildAliveSection(panel.querySelector('[data-section="alive"]'));
-    this._buildCommandsSection(panel.querySelector('[data-section="commands"]'));
+    this._buildAnimationSection(panel.querySelector('[data-section="animation"]'));
+    this._buildBehaviorsSection(panel.querySelector('[data-section="behaviors"]'));
+    this._buildTimingSection(panel.querySelector('[data-section="timing"]'));
+    this._buildStateDiagnosticsSection(panel.querySelector('[data-section="state"]'));
+    this._buildDemosSection(panel.querySelector('[data-section="demos"]'));
   }
 
   // ---- Header drag (floating) ----
@@ -396,54 +393,29 @@ class _DaveDebug {
     body.appendChild(row);
   }
 
-  // ---- State Inspector ----
+  // ---- State & Diagnostics (merged State Inspector + Presets) ----
 
-  _buildStateSection(section) {
+  _buildStateDiagnosticsSection(section) {
     const body = section.querySelector('.dave-debug-section-body');
     this._wireCollapse(section);
+
+    // State grid
     const grid = document.createElement('div');
     grid.className = 'dave-debug-state-grid';
     grid.id = 'daveDebugStateGrid';
     body.appendChild(grid);
-  }
 
-  _refreshState() {
-    const grid = document.getElementById('daveDebugStateGrid');
-    if (!grid || !this._visible) return;
+    // Separator
+    const sep = document.createElement('div');
+    sep.style.cssText = 'border-top:1px solid rgba(0,255,65,0.1);margin:8px 0';
+    body.appendChild(sep);
 
-    const s = DaveMode._session || {};
-    const mins = Math.floor((Date.now() - (s.startTime || Date.now())) / 60000);
-    const items = [
-      ['Mood', DaveMode._mood || 'neutral'],
-      ['Emotion', DaveMode._currentEmotion || 'neutral'],
-      ['Enabled', DaveMode._enabled ? 'yes' : 'no'],
-      ['Dragging', DaveMode._isDragging ? 'yes' : 'no'],
-      ['Spam active', DaveMode._spamActive ? 'yes' : 'no'],
-      ['Terminal', DaveMode._terminalLinked ? 'linked' : 'solo'],
-      ['Session', mins + ' min'],
-      ['Visits', DaveMode._visits || 0],
-      ['Searches', s.searches || s.searchChanges || 0],
-      ['Sorts', s.sortChanges || 0],
-      ['Theme changes', s.themeChanges || 0],
-      ['Errors', s.errorsHit || 0],
-      ['Files loaded', s.filesLoaded || 0],
-      ['Messages shown', DaveMode._shownMessages?.size || 0],
-      ['Idle timer', DaveMode._idleTimer ? 'active' : 'off'],
-      ['Attention', DaveMode._attentionCount || 0],
-    ];
+    // Presets sub-section
+    const presetLabel = document.createElement('div');
+    presetLabel.style.cssText = 'font-size:8px;color:#1a4a1a;margin:4px 0 4px;font-weight:bold';
+    presetLabel.textContent = 'PRESETS';
+    body.appendChild(presetLabel);
 
-    grid.innerHTML = items.map(([k, v]) =>
-      `<div class="dave-debug-state-item"><span class="dave-debug-state-key">${k}</span><span class="dave-debug-state-val">${v}</span></div>`
-    ).join('');
-  }
-
-  // ---- Presets (named) ----
-
-  _buildPresetSection(section) {
-    const body = section.querySelector('.dave-debug-section-body');
-    this._wireCollapse(section);
-
-    // Save row: name input + save button
     const saveRow = document.createElement('div');
     saveRow.className = 'dave-debug-preset-row';
     saveRow.style.marginBottom = '8px';
@@ -482,12 +454,41 @@ class _DaveDebug {
 
     body.appendChild(saveRow);
 
-    // Preset chips list
     const listEl = document.createElement('div');
     listEl.className = 'dave-debug-preset-list';
     listEl.id = 'daveDebugPresetList';
     body.appendChild(listEl);
     this._refreshPresetList(listEl);
+  }
+
+  _refreshState() {
+    const grid = document.getElementById('daveDebugStateGrid');
+    if (!grid || !this._visible) return;
+
+    const s = DaveMode._session || {};
+    const mins = Math.floor((Date.now() - (s.startTime || Date.now())) / 60000);
+    const items = [
+      ['Mood', DaveMode._mood || 'neutral'],
+      ['Emotion', DaveMode._currentEmotion || 'neutral'],
+      ['Enabled', DaveMode._enabled ? 'yes' : 'no'],
+      ['Dragging', DaveMode._isDragging ? 'yes' : 'no'],
+      ['Spam active', DaveMode._spamActive ? 'yes' : 'no'],
+      ['Terminal', DaveMode._terminalLinked ? 'linked' : 'solo'],
+      ['Session', mins + ' min'],
+      ['Visits', DaveMode._visits || 0],
+      ['Searches', s.searches || s.searchChanges || 0],
+      ['Sorts', s.sortChanges || 0],
+      ['Theme changes', s.themeChanges || 0],
+      ['Errors', s.errorsHit || 0],
+      ['Files loaded', s.filesLoaded || 0],
+      ['Messages shown', DaveMode._shownMessages?.size || 0],
+      ['Idle timer', DaveMode._idleTimer ? 'active' : 'off'],
+      ['Attention', DaveMode._attentionCount || 0],
+    ];
+
+    grid.innerHTML = items.map(([k, v]) =>
+      `<div class="dave-debug-state-item"><span class="dave-debug-state-key">${k}</span><span class="dave-debug-state-val">${v}</span></div>`
+    ).join('');
   }
 
   _getPresets() {
@@ -554,9 +555,9 @@ class _DaveDebug {
     }
   }
 
-  // ---- Dave Routine (demo all features) ----
+  // ---- Demos & Tours (Routine + FTUE) ----
 
-  _buildRoutineSection(section) {
+  _buildDemosSection(section) {
     const body = section.querySelector('.dave-debug-section-body');
     this._wireCollapse(section);
 
@@ -575,6 +576,14 @@ class _DaveDebug {
       this._runRoutine(runBtn, statusEl);
     });
     row.appendChild(runBtn);
+
+    const ftueBtn = document.createElement('button');
+    ftueBtn.className = 'dave-debug-btn';
+    ftueBtn.textContent = 'Run FTUE Tour';
+    ftueBtn.addEventListener('click', () => {
+      DaveFTUE.start(true);
+    });
+    row.appendChild(ftueBtn);
 
     body.appendChild(row);
 
@@ -685,20 +694,15 @@ class _DaveDebug {
     setTimeout(() => { if (statusEl.textContent === 'Routine complete.') statusEl.textContent = ''; }, 3000);
   }
 
-  // ---- Alive Behaviors Section (all 13 alive features) ----
+  // ---- Behaviors & Commands (merged Alive Behaviors + Commands) ----
 
-  _buildAliveSection(section) {
+  _buildBehaviorsSection(section) {
     const body = section.querySelector('.dave-debug-section-body');
     this._wireCollapse(section);
 
-    const label = document.createElement('div');
-    label.style.cssText = 'font-size:9px;color:#2a5a2a;margin-bottom:6px';
-    label.textContent = 'Trigger alive behaviors on demand:';
-    body.appendChild(label);
-
-    // Tier 1: Subtle
+    // Alive behaviors — Tier 1: Subtle
     const tier1Label = document.createElement('div');
-    tier1Label.style.cssText = 'font-size:8px;color:#1a4a1a;margin:6px 0 3px;font-weight:bold';
+    tier1Label.style.cssText = 'font-size:8px;color:#1a4a1a;margin:4px 0 3px;font-weight:bold';
     tier1Label.textContent = 'TIER 1: SUBTLE';
     body.appendChild(tier1Label);
 
@@ -791,17 +795,21 @@ class _DaveDebug {
       const el = document.getElementById('daveAliveCycleCount');
       if (el) el.textContent = DaveAlive._idleCycleCount || '0';
     };
-  }
 
-  // ---- Commands Section (quick-trigger all dave commands) ----
+    // Separator before commands
+    const sep = document.createElement('div');
+    sep.style.cssText = 'border-top:1px solid rgba(0,255,65,0.1);margin:8px 0';
+    body.appendChild(sep);
 
-  _buildCommandsSection(section) {
-    const body = section.querySelector('.dave-debug-section-body');
-    this._wireCollapse(section);
+    // Commands sub-section
+    const cmdLabel = document.createElement('div');
+    cmdLabel.style.cssText = 'font-size:8px;color:#1a4a1a;margin:4px 0 3px;font-weight:bold';
+    cmdLabel.textContent = 'COMMANDS';
+    body.appendChild(cmdLabel);
 
     const cmds = ['joke', 'flip', 'rave', 'fortune', 'dance', 'story', 'sleep', 'sing', 'snake', 'breakout', 'heart', 'spiral', 'constellation', 'show', 'patrol', 'help'];
-    const row = document.createElement('div');
-    row.className = 'dave-debug-trigger-row';
+    const cmdRow = document.createElement('div');
+    cmdRow.className = 'dave-debug-trigger-row';
 
     for (const cmd of cmds) {
       const btn = document.createElement('button');
@@ -810,9 +818,9 @@ class _DaveDebug {
       btn.addEventListener('click', () => {
         document.dispatchEvent(new CustomEvent('dave:command', { detail: { command: cmd } }));
       });
-      row.appendChild(btn);
+      cmdRow.appendChild(btn);
     }
-    body.appendChild(row);
+    body.appendChild(cmdRow);
   }
 
   // ---- Helpers ----

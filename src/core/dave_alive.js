@@ -532,6 +532,7 @@ class _DaveAlive {
 
     // Idle nagging
     this._idleCycleCount = 0;
+    this._ftueActive = false;
 
     // Activity tracking
     this._activityLog = []; // { type, time }
@@ -682,6 +683,7 @@ class _DaveAlive {
   // ============================================================
 
   _onIdleCycle() {
+    if (this._ftueActive) return;
     if (!DaveMode._enabled || !DaveMode._presenceEl) return;
     this._idleCycleCount++;
 
