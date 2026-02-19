@@ -528,6 +528,16 @@ function initializeElements() {
       }
 
 
+      // Track top bar height so fixed-position panels stay below it
+      const topBar = document.getElementById('topBar');
+      if (topBar) {
+        const updateTopBarHeight = () => {
+          document.documentElement.style.setProperty('--topbar-height', topBar.offsetHeight + 'px');
+        };
+        updateTopBarHeight();
+        new ResizeObserver(updateTopBarHeight).observe(topBar);
+      }
+
       // Mark initialization as complete
       console.log('INIT DIAGNOSTICS: UI initialization complete, setting uiInitialized=true');
       uiInitialized = true;

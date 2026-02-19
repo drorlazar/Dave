@@ -369,6 +369,12 @@ class DaveTrailEngine {
   animateMoveTo(x, y, durationMs = 800, easing = 'ease') {
     if (!DaveMode._presenceEl) return Promise.resolve();
 
+    // Cancel any existing animation to prevent overlapping rAF loops
+    if (this._rafId) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
+
     return new Promise((resolve) => {
       const p = DaveMode._presenceEl;
       const startX = parseFloat(p.style.left) || 0;
@@ -382,6 +388,13 @@ class DaveTrailEngine {
 
       const startTime = performance.now();
       const animate = (now) => {
+        // Abort if flagged, disabled, or element removed
+        if (this._aborted || !DaveMode._presenceEl || !DaveMode._enabled) {
+          this._rafId = null;
+          resolve();
+          return;
+        }
+
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / durationMs, 1);
         const t = this._easeInOutCubic(progress);
@@ -397,6 +410,7 @@ class DaveTrailEngine {
         if (progress < 1) {
           this._rafId = requestAnimationFrame(animate);
         } else {
+          this._rafId = null;
           resolve();
         }
       };
@@ -585,6 +599,7 @@ class _DaveAlive {
     this._onIdleCycleBound = this._onIdleCycle.bind(this);
     this._onFullscreenBound = this._onFullscreen.bind(this);
     this._onFullscreenExitBound = this._onFullscreenExit.bind(this);
+    this._onDragStartBound = () => this._abortAllBehaviors();
   }
 
   init() {
@@ -593,6 +608,9 @@ class _DaveAlive {
 
     // Wire into Dave Mode's idle cycle
     document.addEventListener('dave:idle', this._onIdleCycleBound);
+
+    // Abort alive animations when user drags Dave
+    document.addEventListener('dave:dragStart', this._onDragStartBound);
 
     // Activity tracking events
     this._installActivityHooks();
@@ -626,11 +644,35 @@ class _DaveAlive {
   }
 
   /**
+   * Abort all running alive behaviors immediately. Called when the user
+   * drags Dave so drag always takes priority over autonomous animations.
+   */
+  _abortAllBehaviors() {
+    // Abort trail engine movement (animatePath + animateMoveTo)
+    this._trailEngine.abort();
+    if (this._trailEngine._rafId) {
+      cancelAnimationFrame(this._trailEngine._rafId);
+      this._trailEngine._rafId = null;
+    }
+    this._resetAllFlags();
+  }
+
+  /**
    * Reset all behavior flags and movement state. Called on error recovery
    * to prevent Dave from getting permanently stuck.
    */
   _resetAllFlags() {
+    // Cancel trail engine animations (rAF, intervals, abort listeners)
+    if (this._trailEngine._rafId) {
+      cancelAnimationFrame(this._trailEngine._rafId);
+      this._trailEngine._rafId = null;
+    }
+    clearInterval(this._trailEngine._trailInterval);
+    this._trailEngine._trailInterval = null;
+    this._trailEngine._removeAbortListeners();
     this._trailEngine._isMoving = false;
+    this._trailEngine._aborted = false;
+
     this._heartActive = false;
     this._spiralActive = false;
     this._sleepOnElementActive = false;
@@ -2129,8 +2171,9 @@ class _DaveAlive {
 
   // Cleanup on disable
   destroy() {
-    // Remove the three document-level listeners added in init()
+    // Remove document-level listeners added in init()
     document.removeEventListener('dave:idle', this._onIdleCycleBound);
+    document.removeEventListener('dave:dragStart', this._onDragStartBound);
     document.removeEventListener('dave:fullscreen', this._onFullscreenBound);
     document.removeEventListener('dave:fullscreenExit', this._onFullscreenExitBound);
 

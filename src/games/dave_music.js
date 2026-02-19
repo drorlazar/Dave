@@ -170,8 +170,10 @@ class _DaveMusicMode {
   _stopFloatingNotes() {
     clearInterval(this._noteInterval);
     this._noteInterval = null;
-    // Let existing notes fade out naturally
-    // They'll be cleaned up by the animation loop
+    if (this._noteRAF) {
+      cancelAnimationFrame(this._noteRAF);
+      this._noteRAF = null;
+    }
   }
 
   // ---- Gentle Rocking ----

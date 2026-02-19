@@ -178,6 +178,12 @@ const tileObserver = new IntersectionObserver((entries, observer) => {
             model.thumbnailDataUrl = null;
         }
 
+        // Abort video scrub listeners before removing content (prevents document-level listener leak)
+        const videoPreview = tile.querySelector('.video-preview');
+        if (videoPreview?._abortController) {
+            videoPreview._abortController.abort();
+        }
+
         // Clear the placeholder content of the tile to ensure it's reloaded if it comes back into view
         // This ensures loadTileContent will re-trigger fully.
         // For GLB, modelViewerElement.remove() is already done.

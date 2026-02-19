@@ -1032,7 +1032,7 @@ select {
   grid-template-columns: repeat(auto-fill, minmax(var(--tile-size, 220px), 1fr));
   gap: 16px;
   padding: 20px;
-  margin-top: 60px;
+  margin-top: var(--topbar-height, 60px);
 }
 
 .model-tile {

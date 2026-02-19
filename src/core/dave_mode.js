@@ -349,6 +349,10 @@ class _DaveMode {
   _onDragStart(e) {
     if (e.button && e.button !== 0) return;
     e.preventDefault();
+
+    // Abort any alive-engine animations so drag takes priority
+    document.dispatchEvent(new CustomEvent('dave:dragStart'));
+
     const pos = e.touches ? e.touches[0] : e;
     const rect = this._presenceEl.getBoundingClientRect();
 

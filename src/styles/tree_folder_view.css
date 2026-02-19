@@ -1,7 +1,7 @@
 /* Tree Side Tab - collapsible toggle on screen edge */
 .tree-side-tab {
   position: fixed;
-  top: 64px;
+  top: calc(var(--topbar-height, 60px) + 4px);
   z-index: 89; /* Below panel (90) so it slides behind */
   display: flex;
   align-items: center;
@@ -49,7 +49,7 @@ body.tree-panel-visible .tree-side-tab-right {
 /* Tree Folder View Panel Styles */
 .tree-folder-panel {
   position: fixed;
-  top: 60px; /* Below the top bar */
+  top: var(--topbar-height, 60px); /* Below the top bar */
   bottom: 0;
   width: var(--tree-panel-width, 280px); /* Use CSS variable with fallback */
   background-color: var(--theme-bg);

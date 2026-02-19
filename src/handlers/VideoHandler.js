@@ -40,8 +40,10 @@ export class VideoHandler extends BaseAssetHandler {
     scrubBar.appendChild(timeMarker);
     videoPreview.appendChild(scrubBarContainer);
 
-    // Add scrubbing functionality
+    // Add scrubbing functionality with AbortController for cleanup
     let isDragging = false;
+    const controller = new AbortController();
+    const { signal } = controller;
 
     const updateVideoTime = (e) => {
       if (!video.duration) return;
@@ -58,18 +60,21 @@ export class VideoHandler extends BaseAssetHandler {
     scrubBarContainer.addEventListener('mousedown', (e) => {
       isDragging = true;
       updateVideoTime(e);
-    });
+    }, { signal });
 
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       updateVideoTime(e);
-    });
+    }, { signal });
 
     document.addEventListener('mouseup', () => {
       isDragging = false;
-    });
+    }, { signal });
 
-    scrubBarContainer.addEventListener('mousemove', updateVideoTime);
+    scrubBarContainer.addEventListener('mousemove', updateVideoTime, { signal });
+
+    // Store controller for cleanup when tile scrolls out of view
+    videoPreview._abortController = controller;
 
     container.innerHTML = '';
     container.appendChild(videoPreview);
