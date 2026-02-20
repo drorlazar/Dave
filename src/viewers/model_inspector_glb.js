@@ -84,10 +84,10 @@ export class GLBInspectorAdapter {
     // model-viewer typically places the model as a child of the scene
     for (const child of this._scene.children) {
       if (child.type === 'Group' || child.type === 'Object3D') {
-        // Check if it has meshes
-        let hasMesh = false;
-        child.traverse(c => { if (c.isMesh) hasMesh = true; });
-        if (hasMesh) return child;
+        // Check if it has renderable objects (meshes or point clouds)
+        let hasRenderable = false;
+        child.traverse(c => { if (c.isMesh || c.isPoints) hasRenderable = true; });
+        if (hasRenderable) return child;
       }
     }
     // Fallback: use scene itself
@@ -117,11 +117,13 @@ export class GLBInspectorAdapter {
     const materialSet = new Set();
 
     root.traverse((child) => {
-      if (child.isMesh) {
+      if (child.isMesh || child.isPoints) {
         meshCount++;
         const geo = child.geometry;
         vertices += geo.attributes.position?.count || 0;
-        if (geo.index) {
+        if (child.isPoints) {
+          // Points don't have triangles
+        } else if (geo.index) {
           triangles += geo.index.count / 3;
         } else {
           triangles += (geo.attributes.position?.count || 0) / 3;
@@ -164,7 +166,7 @@ export class GLBInspectorAdapter {
     const seen = new Set();
 
     root.traverse((child) => {
-      if (!child.isMesh) return;
+      if (!child.isMesh && !child.isPoints) return;
       const mats = Array.isArray(child.material) ? child.material : [child.material];
       mats.forEach(mat => {
         if (!mat) return;
@@ -194,7 +196,7 @@ export class GLBInspectorAdapter {
     if (!root) return;
 
     root.traverse((child) => {
-      if (!child.isMesh) return;
+      if (!child.isMesh && !child.isPoints) return;
       const mats = Array.isArray(child.material) ? child.material : [child.material];
       mats.forEach((mat, matIdx) => {
         if (!mat) return;
@@ -229,7 +231,7 @@ export class GLBInspectorAdapter {
     if (!root) return;
 
     root.traverse((child) => {
-      if (!child.isMesh) return;
+      if (!child.isMesh && !child.isPoints) return;
       const mats = Array.isArray(child.material) ? child.material : [child.material];
       mats.forEach(mat => {
         if (mat) mat.wireframe = enabled;
@@ -415,7 +417,7 @@ export class GLBInspectorAdapter {
       try {
         const { VertexNormalsHelper } = await import('three/addons/helpers/VertexNormalsHelper.js');
         root.traverse(child => {
-          if (child.isMesh) {
+          if (child.isMesh || child.isPoints) {
             const helper = new VertexNormalsHelper(child, 0.02, 0x00ff88);
             this._scene.add(helper);
             this._normalsHelpers.push(helper);
@@ -517,7 +519,7 @@ export class GLBInspectorAdapter {
     const mats = [];
     const seen = new Set();
     root.traverse(child => {
-      if (!child.isMesh) return;
+      if (!child.isMesh && !child.isPoints) return;
       const arr = Array.isArray(child.material) ? child.material : [child.material];
       arr.forEach(m => {
         if (m && !seen.has(m.uuid)) {
@@ -534,7 +536,7 @@ export class GLBInspectorAdapter {
     if (!root) return [];
     const meshes = [];
     root.traverse(child => {
-      if (child.isMesh) meshes.push(child);
+      if (child.isMesh || child.isPoints) meshes.push(child);
     });
     return meshes;
   }

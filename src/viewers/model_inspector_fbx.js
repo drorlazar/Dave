@@ -56,11 +56,13 @@ export class FBXInspectorAdapter {
     const materialSet = new Set();
 
     obj.traverse((child) => {
-      if (child.isMesh) {
+      if (child.isMesh || child.isPoints) {
         meshCount++;
         const geo = child.geometry;
         vertices += geo.attributes.position?.count || 0;
-        if (geo.index) {
+        if (child.isPoints) {
+          // Points don't have triangles
+        } else if (geo.index) {
           triangles += geo.index.count / 3;
         } else {
           triangles += (geo.attributes.position?.count || 0) / 3;
@@ -106,7 +108,7 @@ export class FBXInspectorAdapter {
     const seen = new Set();
 
     obj.traverse((child) => {
-      if (!child.isMesh) return;
+      if (!child.isMesh && !child.isPoints) return;
       const mats = Array.isArray(child.material) ? child.material : [child.material];
       mats.forEach(mat => {
         if (!mat) return;
@@ -136,7 +138,7 @@ export class FBXInspectorAdapter {
     if (!obj) return;
 
     obj.traverse((child) => {
-      if (!child.isMesh) return;
+      if (!child.isMesh && !child.isPoints) return;
       const mats = Array.isArray(child.material) ? child.material : [child.material];
       mats.forEach((mat, matIdx) => {
         if (!mat) return;
@@ -170,7 +172,7 @@ export class FBXInspectorAdapter {
     if (!obj) return;
 
     obj.traverse((child) => {
-      if (!child.isMesh) return;
+      if (!child.isMesh && !child.isPoints) return;
       const mats = Array.isArray(child.material) ? child.material : [child.material];
       mats.forEach(mat => {
         if (mat) mat.wireframe = enabled;
@@ -341,7 +343,7 @@ export class FBXInspectorAdapter {
       try {
         const { VertexNormalsHelper } = await import('three/addons/helpers/VertexNormalsHelper.js');
         obj.traverse(child => {
-          if (child.isMesh) {
+          if (child.isMesh || child.isPoints) {
             const helper = new VertexNormalsHelper(child, 0.05, 0x00ff88);
             scene.add(helper);
             this._normalsHelpers.push(helper);
@@ -400,7 +402,7 @@ export class FBXInspectorAdapter {
     const mats = [];
     const seen = new Set();
     obj.traverse(child => {
-      if (!child.isMesh) return;
+      if (!child.isMesh && !child.isPoints) return;
       const arr = Array.isArray(child.material) ? child.material : [child.material];
       arr.forEach(m => {
         if (m && !seen.has(m.uuid)) {
@@ -417,7 +419,7 @@ export class FBXInspectorAdapter {
     if (!obj) return [];
     const meshes = [];
     obj.traverse(child => {
-      if (child.isMesh) meshes.push(child);
+      if (child.isMesh || child.isPoints) meshes.push(child);
     });
     return meshes;
   }

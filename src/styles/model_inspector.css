@@ -1197,6 +1197,25 @@
   color: #f88;
 }
 
+.inspector-cancel-btn {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 10px;
+  background: rgba(255, 100, 100, 0.15);
+  color: #f88;
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-left: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.inspector-cancel-btn:hover {
+  background: rgba(255, 100, 100, 0.3);
+  color: #faa;
+}
+
 /* --- Export Draco Notice + Estimated Size --- */
 .inspector-export-draco {
   font-size: 10px;

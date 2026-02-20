@@ -1219,18 +1219,46 @@ export class ModelInspectorPanel {
       }
     };
 
+    // Helper to run _doExport with cancel support and progress feedback
+    const runExport = async (opts, successMsg) => {
+      const controller = new AbortController();
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.className = 'inspector-cancel-btn';
+      cancelBtn.onclick = () => controller.abort();
+
+      const onProgress = (msg) => {
+        if (statusEl) {
+          statusEl.textContent = '';
+          statusEl.appendChild(document.createTextNode(msg + ' '));
+          statusEl.appendChild(cancelBtn);
+          statusEl.className = 'inspector-tool-status';
+        }
+      };
+      onProgress('Preparing export...');
+
+      try {
+        await this._doExport({ ...opts, signal: controller.signal, onProgress });
+        setStatus(successMsg);
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          setStatus('Export cancelled');
+        } else {
+          throw err;
+        }
+      } finally {
+        cancelBtn.remove();
+      }
+    };
+
     try {
       switch (action) {
         case 'export-glb-full': {
-          setStatus('Exporting GLB...');
-          await this._doExport({ stripTextures: false });
-          setStatus('GLB exported!');
+          await runExport({ stripTextures: false }, 'GLB exported!');
           break;
         }
         case 'export-glb-notex': {
-          setStatus('Exporting GLB (no textures)...');
-          await this._doExport({ stripTextures: true });
-          setStatus('GLB exported (no textures)!');
+          await runExport({ stripTextures: true }, 'GLB exported (no textures)!');
           break;
         }
         case 'export-textures': {
@@ -1243,9 +1271,10 @@ export class ModelInspectorPanel {
           const idx = parseInt(clickEvent?.target?.closest('[data-anim-idx]')?.dataset?.animIdx ?? '0');
           const clips = this.adapter.getAnimationClips?.() || [];
           if (clips[idx]) {
-            setStatus(`Exporting animation "${clips[idx].name}" (rig only)...`);
-            await this._doExport({ animOnly: true, forceAnims: [clips[idx]] });
-            setStatus('Animation exported (rig only)!');
+            await runExport(
+              { animOnly: true, forceAnims: [clips[idx]] },
+              'Animation exported (rig only)!'
+            );
           }
           break;
         }
@@ -1276,7 +1305,8 @@ export class ModelInspectorPanel {
 
   // Unified export that applies texture resize + simplify + animation selection
   // animOnly: export only skeleton/rig + animations, no mesh geometry
-  async _doExport({ stripTextures = false, forceAnims = undefined, animOnly = false } = {}) {
+  // signal: AbortSignal for cancellation, onProgress: callback for status updates
+  async _doExport({ stripTextures = false, forceAnims = undefined, animOnly = false, signal, onProgress } = {}) {
     const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
     const root = this.adapter.getModelRoot();
     if (!root) throw new Error('No model loaded');
@@ -1345,7 +1375,7 @@ export class ModelInspectorPanel {
       const removedMeshes = [];
       // Collect meshes first, then remove (can't modify tree during traversal)
       root.traverse(child => {
-        if (child.isMesh || child.isSkinnedMesh) {
+        if (child.isMesh || child.isSkinnedMesh || child.isPoints) {
           removedMeshes.push({ mesh: child, parent: child.parent });
         }
       });
@@ -1362,6 +1392,8 @@ export class ModelInspectorPanel {
 
     // 1. Texture resize
     if (texSize > 0 && !animOnly) {
+      onProgress?.('Resizing textures...');
+      if (signal?.aborted) throw new DOMException('Export cancelled', 'AbortError');
       const materials = this.adapter.getAllMaterials?.() || [];
       const processed = new Set();
       for (const mat of materials) {
@@ -1370,6 +1402,17 @@ export class ModelInspectorPanel {
           if (!tex || !tex.image || processed.has(tex.uuid)) continue;
           processed.add(tex.uuid);
           const img = tex.image;
+
+          // Validate drawable source
+          const isDrawable = (img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0)
+            || img instanceof HTMLCanvasElement
+            || img instanceof ImageBitmap
+            || img instanceof OffscreenCanvas;
+          if (!isDrawable) {
+            console.warn(`Skipping texture resize for ${prop}: non-drawable image type`);
+            continue;
+          }
+
           const origW = img.width || img.naturalWidth || 512;
           const origH = img.height || img.naturalHeight || 512;
           if (origW <= texSize && origH <= texSize) continue;
@@ -1378,11 +1421,16 @@ export class ModelInspectorPanel {
           const canvas = document.createElement('canvas');
           canvas.width = Math.round(origW * scale);
           canvas.height = Math.round(origH * scale);
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          tex.image = canvas;
-          tex.needsUpdate = true;
-          restorers.push(() => { tex.image = origImage; tex.needsUpdate = true; });
+          try {
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            tex.image = canvas;
+            tex.needsUpdate = true;
+            restorers.push(() => { tex.image = origImage; tex.needsUpdate = true; });
+          } catch (err) {
+            console.warn(`Texture resize failed for ${prop}:`, err);
+          }
         }
+        if (signal?.aborted) throw new DOMException('Export cancelled', 'AbortError');
       }
     }
 
@@ -1401,58 +1449,145 @@ export class ModelInspectorPanel {
       }
     }
 
-    // 3. Simplify geometry
+    // 3. Simplify geometry (using meshoptimizer for topology-preserving, fast WASM simplification)
     if (simplifyRatio < 1 && !animOnly) {
+      onProgress?.('Loading simplifier...');
+      if (signal?.aborted) throw new DOMException('Export cancelled', 'AbortError');
       try {
-        const { SimplifyModifier } = await import('three/addons/modifiers/SimplifyModifier.js');
-        const { BufferGeometryUtils } = await import('three/addons/utils/BufferGeometryUtils.js');
-        const modifier = new SimplifyModifier();
+        const { MeshoptSimplifier } = await import('https://cdn.jsdelivr.net/npm/meshoptimizer@0.21/meshopt_simplifier.module.js');
+        await MeshoptSimplifier.ready;
+        const { BufferAttribute, BufferGeometry } = await import('three');
+
         const meshes = this.adapter.getAllMeshes?.() || [];
-        for (const mesh of meshes) {
+        let simplifyFailed = 0;
+        for (let i = 0; i < meshes.length; i++) {
+          if (signal?.aborted) throw new DOMException('Export cancelled', 'AbortError');
+          const mesh = meshes[i];
+          if (mesh.isPoints) continue; // Point clouds can't be simplified
+
           const geo = mesh.geometry;
           const origGeo = geo;
-          const vertCount = geo.attributes.position.count;
-          // SimplifyModifier.modify(geo, removeCount) - removes N vertices
-          const removeCount = Math.max(0, Math.floor(vertCount * (1 - simplifyRatio)));
-          if (removeCount < 1) continue;
+          const posAttr = geo.attributes.position;
+          if (!posAttr || posAttr.count < 4) continue;
+
+          onProgress?.(`Simplifying mesh ${i + 1}/${meshes.length}...`);
           try {
-            let workGeo = geo.index ? geo : BufferGeometryUtils.mergeVertices(geo);
-            const simplified = modifier.modify(workGeo, removeCount);
-            mesh.geometry = simplified;
-            restorers.push(() => { mesh.geometry = origGeo; });
+            // Get or create index buffer (meshoptimizer requires indexed geometry)
+            let workGeo = geo;
+            if (!geo.index) {
+              const { BufferGeometryUtils } = await import('three/addons/utils/BufferGeometryUtils.js');
+              workGeo = BufferGeometryUtils.mergeVertices(geo);
+            }
+            const srcIndices = new Uint32Array(workGeo.index.array);
+            const positions = new Float32Array(workGeo.attributes.position.array);
+            const targetIndexCount = Math.max(3, Math.floor(srcIndices.length * simplifyRatio / 3) * 3);
+
+            const [newIndices, error] = MeshoptSimplifier.simplify(
+              srcIndices, positions, 3, targetIndexCount, 0.01, ['LockBorder']
+            );
+
+            if (newIndices.length >= 3 && newIndices.length < srcIndices.length) {
+              // Compact: remove unreferenced vertices to shrink the buffer
+              const usedSet = new Set(newIndices);
+              const oldToNew = new Map();
+              let newIdx = 0;
+              for (const vi of usedSet) oldToNew.set(vi, newIdx++);
+              const compactCount = oldToNew.size;
+
+              const compactGeo = new BufferGeometry();
+              // Remap each attribute buffer to only include used vertices
+              for (const name in workGeo.attributes) {
+                const src = workGeo.attributes[name];
+                const arr = new src.array.constructor(compactCount * src.itemSize);
+                for (const [oldV, newV] of oldToNew) {
+                  for (let c = 0; c < src.itemSize; c++) {
+                    arr[newV * src.itemSize + c] = src.array[oldV * src.itemSize + c];
+                  }
+                }
+                compactGeo.setAttribute(name, new BufferAttribute(arr, src.itemSize, src.normalized));
+              }
+              // Remap index buffer
+              const remappedIdx = new Uint32Array(newIndices.length);
+              for (let j = 0; j < newIndices.length; j++) remappedIdx[j] = oldToNew.get(newIndices[j]);
+              compactGeo.setIndex(new BufferAttribute(remappedIdx, 1));
+
+              // Copy morph attributes if present
+              if (workGeo.morphAttributes) {
+                for (const name in workGeo.morphAttributes) {
+                  compactGeo.morphAttributes[name] = workGeo.morphAttributes[name].map(src => {
+                    const arr = new src.array.constructor(compactCount * src.itemSize);
+                    for (const [oldV, newV] of oldToNew) {
+                      for (let c = 0; c < src.itemSize; c++) {
+                        arr[newV * src.itemSize + c] = src.array[oldV * src.itemSize + c];
+                      }
+                    }
+                    return new BufferAttribute(arr, src.itemSize, src.normalized);
+                  });
+                }
+              }
+              if (workGeo.morphTargetsRelative) compactGeo.morphTargetsRelative = true;
+
+              mesh.geometry = compactGeo;
+              restorers.push(() => { mesh.geometry = origGeo; });
+            }
           } catch (err) {
-            console.warn(`Simplify failed for ${mesh.name}:`, err);
+            simplifyFailed++;
+            console.warn(`Simplify failed for ${mesh.name || 'mesh'}:`, err);
           }
+          // Yield to event loop between meshes so UI stays responsive
+          await new Promise(r => setTimeout(r, 0));
+        }
+        if (simplifyFailed > 0) {
+          console.warn(`${simplifyFailed}/${meshes.length} meshes could not be simplified`);
         }
       } catch (err) {
-        console.warn('SimplifyModifier not available:', err);
+        if (err.name === 'AbortError') throw err;
+        console.warn('meshoptimizer simplifier not available:', err);
       }
     }
 
-    // --- Export ---
-    const exporter = new GLTFExporter();
-    const options = { binary: true };
-    if (animations.length > 0) options.animations = animations;
+    // --- Export (with try/finally to guarantee restorers run) ---
+    try {
+      if (signal?.aborted) throw new DOMException('Export cancelled', 'AbortError');
+      onProgress?.('Generating GLB file...');
 
-    const result = await exporter.parseAsync(root, options);
+      const exporter = new GLTFExporter();
+      const options = { binary: true };
+      if (animations.length > 0) options.animations = animations;
 
-    // --- Restore all modifications ---
-    restorers.forEach(fn => fn());
-    this.adapter._requestRender?.();
+      // Race parseAsync against a 60s timeout and the abort signal
+      const EXPORT_TIMEOUT_MS = 60000;
+      let exportTimeout;
+      const result = await Promise.race([
+        exporter.parseAsync(root, options),
+        new Promise((_, reject) => {
+          exportTimeout = setTimeout(() => reject(new Error('Export timed out (60s)')), EXPORT_TIMEOUT_MS);
+          signal?.addEventListener('abort', () => {
+            clearTimeout(exportTimeout);
+            reject(new DOMException('Export cancelled', 'AbortError'));
+          }, { once: true });
+        })
+      ]);
+      clearTimeout(exportTimeout);
 
-    // --- Download ---
-    const suffix = [];
-    if (animOnly && forceAnims?.length) {
-      const clipName = (forceAnims[0].name || 'animation').replace(/[^a-zA-Z0-9_-]/g, '_');
-      suffix.push(`anim_${clipName}`);
+      // --- Download ---
+      const suffix = [];
+      if (animOnly && forceAnims?.length) {
+        const clipName = (forceAnims[0].name || 'animation').replace(/[^a-zA-Z0-9_-]/g, '_');
+        suffix.push(`anim_${clipName}`);
+      }
+      if (texSize > 0 && !animOnly) suffix.push(`${texSize}px`);
+      if (simplifyRatio < 1 && !animOnly) suffix.push(`${Math.round(simplifyRatio * 100)}pct`);
+      if (stripTextures && !animOnly) suffix.push('notex');
+      const name = this._getModelName() + (suffix.length ? '_' + suffix.join('_') : '') + '.glb';
+
+      const blob = new Blob([result], { type: 'application/octet-stream' });
+      this._downloadBlob(blob, name);
+    } finally {
+      // ALWAYS restore modifications, even if export throws or is cancelled
+      restorers.forEach(fn => fn());
+      this.adapter._requestRender?.();
     }
-    if (texSize > 0 && !animOnly) suffix.push(`${texSize}px`);
-    if (simplifyRatio < 1 && !animOnly) suffix.push(`${Math.round(simplifyRatio * 100)}pct`);
-    if (stripTextures && !animOnly) suffix.push('notex');
-    const name = this._getModelName() + (suffix.length ? '_' + suffix.join('_') : '') + '.glb';
-
-    const blob = new Blob([result], { type: 'application/octet-stream' });
-    this._downloadBlob(blob, name);
   }
 
   async _exportTextures() {
