@@ -1050,97 +1050,25 @@ async function showFullscreen(model) {
     } else if (model.type === "image") {
       fullscreenViewer.style.display = 'block';
       fullscreenVideo.style.display = 'none';
-      const img = document.createElement("img");
-      img.src = fileUrl;
-      img.draggable = false;
-      img.style.width = "100%";
-      img.style.height = "100%";
-      img.style.objectFit = "contain";
-      fullscreenViewer.innerHTML = "";
-      fullscreenViewer.appendChild(img);
 
-      // --- Zoom & Pan ---
-      let scale = 1, translateX = 0, translateY = 0;
-      let isDragging = false, startX = 0, startY = 0;
-
-      const updateTransform = () => {
-        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-        img.style.cursor = isDragging ? 'grabbing' : (scale !== 1 ? 'grab' : 'default');
-      };
-
-      // Wheel zoom (cursor-centered)
-      const onWheel = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const rect = img.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const mx = e.clientX - cx;
-        const my = e.clientY - cy;
-        const prev = scale;
-        const factor = 1.1;
-        scale = e.deltaY < 0
-          ? Math.min(scale * factor, 10)
-          : Math.max(scale / factor, 0.5);
-        const r = scale / prev;
-        translateX = mx - r * (mx - translateX);
-        translateY = my - r * (my - translateY);
-        updateTransform();
-      };
-
-      // Block page scroll on the entire overlay while image is open
-      const onOverlayWheel = (e) => { e.preventDefault(); };
-      fullscreenOverlay.addEventListener('wheel', onOverlayWheel, { passive: false });
-      fullscreenViewer.addEventListener('wheel', onWheel, { passive: false });
-
-      // Pan (left-drag)
-      const onMouseDown = (e) => {
-        if (e.button !== 0) return;
-        isDragging = true;
-        startX = e.clientX - translateX;
-        startY = e.clientY - translateY;
-        img.style.cursor = 'grabbing';
-        e.preventDefault();
-      };
-      const onMouseMove = (e) => {
-        if (!isDragging) return;
-        translateX = e.clientX - startX;
-        translateY = e.clientY - startY;
-        updateTransform();
-      };
-      const onMouseUp = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        updateTransform();
-      };
-      img.addEventListener('mousedown', onMouseDown);
-      window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', onMouseUp);
-
-      // Zoom control buttons
-      const controls = document.createElement('div');
-      controls.className = 'image-controls';
-      controls.innerHTML = `
-        <button class="zoom-in" title="Zoom In"><i class="fa fa-plus"></i></button>
-        <button class="zoom-out" title="Zoom Out"><i class="fa fa-minus"></i></button>
-        <button class="zoom-reset" title="Reset Zoom"><i class="fa fa-expand"></i></button>
-      `;
-      controls.querySelector('.zoom-in').addEventListener('click', () => { scale = Math.min(scale * 1.2, 10); updateTransform(); });
-      controls.querySelector('.zoom-out').addEventListener('click', () => { scale = Math.max(scale / 1.2, 0.5); updateTransform(); });
-      controls.querySelector('.zoom-reset').addEventListener('click', () => { scale = 1; translateX = 0; translateY = 0; updateTransform(); });
-      fullscreenViewer.appendChild(controls);
+      // Use the new image viewer module
+      const { imageViewer } = await import('../viewers/image_viewer.js');
+      const imageFiles = filteredModelFiles.filter(f => f.type === 'image');
+      const imageIndex = imageFiles.findIndex(f => f.name === model.name);
+      await imageViewer.open(model, fileUrl, imageFiles, imageIndex);
 
       currentFullscreenViewer = {
         type: 'image',
-        element: img,
+        element: imageViewer.img,
         fileName: model.name,
+        imageViewer,
         cleanup: () => {
-          window.removeEventListener('mousemove', onMouseMove);
-          window.removeEventListener('mouseup', onMouseUp);
-          fullscreenOverlay.removeEventListener('wheel', onOverlayWheel);
+          imageViewer.close();
           if (needsCleanup && fileUrl) URL.revokeObjectURL(fileUrl);
         }
       };
+      // Store external ref so imageViewer navigation can update fileName
+      window._ivExternalRef = currentFullscreenViewer;
 
     } else if (model.type === "audio") {
       fullscreenViewer.style.display = 'block';

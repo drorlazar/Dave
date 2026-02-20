@@ -1,0 +1,910 @@
+/* ================================================================
+   Image Viewer - Redesigned bottom toolbar UI
+   All classes prefixed with iv- to avoid conflicts.
+   Theme-aware: all colors derive from --theme-* CSS custom properties.
+   ================================================================ */
+
+/* --- Theme Variable Bridge ---
+   Scoped to IV containers. Derives from the app's --theme-* system
+   so all 15 themes work automatically with zero overrides. */
+.iv-toolbar,
+.iv-anno-bar,
+.iv-minimap,
+.iv-info-panel,
+.iv-export-panel {
+  --iv-accent: var(--theme-accent);
+  --iv-bg: color-mix(in srgb, var(--theme-bg) 92%, transparent);
+  --iv-bg-solid: var(--theme-bg);
+  --iv-surface: var(--theme-surface);
+  --iv-border: var(--theme-border);
+  --iv-text: var(--theme-text);
+  --iv-muted: var(--theme-muted);
+  --iv-btn-bg: color-mix(in srgb, var(--theme-accent) 4%, transparent);
+  --iv-btn-hover-bg: color-mix(in srgb, var(--theme-accent) 8%, transparent);
+  --iv-btn-hover-border: color-mix(in srgb, var(--theme-accent) 40%, var(--theme-border));
+  --iv-btn-hover-text: color-mix(in srgb, var(--theme-accent) 70%, var(--theme-text));
+  --iv-active-bg: color-mix(in srgb, var(--theme-accent) 14%, transparent);
+  --iv-active-glow: color-mix(in srgb, var(--theme-accent) 20%, transparent);
+  --iv-glow: color-mix(in srgb, var(--theme-accent) 5%, transparent);
+}
+
+/* --- Hide old UI elements when image viewer is active --- */
+.iv-fullscreen #returnButton,
+.iv-fullscreen .fullscreen-info,
+.iv-fullscreen .fullscreen-edit-btn,
+.iv-fullscreen .image-controls {
+  display: none !important;
+}
+
+/* Expand image area to fill viewport minus toolbar */
+.iv-fullscreen #fullscreenContent {
+  top: 0;
+  left: 0;
+  transform: none;
+  width: 100%;
+  height: calc(100% - 52px);
+}
+
+.iv-fullscreen #fullscreenViewerWrap {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+.iv-fullscreen #fullscreenViewer {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.iv-fullscreen #fullscreenViewer img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Narrower nav areas when image viewer is active */
+.iv-fullscreen .fullscreen-nav {
+  width: 60px;
+  background: transparent;
+}
+
+.iv-fullscreen #prevNav:hover {
+  background: linear-gradient(to right, rgba(0,0,0,0.3), transparent);
+}
+
+.iv-fullscreen #nextNav:hover {
+  background: linear-gradient(to left, rgba(0,0,0,0.3), transparent);
+}
+
+/* ================================================================
+   Bottom Toolbar
+   ================================================================ */
+.iv-toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: var(--iv-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--iv-border);
+  box-shadow: 0 -1px 10px var(--iv-glow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: calc(var(--z-fullscreen) + 3);
+  gap: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: 'Courier New', Courier, monospace;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.iv-toolbar.iv-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+
+/* Toolbar sections */
+.iv-toolbar-left,
+.iv-toolbar-center,
+.iv-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iv-toolbar-left {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.iv-toolbar-center {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.iv-toolbar-right {
+  flex: 0 0 auto;
+}
+
+/* ================================================================
+   Buttons
+   ================================================================ */
+.iv-btn {
+  background: var(--iv-btn-bg);
+  border: 1px solid var(--iv-border);
+  color: var(--iv-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.iv-btn:hover {
+  background: var(--iv-btn-hover-bg);
+  border-color: var(--iv-btn-hover-border);
+  color: var(--iv-btn-hover-text);
+}
+
+.iv-btn.iv-active {
+  background: var(--iv-active-bg);
+  border-color: var(--iv-accent);
+  color: var(--iv-accent);
+  box-shadow: 0 0 8px var(--iv-active-glow);
+}
+
+.iv-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Text buttons (Fit, 100%) */
+.iv-btn-text {
+  width: auto;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ================================================================
+   Zoom Slider
+   ================================================================ */
+.iv-zoom-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iv-zoom-slider-wrap {
+  width: 120px;
+  display: flex;
+  align-items: center;
+}
+
+.iv-zoom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--iv-border);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+
+.iv-zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--iv-accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--iv-active-glow);
+}
+
+.iv-zoom-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--iv-accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--iv-active-glow);
+  border: none;
+}
+
+.iv-zoom-label {
+  font-size: 12px;
+  color: var(--iv-muted);
+  min-width: 42px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ================================================================
+   Divider
+   ================================================================ */
+.iv-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--iv-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   Filename & Dimensions
+   ================================================================ */
+.iv-filename {
+  font-size: 13px;
+  color: var(--iv-accent);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Courier New', Courier, monospace;
+  text-shadow: 0 0 6px var(--iv-active-glow);
+}
+
+.iv-dimensions {
+  font-size: 11px;
+  color: var(--iv-muted);
+  white-space: nowrap;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ================================================================
+   Navigation Counter
+   ================================================================ */
+.iv-nav-counter {
+  font-size: 12px;
+  color: var(--iv-muted);
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ================================================================
+   Mini-Map
+   ================================================================ */
+.iv-minimap {
+  position: fixed;
+  bottom: 68px;
+  right: 16px;
+  width: 160px;
+  background: color-mix(in srgb, var(--theme-bg) 85%, transparent);
+  border: 1px solid var(--iv-border);
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: calc(var(--z-fullscreen) + 3);
+  transition: opacity 0.2s;
+  box-shadow: 0 0 8px var(--iv-glow);
+}
+
+.iv-minimap-canvas {
+  display: block;
+  width: 100%;
+}
+
+.iv-minimap-viewport {
+  position: absolute;
+  border: 2px solid var(--iv-accent);
+  background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
+  pointer-events: auto;
+  cursor: move;
+  box-sizing: border-box;
+}
+
+/* ================================================================
+   Info Panel
+   ================================================================ */
+.iv-info-panel {
+  position: fixed;
+  bottom: 60px;
+  left: 16px;
+  width: 280px;
+  background: color-mix(in srgb, var(--theme-bg) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: 1px solid var(--iv-border);
+  z-index: calc(var(--z-fullscreen) + 4);
+  padding: 12px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 10px var(--iv-glow);
+  animation: iv-slide-up 0.2s ease-out;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.iv-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--iv-glow);
+}
+
+.iv-info-row:last-child {
+  border-bottom: none;
+}
+
+.iv-info-row span:first-child {
+  color: var(--iv-muted);
+  flex-shrink: 0;
+}
+
+.iv-info-row span:last-child {
+  color: var(--iv-accent);
+  text-align: right;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ================================================================
+   Export Panel
+   ================================================================ */
+.iv-export-panel {
+  position: fixed;
+  bottom: 60px;
+  right: 16px;
+  width: 320px;
+  background: color-mix(in srgb, var(--theme-bg) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: 1px solid var(--iv-border);
+  z-index: calc(var(--z-fullscreen) + 4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 10px var(--iv-glow);
+  overflow: hidden;
+  animation: iv-slide-up 0.2s ease-out;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.iv-export-header {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--iv-border);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--iv-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.iv-export-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.iv-export-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.iv-export-row > label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--iv-muted);
+  font-weight: 500;
+}
+
+.iv-export-formats,
+.iv-export-sizes {
+  display: flex;
+  gap: 6px;
+}
+
+.iv-export-fmt,
+.iv-export-size {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--iv-border);
+  background: var(--iv-btn-bg);
+  color: var(--iv-muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Courier New', Courier, monospace;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.iv-export-fmt:hover,
+.iv-export-size:hover {
+  background: var(--iv-btn-hover-bg);
+  border-color: var(--iv-btn-hover-border);
+  color: var(--iv-btn-hover-text);
+}
+
+.iv-export-fmt.iv-active,
+.iv-export-size.iv-active {
+  background: var(--iv-active-bg);
+  color: var(--iv-accent);
+  border-color: var(--iv-accent);
+  box-shadow: 0 0 6px var(--iv-active-glow);
+}
+
+.iv-quality-row {
+  flex-direction: row;
+  align-items: center;
+}
+
+.iv-quality-row label {
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.iv-quality-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 2px;
+  background: var(--iv-border);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+
+.iv-quality-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--iv-accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--iv-active-glow);
+}
+
+.iv-quality-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--iv-accent);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--iv-active-glow);
+}
+
+.iv-quality-value {
+  font-size: 12px;
+  color: var(--iv-muted);
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.iv-export-custom-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.iv-export-custom-size input[type="number"] {
+  width: 80px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--iv-border);
+  background: var(--iv-btn-bg);
+  color: var(--iv-accent);
+  font-size: 12px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.iv-export-custom-size span {
+  color: var(--iv-muted);
+  font-size: 12px;
+}
+
+.iv-export-custom-size label {
+  font-size: 11px;
+  color: var(--iv-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.iv-export-include-annotations label {
+  font-size: 12px;
+  color: var(--iv-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.iv-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.iv-export-actions .iv-btn {
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  gap: 6px;
+  flex: 1;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.iv-export-actions .iv-btn i {
+  font-size: 12px;
+}
+
+.iv-export-download {
+  background: var(--iv-active-bg) !important;
+  color: var(--iv-accent) !important;
+  border-color: var(--iv-accent) !important;
+  box-shadow: 0 0 8px var(--iv-active-glow) !important;
+}
+
+.iv-export-download:hover {
+  background: var(--iv-active-glow) !important;
+}
+
+/* ================================================================
+   Annotation Toolbar
+   ================================================================ */
+.iv-anno-bar {
+  position: fixed;
+  bottom: 52px;
+  left: 0;
+  right: 0;
+  background: var(--iv-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--iv-border);
+  box-shadow: 0 -1px 8px var(--iv-glow);
+  z-index: calc(var(--z-fullscreen) + 4);
+  font-family: 'Courier New', Courier, monospace;
+  user-select: none;
+  -webkit-user-select: none;
+  display: none;
+}
+
+.iv-anno-bar--enter {
+  animation: iv-anno-slide-up 0.2s ease-out;
+}
+
+/* Header row */
+.iv-anno-bar__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 12px 0;
+  height: 14px;
+}
+
+.iv-anno-bar__status-light {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--iv-accent);
+  box-shadow: 0 0 4px var(--iv-accent);
+  animation: iv-anno-blink 2s ease-in-out infinite;
+}
+
+.iv-anno-bar__title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--iv-muted);
+}
+
+/* Body row */
+.iv-anno-bar__body {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px 6px;
+  gap: 4px;
+}
+
+.iv-anno-bar__section {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.iv-anno-bar__options {
+  gap: 6px;
+}
+
+.iv-anno-bar__divider {
+  width: 1px;
+  height: 24px;
+  background: var(--iv-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Tool buttons */
+.iv-anno-tool {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  background: var(--iv-btn-bg);
+  border: 1px solid var(--iv-border);
+  color: var(--iv-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  padding: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.iv-anno-tool:hover {
+  border-color: var(--iv-btn-hover-border);
+  color: var(--iv-btn-hover-text);
+  background: var(--iv-btn-hover-bg);
+}
+
+.iv-anno-tool--active {
+  background: var(--iv-active-bg);
+  border-color: var(--iv-accent);
+  color: var(--iv-accent);
+  box-shadow: 0 0 8px var(--iv-active-glow);
+}
+
+.iv-anno-tool--active:hover {
+  background: color-mix(in srgb, var(--theme-accent) 16%, transparent);
+  color: var(--iv-accent);
+}
+
+/* Keyboard shortcut hint */
+.iv-anno-tool__key {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 8px;
+  line-height: 1;
+  color: color-mix(in srgb, var(--theme-accent) 40%, var(--theme-bg));
+  font-family: 'Courier New', Courier, monospace;
+  pointer-events: none;
+}
+
+/* Toggle buttons (fill/stroke) */
+.iv-anno-toggle {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid var(--iv-border);
+  color: var(--iv-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  padding: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.iv-anno-toggle:hover {
+  border-color: var(--iv-btn-hover-border);
+  color: var(--iv-btn-hover-text);
+}
+
+.iv-anno-toggle--active {
+  background: color-mix(in srgb, var(--theme-accent) 10%, transparent);
+  border-color: var(--iv-accent);
+  color: var(--iv-accent);
+}
+
+/* Color swatches */
+.iv-anno-color-swatches {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.iv-anno-color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  flex-shrink: 0;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.iv-anno-color-swatch:hover {
+  transform: scale(1.2);
+}
+
+.iv-anno-color-swatch--active {
+  border-color: var(--iv-text);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--theme-text) 40%, transparent);
+}
+
+/* Custom color picker */
+.iv-anno-color-custom {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+}
+
+.iv-anno-color-custom::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.iv-anno-color-custom::-webkit-color-swatch {
+  border: 1px solid var(--iv-border);
+  border-radius: 3px;
+}
+
+/* Stroke width slider */
+.iv-anno-slider-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iv-anno-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 70px;
+  height: 2px;
+  background: var(--iv-border);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+
+.iv-anno-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--iv-accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--iv-active-glow);
+}
+
+.iv-anno-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--iv-accent);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--iv-active-glow);
+}
+
+.iv-anno-slider__value {
+  font-size: 11px;
+  color: var(--iv-muted);
+  min-width: 28px;
+  font-family: 'Courier New', Courier, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inline text editor */
+.iv-anno-text-input {
+  position: fixed;
+  z-index: calc(var(--z-fullscreen) + 10);
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 30%, transparent);
+  outline: none;
+  min-width: 40px;
+  max-width: 400px;
+  white-space: pre;
+  caret-color: var(--theme-accent);
+  line-height: 1.2;
+}
+
+/* ================================================================
+   Annotation Canvas
+   ================================================================ */
+.iv-annotation-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: calc(var(--z-fullscreen) + 2);
+  pointer-events: none;
+}
+
+.iv-annotation-canvas.iv-drawing {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+/* ================================================================
+   Checkerboard background for transparency
+   ================================================================ */
+.iv-bg-checker #fullscreenViewer {
+  background-image:
+    linear-gradient(45deg, #333 25%, transparent 25%),
+    linear-gradient(-45deg, #333 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #333 75%),
+    linear-gradient(-45deg, transparent 75%, #333 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+body:not(.dark-mode) .iv-bg-checker #fullscreenViewer {
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+}
+
+/* ================================================================
+   Animations
+   ================================================================ */
+@keyframes iv-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes iv-anno-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes iv-anno-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

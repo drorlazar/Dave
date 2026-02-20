@@ -467,6 +467,13 @@ function initializeElements() {
           }
           // Fullscreen view shortcuts
           else if (isFullscreen) {
+            // Image viewer handles its own keys via capture phase
+            if (currentFullscreenViewer?.imageViewer) {
+              if (event.key === 'Escape' && !event.defaultPrevented) {
+                exitFullscreen(currentFullscreenViewer);
+              }
+              return;
+            }
             // 3D Inspector shortcuts
             if (currentFullscreenViewer?.inspector) {
               const inspector = currentFullscreenViewer.inspector;
@@ -943,6 +950,11 @@ function handleSortDropdownToggle(event) {
 
 // Function to navigate in fullscreen mode
 function navigateFullscreen(direction) {
+  // Image viewer handles its own navigation
+  if (currentFullscreenViewer?.imageViewer) {
+    currentFullscreenViewer.imageViewer.navigate(direction);
+    return;
+  }
   const currentIndex = filteredModelFiles.findIndex(file => file.name === currentFullscreenViewer?.fileName);
   if (currentIndex === -1) return;
 

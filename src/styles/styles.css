@@ -46,6 +46,9 @@
   --z-notification:   999;
   --z-tooltip:        1000;
   --z-fullscreen:     1200;
+  --z-iv-annotation:  calc(var(--z-fullscreen) + 2);
+  --z-iv-toolbar:     calc(var(--z-fullscreen) + 3);
+  --z-iv-panel:       calc(var(--z-fullscreen) + 4);
   --z-modal:          1500;
   --z-dave-alive:     1700;
   --z-dave-presence:  2000;
