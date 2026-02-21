@@ -415,7 +415,13 @@ class ImageViewer {
     if (!this.img) return;
     const rot = this.rotation ? `rotate(${this.rotation}deg)` : '';
     this.img.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale}) ${rot}`;
-    this.img.style.cursor = this.isDragging ? 'grabbing' : (this.scale > 1.01 ? 'grab' : 'default');
+    const atFit = Math.abs(this.scale - 1) < 0.01 && Math.abs(this.translateX) < 1 && Math.abs(this.translateY) < 1;
+    this.img.style.cursor = this.isDragging ? 'grabbing' : (!atFit ? 'grab' : 'default');
+
+    // Keep annotation overlay in sync with image transform
+    if (this._annotationModule && this.isAnnotationMode) {
+      this._annotationModule._requestRedraw();
+    }
   }
 
   _updateZoomUI() {
@@ -439,8 +445,8 @@ class ImageViewer {
   _handleMouseDown(e) {
     if (e.button !== 0) return;
     if (this.isAnnotationMode) return;
-    // Only allow pan if zoomed beyond fit (scale > 1 = fit)
-    if (this.scale <= 1.01) return;
+    // Only block pan at exact fit (scale ~1 with no translation)
+    if (Math.abs(this.scale - 1) < 0.01 && Math.abs(this.translateX) < 1 && Math.abs(this.translateY) < 1) return;
 
     this.isDragging = true;
     this.dragStartX = e.clientX - this.translateX;
@@ -519,7 +525,7 @@ class ImageViewer {
     if (this.isDragging) return;
     if (this._infoPanelOpen || this._exportPanelOpen) return;
     const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
-    document.dispatchEvent(event);
+    document.body.dispatchEvent(event);
   }
 
   /** Check if a screen point falls on actual image content (not letterbox area) */
@@ -1011,6 +1017,9 @@ class ImageViewer {
     // Just update minimap and zoom UI (percentage display may change).
     this._updateZoomUI();
     this._updateMiniMap();
+    if (this._annotationModule && this.isAnnotationMode) {
+      this._annotationModule._resizeCanvas();
+    }
   }
 
   // ===========================================================

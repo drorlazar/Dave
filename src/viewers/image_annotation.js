@@ -23,6 +23,7 @@ export class ImageAnnotation {
     this.visible = true;
     this.isDrawing = false;
     this._animFrame = null;
+    this._nextNumber = 1;
 
     // Selection state
     this.selectedId = null;
@@ -165,6 +166,7 @@ export class ImageAnnotation {
       { id: 'rect', icon: 'fa-square', key: '', title: 'Rectangle' },
       { id: 'circle', icon: 'fa-circle', key: '', title: 'Circle' },
       { id: 'text', icon: 'fa-font', key: 'T', title: 'Text' },
+      { id: 'number', icon: 'fa-hashtag', key: 'N', title: 'Number' },
       { id: 'highlighter', icon: 'fa-highlighter', key: 'H', title: 'Highlighter' },
     ];
 
@@ -608,6 +610,15 @@ export class ImageAnnotation {
           maxY: stroke.start.y + this._pixelsToImageDist(4)
         };
       }
+      case 'number': {
+        const radius = this._pixelsToImageDist((stroke.fontSize || 18) * 0.75);
+        return {
+          minX: stroke.start.x - radius,
+          minY: stroke.start.y - radius,
+          maxX: stroke.start.x + radius,
+          maxY: stroke.start.y + radius
+        };
+      }
       default:
         return null;
     }
@@ -679,6 +690,12 @@ export class ImageAnnotation {
       case 'text': {
         const b = this._getBounds(stroke);
         return b && testPt.x >= b.minX && testPt.x <= b.maxX && testPt.y >= b.minY && testPt.y <= b.maxY;
+      }
+      case 'number': {
+        const radius = this._pixelsToImageDist((stroke.fontSize || 18) * 0.75);
+        const dx = testPt.x - stroke.start.x;
+        const dy = testPt.y - stroke.start.y;
+        return Math.sqrt(dx * dx + dy * dy) <= radius + threshold;
       }
       default:
         return false;
@@ -851,6 +868,7 @@ export class ImageAnnotation {
         stroke.end.y = newMinY + (orig.end.y - origBounds.minY) * scaleY;
         break;
       }
+      case 'number':
       case 'text': {
         stroke.start.x = newMinX + (orig.start.x - origBounds.minX) * scaleX;
         stroke.start.y = newMinY + (orig.start.y - origBounds.minY) * scaleY;
@@ -880,6 +898,32 @@ export class ImageAnnotation {
     if (this.tool === 'text') {
       if (!this._isInImageBounds(pt)) return;
       this._openTextEditor(pt, e.clientX, e.clientY);
+      return;
+    }
+
+    // NUMBER TOOL — click-to-place numbered point
+    if (this.tool === 'number') {
+      if (!this._isInImageBounds(pt)) return;
+      const stroke = {
+        id: crypto.randomUUID(),
+        type: 'number',
+        color: this.color,
+        lineWidth: this.lineWidth,
+        text: String(this._nextNumber),
+        start: { ...pt },
+        end: { ...pt },
+        fontSize: Math.max(18, this.lineWidth * 5),
+        points: [],
+        fillColor: null,
+        fillOpacity: 0.3,
+        strokeEnabled: true,
+        rotation: 0,
+      };
+      this.strokes.push(stroke);
+      this._pushUndo({ type: 'add', stroke });
+      this._nextNumber++;
+      this._requestRedraw();
+      e.preventDefault();
       return;
     }
 
@@ -1234,7 +1278,7 @@ export class ImageAnnotation {
 
     // Check selected stroke first
     const selected = this._getSelectedStroke();
-    if (selected && selected.type === 'text' && this._hitTestStroke(selected, pt)) {
+    if (selected && (selected.type === 'text' || selected.type === 'number') && this._hitTestStroke(selected, pt)) {
       e.stopPropagation();
       this._editTextStroke(selected);
       return;
@@ -1243,7 +1287,7 @@ export class ImageAnnotation {
     // Find any text annotation under cursor
     for (let i = this.strokes.length - 1; i >= 0; i--) {
       const stroke = this.strokes[i];
-      if (stroke.type === 'text' && this._hitTestStroke(stroke, pt)) {
+      if ((stroke.type === 'text' || stroke.type === 'number') && this._hitTestStroke(stroke, pt)) {
         this.selectedId = stroke.id;
         this._onSelectionChange();
         e.stopPropagation();
@@ -1346,6 +1390,7 @@ export class ImageAnnotation {
       case 'p': case 'P': this._selectTool('pen'); e.preventDefault(); return true;
       case 'l': case 'L': this._selectTool('line'); e.preventDefault(); return true;
       case 't': case 'T': this._selectTool('text'); e.preventDefault(); return true;
+      case 'n': case 'N': this._selectTool('number'); e.preventDefault(); return true;
       case 'h': case 'H': this._selectTool('highlighter'); e.preventDefault(); return true;
     }
 
@@ -1475,6 +1520,7 @@ export class ImageAnnotation {
       case 'rect': this._renderRect(stroke, ctx, toCanvas, isExport); break;
       case 'circle': this._renderCircle(stroke, ctx, toCanvas, isExport); break;
       case 'text': this._renderText(stroke, ctx, toCanvas, isExport); break;
+      case 'number': this._renderNumber(stroke, ctx, toCanvas, isExport); break;
       case 'highlighter': this._renderHighlighter(stroke, ctx, toCanvas, isExport); break;
     }
 
@@ -1606,6 +1652,36 @@ export class ImageAnnotation {
     // Text
     ctx.fillStyle = stroke.color;
     ctx.fillText(text, p.x, p.y);
+  }
+
+  _renderNumber(stroke, ctx, toCanvas) {
+    const center = toCanvas ? toCanvas(stroke.start.x, stroke.start.y) : stroke.start;
+    const fontSize = stroke.fontSize || 18;
+    const radius = fontSize * 0.75;
+    const text = stroke.text || '1';
+
+    // Dark semi-transparent circle background
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Colored border ring
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Colored number text centered
+    ctx.fillStyle = stroke.color;
+    ctx.font = `bold ${fontSize}px 'Courier New', Courier, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, center.x, center.y);
   }
 
   _renderHighlighter(stroke, ctx, toCanvas) {
@@ -1947,6 +2023,7 @@ export class ImageAnnotation {
     }
     this.strokes = [];
     this.redoStack = [];
+    this._nextNumber = 1;
     this._clearSelection();
     this._requestRedraw();
   }
@@ -2108,6 +2185,33 @@ export class ImageAnnotation {
         // Text
         ctx.fillStyle = stroke.color;
         ctx.fillText(text, p.x, p.y);
+        break;
+      }
+      case 'number': {
+        const center = toPixel(stroke.start);
+        const fontSize = (stroke.fontSize || 18) * scale;
+        const radius = fontSize * 0.75;
+        const text = stroke.text || '1';
+        // Dark semi-transparent circle background
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Colored border ring
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        // Colored number text centered
+        ctx.fillStyle = stroke.color;
+        ctx.font = `bold ${fontSize}px 'Courier New', Courier, monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, center.x, center.y);
         break;
       }
       case 'highlighter': {
