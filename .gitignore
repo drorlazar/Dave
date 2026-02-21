@@ -4,7 +4,9 @@
 /tmp
 /out-tsc
 
-dist
+/dist/*
+!/dist/dave-skill/
+!/dist/dave-skill.zip
 recordings
 trash
 *.blend1
