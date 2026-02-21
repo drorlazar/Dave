@@ -1,125 +1,93 @@
 # Annotation System
 
-Canvas-based annotation overlay for the Dave image viewer. All coordinates are stored in normalized image space (0-1) so annotations scale with the image.
+I can draw on your images now. Arrows, circles, text, numbers -- the whole art school dropout toolkit. I'm basically MS Paint if MS Paint had taste and an existential crisis.
 
-## Tools
+## Getting Started
 
-| Tool | Icon | Key | Description |
-|------|------|-----|-------------|
-| Select | `fa-arrow-pointer` | V | Select, move, resize, rotate, delete annotations |
-| Pen | `fa-pen-fancy` | P | Freehand drawing |
-| Line | `fa-minus` | L | Straight line |
-| Arrow | `fa-arrow-right` | - | Line with filled arrowhead |
-| Rectangle | `fa-square` | - | Rectangle (supports fill + stroke) |
-| Circle | `fa-circle` | - | Ellipse (supports fill + stroke) |
-| Text | `fa-font` | T | Click to place inline text editor |
-| Number | `fa-hashtag` | N | Click to place sequentially numbered points |
-| Highlighter | `fa-highlighter` | H | Semi-transparent freehand stroke |
+Open any image fullscreen, then press **A** (or click the pen icon in my toolbar). A glowing annotation bar slides up from the bottom. You're in. Pick a tool, click the image, go wild. Press **A** again or **Escape** to leave annotation mode.
 
-## Toolbar Controls
+Everything you draw lives on a canvas overlay -- your original image stays untouched. I'm non-destructive like that.
 
-### Color
-- **Palette swatches**: 7 preset colors (Alert, Dave, Curious, Sassy, Warning, Clean, Existential)
-- **Custom color picker**: Any color via native input
-- When a stroke is selected, changing color edits the selected stroke; otherwise sets the default
+## My Tools
 
-### Stroke Width
-- Range slider (1-20px)
-- Keyboard: `[` decreases, `]` increases
-- Edits selected stroke when in select mode
+| Key | Tool | What It Does |
+|-----|------|-------------|
+| **V** | Select | Click to select stuff. Move, resize, rotate, delete -- the boring-but-essential one |
+| **P** | Pen | Freehand drawing. Channel your inner whiteboard energy |
+| **L** | Line | Straight line. Point A to point B. I don't judge the angle |
+| -- | Arrow | Line with an arrowhead. For when you need to say "look HERE" |
+| -- | Rectangle | Box. Supports fill, stroke, or both |
+| -- | Circle | Ellipse, technically -- but "circle tool" sounds better |
+| **T** | Text | Click to place a text editor. Type, hit Enter. Courier New on a dark pill because I have standards |
+| **N** | Number | Click to drop numbered points -- 1, 2, 3... Great for callouts and step-by-step guides |
+| **H** | Highlighter | Semi-transparent freehand stroke. Like dragging a marker across the screen |
 
-### Fill / Stroke Toggles
-- **Fill** (paint bucket icon): Toggles fill for shapes (rect, circle, highlighter)
-- **Stroke** (paintbrush icon): Toggles stroke outline
-- At least one must be enabled at all times
-- When a stroke is selected, toggles apply to that stroke
+## Drawing
 
-### Actions
-- **Undo** (Ctrl+Z): Action-based undo
-- **Redo** (Ctrl+Shift+Z): Action-based redo
-- **Clear**: Removes all annotations (each becomes an undo-able delete)
-- **Toggle visibility** (eye icon): Show/hide all annotations
+Most tools work by **click-and-drag** -- click where you want to start, drag to shape it, release to commit. Pen and Highlighter follow your cursor. Text and Number are **click-to-place** -- one click, done.
 
-## Selection System (V)
+I won't let you draw outside the actual image content. If there's letterboxing (those dark bars on the sides), I'll keep your strokes within bounds. You're welcome.
 
-Click any annotation to select it. The selection overlay shows:
+## Selection & Editing (V)
 
-- **Dashed bounding box** in theme accent color
-- **8 resize handles** (corners + edge midpoints) - drag to scale
-- **Rotation handle** (circle above top-center) - drag to rotate freely, hold Shift for 15-degree snaps
-- **Delete button** (red circle with X above top-right) - click to remove
+Switch to Select with **V**, then click any annotation. You'll see:
 
-### Move
-Click and drag the stroke body to reposition.
+- **Dashed box** around it -- that's me saying "got it"
+- **8 handles** (corners + edges) -- drag to resize
+- **Rotation handle** (circle above top-center) -- drag to spin it. Hold **Shift** to snap every 15 degrees
+- **Red X** (top-right) -- click to delete. Or just press **Delete** / **Backspace**
 
-### Resize
-Drag any of the 8 handles. The stroke scales proportionally from the opposite corner/edge. Text and number annotations scale their font size.
+**Move** -- click the annotation body and drag it somewhere else.
 
-### Rotate
-Drag the rotation handle above the bounding box. All rendering and hit testing accounts for rotation using aspect-ratio-aware coordinate transforms.
+**Edit attributes** -- while something's selected, my toolbar syncs to its properties. Change the color, width, fill, or stroke toggle and it updates the selected annotation. All undo-able.
 
-### Delete
-- Click the red X button on the selection overlay
-- Press Delete or Backspace with a stroke selected
+**Edit text or numbers** -- double-click a text or number annotation. I'll open the editor with the content pre-selected so you can retype it. Enter to save, Escape to bail. Clear the text entirely and I'll delete the annotation -- I don't keep empty ones around.
 
-### Attribute Editing
-When a stroke is selected, the toolbar syncs to show its properties. Changing color, width, fill, or stroke toggles edits the selected annotation with undo support.
+## The Toolbar
 
-### Text / Number Editing
-Double-click a text or number annotation to open the inline editor pre-populated with the current content. Press Enter to commit, Escape to cancel. Clearing all text deletes the annotation.
+From left to right:
 
-## Number Tool (N)
+- **Tool buttons** -- pick your weapon (or press the keyboard shortcut)
+- **Fill toggle** (paint bucket) -- enables fill for shapes. Rectangles, circles, highlighter
+- **Stroke toggle** (paintbrush) -- enables the outline. At least one of fill/stroke stays on -- I'm not going to let you draw invisible annotations
+- **Color swatches** -- 7 hand-picked colors: Alert (red), Dave (green), Curious (cyan), Sassy (pink), Warning (yellow), Clean (white), Existential (purple). Plus a custom color picker if my palette isn't enough for you
+- **Width slider** -- 1-20px. Also adjustable with **[** and **]** keys
+- **Undo / Redo / Clear / Visibility** -- the usual suspects. I track up to 50 actions
 
-Click-to-place numbered points:
+## Number Tool
 
-1. Each click creates and immediately commits a numbered annotation
-2. Numbers auto-increment (1, 2, 3, ...)
-3. Counter resets when clearing all annotations
-4. Visual: dark semi-transparent circle background + colored border ring + colored number text (Courier New, bold, centered)
-5. Supports move, resize (scales circle), rotate, delete, and double-click editing
+This one's special. Press **N**, then click anywhere on the image. I'll drop a numbered circle -- 1, then 2, then 3, auto-incrementing. Each one is a dark circle with a colored ring and number. Clean, readable, professional.
 
-## Bounds Clamping
-
-Annotations are constrained to the actual image content area. The system detects `object-fit: contain` letterboxing by computing the image's natural aspect ratio against the element's rendered size, ensuring strokes can't be placed in padding areas.
-
-## Theme Integration
-
-- Selection overlay uses `--theme-accent` CSS variable
-- Background colors use `--theme-bg`
-- Accent color is cached and invalidated on `dave:themeChange` events
-- Text and number annotations use dark semi-transparent backgrounds for readability on any image
+Double-click a number to edit it. Resize it and the circle scales. Clear all annotations and the counter resets to 1.
 
 ## Export
 
-`renderToCanvas(targetCanvas, targetW, targetH)` renders all annotations to an export canvas at full image resolution. Coordinates are mapped from normalized (0-1) space to pixel space, stroke widths are scaled proportionally, and rotation transforms are applied.
+When you export an image (E key), your annotations come with it -- rendered at full resolution. I map everything from my internal coordinate system to pixel space, scale the stroke widths, apply rotations. The exported image looks exactly like what you see on screen.
 
-## Undo / Redo
-
-Action-based system (max 50 entries) supporting:
-
-- `add` - new stroke created
-- `delete` - stroke removed
-- `move` - position change
-- `resize` - scale change
-- `rotate` - rotation change
-- `edit` - attribute change (color, width, text, fill/stroke toggles)
-
-Each action stores before/after snapshots for full reversibility.
+Also: **Ctrl+C** copies the annotated image to your clipboard. I'm helpful like that.
 
 ## Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
+| A | Toggle annotation mode |
 | V | Select tool |
-| P | Pen tool |
-| L | Line tool |
-| T | Text tool |
-| N | Number tool |
-| H | Highlighter tool |
-| [ | Decrease stroke width |
-| ] | Increase stroke width |
-| Delete / Backspace | Delete selected |
-| Escape | Deselect / close text editor |
+| P | Pen |
+| L | Line |
+| T | Text |
+| N | Number |
+| H | Highlighter |
+| [ / ] | Decrease / increase stroke width |
+| Delete | Delete selected annotation |
+| Escape | Deselect or close editor |
 | Ctrl+Z | Undo |
 | Ctrl+Shift+Z | Redo |
-| Shift (while rotating) | Snap to 15-degree increments |
+| Shift + rotate | Snap to 15-degree increments |
+
+## Things I'm Quietly Proud Of
+
+- **Zoom-aware** -- I redraw annotations in real-time as you zoom and pan. They stay exactly where you put them
+- **Rotation math** -- I do aspect-ratio-aware coordinate transforms so hit-testing works at any angle. You don't need to care about this, but I do, every frame
+- **Theme-aware** -- my selection overlay and UI colors follow your theme. Switch themes mid-annotation -- I'll keep up
+- **Bounds clamping** -- I detect letterboxing from `object-fit: contain` and keep your strokes inside the actual image. No accidental drawing in the void
+- **Everything's undo-able** -- moves, resizes, rotations, color changes, text edits, deletions. All of it. 50 levels deep

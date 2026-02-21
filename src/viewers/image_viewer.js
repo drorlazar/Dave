@@ -310,7 +310,7 @@ class ImageViewer {
     tb.querySelector('.iv-close').addEventListener('click', () => {
       // Dispatch the close via the existing exitFullscreen path
       const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
-      document.dispatchEvent(event);
+      document.body.dispatchEvent(event);
     });
 
     // Prevent toolbar clicks from closing the overlay

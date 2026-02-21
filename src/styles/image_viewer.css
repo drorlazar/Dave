@@ -880,6 +880,105 @@ body:not(.dark-mode) .iv-bg-checker #fullscreenViewer {
 }
 
 /* ================================================================
+   Annotation Guide Panel
+   ================================================================ */
+.iv-anno-guide {
+  position: fixed;
+  bottom: 100px;
+  right: 16px;
+  width: 340px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--theme-bg) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: 1px solid var(--iv-border);
+  z-index: calc(var(--z-fullscreen) + 5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 10px var(--iv-glow);
+  animation: iv-slide-up 0.2s ease-out;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.iv-anno-guide__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--iv-border);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--iv-muted);
+}
+
+.iv-anno-guide__close {
+  background: none;
+  border: none;
+  color: var(--iv-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.iv-anno-guide__close:hover {
+  color: var(--iv-accent);
+}
+
+.iv-anno-guide__body {
+  padding: 10px 14px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--iv-fg, #ccc);
+}
+
+.iv-anno-guide__body p {
+  margin: 0 0 8px;
+}
+
+.iv-anno-guide__body h3 {
+  margin: 10px 0 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--iv-accent);
+}
+
+.iv-anno-guide__body ul {
+  margin: 4px 0 8px;
+  padding-left: 16px;
+}
+
+.iv-anno-guide__body li {
+  margin: 2px 0;
+}
+
+.iv-anno-guide__shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+}
+
+.iv-anno-guide__shortcuts span {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.iv-anno-guide kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+  background: var(--iv-btn-bg);
+  border: 1px solid var(--iv-border);
+  border-radius: 3px;
+  color: var(--iv-accent);
+  min-width: 16px;
+  text-align: center;
+}
+
+/* ================================================================
    Animations
    ================================================================ */
 @keyframes iv-slide-up {

@@ -51,6 +51,9 @@ export class ImageAnnotation {
     this._editingStrokeId = null;
     this._editingStrokeBefore = null;
 
+    // Guide panel
+    this._guidePanel = null;
+
     // Dave color palette
     this._palette = [
       { color: '#ff3333', name: 'Alert' },
@@ -114,6 +117,7 @@ export class ImageAnnotation {
     this.isDrawing = false;
     this._clearSelection();
     this._removeTextEditor();
+    this._closeGuide();
   }
 
   dispose() {
@@ -214,6 +218,8 @@ export class ImageAnnotation {
           <button class="iv-anno-tool" data-action="redo" title="Redo (Ctrl+Shift+Z)"><i class="fa fa-redo"></i></button>
           <button class="iv-anno-tool" data-action="clear" title="Clear all"><i class="fa fa-trash"></i></button>
           <button class="iv-anno-tool iv-anno-toggle-vis" data-action="toggle" title="Toggle visibility"><i class="fa fa-eye"></i></button>
+          <div class="iv-anno-bar__divider"></div>
+          <button class="iv-anno-tool" data-action="help" title="Annotation guide (?)"><i class="fa fa-question-circle"></i></button>
         </div>
       </div>
     `;
@@ -353,6 +359,7 @@ export class ImageAnnotation {
     this.toolbar.querySelector('[data-action="redo"]').addEventListener('click', () => this.redo());
     this.toolbar.querySelector('[data-action="clear"]').addEventListener('click', () => this.clearAll());
     this.toolbar.querySelector('[data-action="toggle"]').addEventListener('click', () => this.toggleVisibility());
+    this.toolbar.querySelector('[data-action="help"]').addEventListener('click', () => this._toggleGuide());
   }
 
   _selectTool(toolId) {
@@ -1392,6 +1399,7 @@ export class ImageAnnotation {
       case 't': case 'T': this._selectTool('text'); e.preventDefault(); return true;
       case 'n': case 'N': this._selectTool('number'); e.preventDefault(); return true;
       case 'h': case 'H': this._selectTool('highlighter'); e.preventDefault(); return true;
+      case '?': this._toggleGuide(); e.preventDefault(); return true;
     }
 
     // Delete selected annotation
@@ -2033,6 +2041,80 @@ export class ImageAnnotation {
     const icon = this.toolbar.querySelector('.iv-anno-toggle-vis i');
     icon.className = this.visible ? 'fa fa-eye' : 'fa fa-eye-slash';
     this._requestRedraw();
+  }
+
+  // ===========================================================
+  //  GUIDE PANEL
+  // ===========================================================
+
+  _toggleGuide() {
+    if (this._guidePanel) {
+      this._closeGuide();
+    } else {
+      this._openGuide();
+    }
+  }
+
+  _openGuide() {
+    if (this._guidePanel) return;
+    this._guidePanel = document.createElement('div');
+    this._guidePanel.className = 'iv-anno-guide';
+    this._guidePanel.innerHTML = `
+      <div class="iv-anno-guide__header">
+        <span>ANNOTATION GUIDE</span>
+        <button class="iv-anno-guide__close" title="Close">&times;</button>
+      </div>
+      <div class="iv-anno-guide__body">
+        <p>I can draw on your images now -- arrows, circles, text, numbers. I'm basically MS Paint if MS Paint had taste.</p>
+
+        <h3>Tools</h3>
+        <div class="iv-anno-guide__shortcuts">
+          <span><kbd>V</kbd> Select</span>
+          <span><kbd>P</kbd> Pen</span>
+          <span><kbd>L</kbd> Line</span>
+          <span><kbd>T</kbd> Text</span>
+          <span><kbd>N</kbd> Number</span>
+          <span><kbd>H</kbd> Highlighter</span>
+          <span>Arrow &amp; Rectangle &amp; Circle in toolbar</span>
+        </div>
+
+        <h3>Drawing</h3>
+        <p>Most tools: <strong>click + drag</strong>. Text &amp; Number: <strong>click to place</strong>. I won't let you draw outside the image.</p>
+
+        <h3>Selection (V)</h3>
+        <p>Click to select. Then:</p>
+        <ul>
+          <li><strong>Drag body</strong> to move</li>
+          <li><strong>Drag handles</strong> to resize</li>
+          <li><strong>Drag top circle</strong> to rotate (<kbd>Shift</kbd> snaps 15&deg;)</li>
+          <li><strong>Red X</strong> or <kbd>Del</kbd> to delete</li>
+          <li><strong>Double-click</strong> text/number to edit</li>
+        </ul>
+
+        <h3>Toolbar</h3>
+        <p>Change color, width, fill/stroke -- edits selected annotation or sets default. <kbd>[</kbd> <kbd>]</kbd> adjust width.</p>
+
+        <h3>More</h3>
+        <ul>
+          <li><kbd>Ctrl+Z</kbd> undo &middot; <kbd>Ctrl+Shift+Z</kbd> redo (50 levels)</li>
+          <li>Export (<kbd>E</kbd>) or clipboard (<kbd>Ctrl+C</kbd>) includes annotations</li>
+          <li>Annotations follow zoom &amp; pan in real-time</li>
+          <li>Colors follow your theme</li>
+        </ul>
+      </div>
+    `;
+
+    this._guidePanel.querySelector('.iv-anno-guide__close').addEventListener('click', () => this._closeGuide());
+    this.viewer.overlay.appendChild(this._guidePanel);
+    this.toolbar.querySelector('[data-action="help"]').classList.add('iv-anno-tool--active');
+  }
+
+  _closeGuide() {
+    if (this._guidePanel) {
+      this._guidePanel.remove();
+      this._guidePanel = null;
+      this.toolbar?.querySelector('[data-action="help"]')?.classList.remove('iv-anno-tool--active');
+    }
   }
 
   hasAnnotations() {
