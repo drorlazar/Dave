@@ -27,6 +27,9 @@ app.get('/favicon.ico', (req, res) => res.sendStatus(204));
 app.use('/api/s3', require('./routes/s3.cjs'));
 app.use('/api/gdrive', require('./routes/gdrive.cjs'));
 app.use('/api/config', require('./routes/config.cjs'));
+const controlRoutes = require('./routes/control.cjs');
+app.use('/api/control', controlRoutes);
+app.get('/api/file', controlRoutes.fileHandler);
 
 // URL rewriting middleware (preserve existing behavior)
 // When index.html references "styles/styles.css", it becomes "/styles/styles.css"

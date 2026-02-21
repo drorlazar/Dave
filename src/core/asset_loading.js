@@ -505,7 +505,9 @@ async function loadTileContent(tile) {
     // Get file URL - local files use blob URLs, cloud files use signed/proxy URLs
     let fileUrl;
     let isCloudFile = false;
-    if (model.file) {
+    if (model.remoteUrl) {
+      fileUrl = model.remoteUrl;
+    } else if (model.file) {
       fileUrl = URL.createObjectURL(model.file);
     } else if (model.source === 's3' || model.source === 'gdrive') {
       fileUrl = await CloudStorage.getFileUrl(model);
@@ -924,8 +926,11 @@ async function showFullscreen(model) {
   let needsCleanup = false;
 
   try {
-    // Get file URL - local or cloud
-    if (model.file) {
+    // Get file URL - remote, local, or cloud
+    if (model.remoteUrl) {
+      fileUrl = model.remoteUrl;
+      needsCleanup = false;
+    } else if (model.file) {
       fileUrl = URL.createObjectURL(model.file);
       needsCleanup = true;
     } else if (model.source === 's3' || model.source === 'gdrive') {

@@ -12,6 +12,7 @@ import { DaveMode } from './dave_mode.js';
 import { DaveDebug } from './dave_debug.js';
 import { DaveCommands } from '../games/dave_commands.js';
 import { DaveAlive } from './dave_alive.js';
+import { remoteControl } from './remote_control.js';
 
 // Global debugging configuration
 window.APP_DEBUG = {
@@ -68,6 +69,7 @@ UI.initializeUI().then(() => {
   try { DaveDebug.init(); } catch (e) { console.error('[Main] Dave Debug init error:', e); }
   try { DaveCommands.init(); } catch (e) { console.error('[Main] Dave Commands init error:', e); }
   try { DaveAlive.init(); window._daveAliveLoaded = true; } catch (e) { console.error('[Main] Dave Alive init error:', e); }
+  try { remoteControl.init(); } catch (e) { console.error('[Main] RemoteControl init error:', e); }
 
   // Initial render
   AssetLoading.renderPage(UI.getCurrentPage());

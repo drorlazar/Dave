@@ -271,6 +271,27 @@
             </div>
             <div class="settings-dd-section-body" id="releaseLogBody"></div>
           </div>
+          <div class="settings-dd-section collapsed">
+            <div class="settings-dd-section-header" id="remoteControlToggle">
+              <i class="fa fa-robot"></i>
+              <span>AI Remote Control</span>
+              <span class="settings-collapse-icon">&#9656;</span>
+            </div>
+            <div class="settings-dd-section-body" id="remoteControlBody">
+              <div class="remote-control-info">
+                <p class="rc-status" id="rcStatus"><i class="fa fa-circle rc-dot-off"></i> Not connected</p>
+                <p class="rc-desc">Let AI tools (Claude Code, etc.) show files and control Dave remotely.</p>
+                <div class="rc-instructions">
+                  <strong>Setup:</strong>
+                  <code>node dave-helper.cjs</code>
+                  <p class="rc-hint">Then use the <code>dave-show</code> skill in Claude Code, or send commands via API.</p>
+                </div>
+                <a class="rc-docs-link" href="https://github.com/drorlazar-sett/Dave#remote-control" target="_blank">
+                  <i class="fa fa-book"></i> Documentation
+                </a>
+              </div>
+            </div>
+          </div>
           <div class="dropdown-divider"></div>
           <label class="dropdown-setting-row" id="cloudSettingsRow">
             <i class="fa fa-cloud"></i>

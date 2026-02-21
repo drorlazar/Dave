@@ -573,6 +573,37 @@ body:not(.dark-mode) .settings-dd-section-body .release-features li {
   color: #666;
 }
 
+/* Remote Control section in settings dropdown */
+.remote-control-info {
+  font-size: 0.72rem;
+  color: #aaa;
+  line-height: 1.5;
+}
+.remote-control-info p { margin: 4px 0; }
+.remote-control-info code {
+  background: rgba(255,255,255,0.08);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.68rem;
+  color: var(--theme-accent);
+}
+.rc-status { display: flex; align-items: center; gap: 6px; }
+.rc-dot-on { color: #4caf50; font-size: 0.5rem; }
+.rc-dot-off { color: #666; font-size: 0.5rem; }
+.rc-desc { color: #888; font-size: 0.65rem; }
+.rc-instructions { margin: 8px 0; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; }
+.rc-instructions strong { color: #ccc; font-size: 0.68rem; }
+.rc-hint { font-size: 0.6rem; color: #777; margin-top: 4px; }
+.rc-docs-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.65rem; color: var(--theme-accent); text-decoration: none; margin-top: 4px;
+}
+.rc-docs-link:hover { text-decoration: underline; }
+body:not(.dark-mode) .remote-control-info { color: #555; }
+body:not(.dark-mode) .rc-desc { color: #777; }
+body:not(.dark-mode) .rc-instructions { background: rgba(0,0,0,0.05); }
+body:not(.dark-mode) .rc-hint { color: #888; }
+
 .dropdown-setting-row {
   display: flex !important;
   align-items: center;
