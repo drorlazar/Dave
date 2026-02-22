@@ -15,8 +15,10 @@ let isPanelOnRightSide = false; // New state variable for panel position
 let selectedTreeFolder = null; // Local folder
 let currentDirectoryHandle = null; // For local folders
 let folderStructure = null; // Structure for local folders
-let currentSourceType = 'local'; // Always 'local' now
+let currentSourceType = 'local'; // 'local', 's3', or 'gdrive'
 let scanDepth = 1; // Default scan depth (1 = immediate children only)
+let cloudContext = null; // Stored cloud context for current session
+let isTreeDrivenLoad = false; // Re-entry guard to prevent rebuilding tree when tree initiated the load
 
 // Caching and performance settings
 const hasSubdirCache = new Map(); // Cache subdirectory checks by path
@@ -621,12 +623,20 @@ export function initTreeFolderView() {
     if (isTreeVisible) {
         showTreePanel();
     }
-    // Tree view is for local folders only now
+    // Listen for cloud files loaded to populate tree with cloud folder hierarchy
+    window.addEventListener('cloudFilesLoaded', (event) => {
+        if (isTreeDrivenLoad) return; // Don't rebuild tree when tree initiated the load
+        const { context, folders } = event.detail;
+        if (context?.source && (context.source === 's3' || context.source === 'gdrive')) {
+            processCloudFilesLoaded(context, folders || []);
+        }
+    });
 }
 
 // Process the dropped folder (for local files)
 async function processFolderDrop(dirHandle) {
     currentSourceType = 'local';
+    cloudContext = null; // Clear cloud state when switching to local
     const folderTreeContainer = document.getElementById('folderTreeContainer');
     let loadingIndicator = document.getElementById('treeLoadingIndicator');
 
@@ -755,6 +765,110 @@ async function buildLocalFolderStructure(dirHandle, path = '', fullScan = false,
     return result;
 }
 
+// ── Cloud folder support ──
+
+// Build a tree node structure from cloud browser context + folders array
+function buildCloudFolderStructure(context, folders) {
+    // Determine root node name
+    let rootName;
+    if (context.source === 's3') {
+        rootName = context.bucket || 'S3 Bucket';
+    } else {
+        // GDrive: use last breadcrumb name or fallback
+        const crumbs = context.breadcrumbs || [];
+        rootName = crumbs.length > 0 ? crumbs[crumbs.length - 1].name : 'Google Drive';
+    }
+
+    const rootCloudSource = context.source === 's3'
+        ? { type: 's3', bucket: context.bucket, prefix: context.path || '', profileId: context.profileId }
+        : { type: 'gdrive', folderId: context.folderId || 'root', accountEmail: context.accountEmail };
+
+    const children = folders.map(folder => {
+        const childSource = context.source === 's3'
+            ? { type: 's3', bucket: context.bucket, prefix: folder.path, profileId: context.profileId }
+            : { type: 'gdrive', folderId: folder.id, accountEmail: context.accountEmail };
+
+        return {
+            name: folder.name,
+            path: folder.path || folder.id,
+            cloudSource: childSource,
+            type: 'directory',
+            children: undefined // Lazy-loadable
+        };
+    });
+
+    return {
+        name: rootName,
+        path: context.path || context.folderId || 'root',
+        cloudSource: rootCloudSource,
+        type: 'directory',
+        children: children,
+        isCloudRoot: true
+    };
+}
+
+// Entry point when cloudFilesLoaded fires for cloud sources
+function processCloudFilesLoaded(context, folders) {
+    currentSourceType = context.source;
+    currentDirectoryHandle = null; // Clear local handle
+    cloudContext = context;
+
+    const folderData = buildCloudFolderStructure(context, folders);
+    folderStructure = folderData;
+    renderFolderTree(folderData);
+
+    // Show tree panel if hidden
+    if (!isTreeVisible) showTreePanel();
+}
+
+// Fetch subfolders for a cloud folder via API
+async function listCloudSubfolders(cloudSource) {
+    try {
+        const { listFiles } = await import('../cloud/CloudStorageProvider.js');
+        const params = cloudSource.type === 's3'
+            ? { bucket: cloudSource.bucket, prefix: cloudSource.prefix, profileId: cloudSource.profileId }
+            : { folderId: cloudSource.folderId };
+
+        const { folders } = await listFiles(cloudSource.type, params);
+        return folders.map(f => ({
+            name: f.name,
+            path: f.path || f.id,
+            id: f.id
+        }));
+    } catch (error) {
+        console.error('Error listing cloud subfolders:', error);
+        return [];
+    }
+}
+
+// Load files from a cloud folder into the grid (tree-driven)
+async function loadCloudFolderFiles(folder) {
+    isTreeDrivenLoad = true;
+    try {
+        const { listFiles } = await import('../cloud/CloudStorageProvider.js');
+        const cs = folder.cloudSource;
+        const params = cs.type === 's3'
+            ? { bucket: cs.bucket, prefix: cs.prefix, profileId: cs.profileId }
+            : { folderId: cs.folderId };
+
+        const { files, folders } = await listFiles(cs.type, params);
+
+        // Build context matching what CloudBrowserModal would produce
+        const context = cs.type === 's3'
+            ? { source: 's3', path: cs.prefix, bucket: cs.bucket, profileId: cs.profileId }
+            : { source: 'gdrive', folderId: cs.folderId, accountEmail: cs.accountEmail };
+
+        window.dispatchEvent(new CustomEvent('cloudFilesLoaded', {
+            detail: { files, folders, context }
+        }));
+    } catch (error) {
+        console.error('Error loading cloud folder files:', error);
+        alert(`Error loading cloud folder: ${error.message}`);
+    } finally {
+        isTreeDrivenLoad = false;
+    }
+}
+
 // Render the folder tree in the panel (optimized for performance)
 function renderFolderTree(folderData) {
     if (!folderData) return;
@@ -815,10 +929,13 @@ function addFolderToTree(folder, parentElement) {
         // If the folder has a handle and we haven't checked for children yet (i.e., at the deeper levels),
         // we show the chevron to allow exploration.
         // If children have been checked and there are none, we hide the chevron.
-        canHaveChildren = folder.handle && (
+        canHaveChildren = (folder.handle && (
             !Array.isArray(folder.children) || // Not yet checked for children
             folder.children.length > 0         // Has actual children
-        );
+        )) || (folder.cloudSource && (
+            !Array.isArray(folder.children) || // Not yet checked (lazy-loadable)
+            folder.children.length > 0         // Has actual children
+        ));
     }
 
     chevronIcon.innerHTML = canHaveChildren ? '<i class="fa fa-chevron-right"></i>' : '<i class="fa fa-fw"></i>'; // fa-fw for spacing
@@ -835,6 +952,15 @@ function addFolderToTree(folder, parentElement) {
     folderName.className = 'folder-name';
     folderName.textContent = folder.name;
     li.appendChild(folderName);
+
+    // Add cloud source badge on root node
+    if (folder.isCloudRoot && folder.cloudSource) {
+        const badge = document.createElement('span');
+        const sourceType = folder.cloudSource.type;
+        badge.className = `tree-cloud-badge ${sourceType}`;
+        badge.textContent = sourceType === 's3' ? 'S3' : 'GDrive';
+        li.appendChild(badge);
+    }
 
     // Add to parent
     parentElement.appendChild(li);
@@ -858,10 +984,6 @@ function addFolderToTree(folder, parentElement) {
         ul.style.display = 'none'; // Start collapsed
         // Store folder data on the ul for lazy loading/expansion
         ul.dataset.folderPath = folder.path;
-        if (folder.handle) {
-            // For local, we might need to re-attach the handle if not passed down
-            // but it should be on the `folder` object itself.
-        }
         li.appendChild(ul);
     }
 }
@@ -898,6 +1020,34 @@ async function expandSubfolders(li, folder, expandAllMode = false) {
             } else {
                 // If scan failed or returned null, mark as empty
                 folder.children = [];
+            }
+        } else if (folder.cloudSource) { // Cloud folder
+            // Show loading spinner on the li
+            const loadingSpan = document.createElement('span');
+            loadingSpan.className = 'tree-cloud-loading';
+            loadingSpan.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+            li.appendChild(loadingSpan);
+
+            try {
+                const cloudFolders = await listCloudSubfolders(folder.cloudSource);
+                subFolders = cloudFolders.map(f => {
+                    const childSource = folder.cloudSource.type === 's3'
+                        ? { type: 's3', bucket: folder.cloudSource.bucket, prefix: f.path, profileId: folder.cloudSource.profileId }
+                        : { type: 'gdrive', folderId: f.id || f.path, accountEmail: folder.cloudSource.accountEmail };
+                    return {
+                        name: f.name,
+                        path: f.path || f.id,
+                        cloudSource: childSource,
+                        type: 'directory',
+                        children: undefined // Lazy-loadable
+                    };
+                });
+                folder.children = subFolders;
+            } catch (error) {
+                console.error('Error expanding cloud folder:', error);
+                folder.children = [];
+            } finally {
+                loadingSpan.remove();
             }
         }
 
@@ -1032,8 +1182,11 @@ async function loadFilesFromSelectedFolder(folder) {
                     }, 50); // Short delay to ensure all async operations are complete
                 });
             });
+        } else if (folder.cloudSource) { // Cloud folder
+            console.log(`Loading cloud files from folder: ${folder.name}`);
+            await loadCloudFolderFiles(folder);
         } else {
-            throw new Error("Folder source is not recognized (no local handle).");
+            throw new Error("Folder source is not recognized.");
         }
     } catch (error) {
         console.error("Error loading files from selected folder:", error);
@@ -1492,6 +1645,8 @@ async function reloadFolderStructure() {
         if (currentDirectoryHandle) {
             folderStructure = await buildLocalFolderStructure(currentDirectoryHandle, '', true); // fullScan = true
             renderFolderTree(folderStructure);
+        } else if (cloudContext) {
+            await refreshCurrentFolder(); // Delegates to cloud refresh
         }
     } catch (error) {
         console.error("Error reloading folder structure:", error);
@@ -1504,13 +1659,26 @@ async function reloadFolderStructure() {
 
 // Refresh the currently loaded folder (tree + grid files)
 async function refreshCurrentFolder() {
-    if (!currentDirectoryHandle) {
+    if (currentDirectoryHandle) {
+        console.log('Tree View: Refreshing current local folder...');
+        folderStructure = await buildLocalFolderStructure(currentDirectoryHandle, '', true);
+        renderFolderTree(folderStructure);
+        await handleFolderPick(currentDirectoryHandle);
+    } else if (cloudContext) {
+        console.log('Tree View: Refreshing current cloud folder...');
+        try {
+            const { listFiles } = await import('../cloud/CloudStorageProvider.js');
+            const params = cloudContext.source === 's3'
+                ? { bucket: cloudContext.bucket, prefix: cloudContext.path, profileId: cloudContext.profileId }
+                : { folderId: cloudContext.folderId };
+            const { folders } = await listFiles(cloudContext.source, params);
+            processCloudFilesLoaded(cloudContext, folders);
+        } catch (error) {
+            console.error('Error refreshing cloud folder:', error);
+        }
+    } else {
         console.warn('Tree View: No folder loaded to refresh');
-        return;
     }
-    console.log('Tree View: Refreshing current folder...');
-    await reloadFolderStructure();
-    await handleFolderPick(currentDirectoryHandle);
 }
 
 // Toggle tree panel visibility
@@ -1541,5 +1709,6 @@ export {
     toggleTreePanel,
     showTreePanel,
     hideTreePanel,
-    processFolderDrop
+    processFolderDrop,
+    processCloudFilesLoaded
 };

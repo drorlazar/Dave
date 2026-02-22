@@ -589,6 +589,7 @@ export class CloudBrowserModal {
       window.dispatchEvent(new CustomEvent('cloudFilesLoaded', {
         detail: {
           files,
+          folders: this.lastLoadedFolders,
           context: {
             source: this.currentSource,
             breadcrumbs: [...this.breadcrumbs],

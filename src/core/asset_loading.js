@@ -1425,11 +1425,41 @@ function showCloudPathBar(context) {
   // Browse button reopens the cloud browser at the current location
   browseBtn.onclick = () => {
     if (context.source === 's3') {
-      cloudBrowser.open('s3', { bucket: context.bucket, prefix: context.path });
+      cloudBrowser.open('s3', { bucket: context.bucket, prefix: context.path, profileId: context.profileId });
     } else {
       cloudBrowser.open('gdrive', { folderId: context.folderId });
     }
   };
+
+  // Open S3 / GDrive buttons
+  const openS3Btn = document.getElementById('cloudPathOpenS3');
+  const openGDriveBtn = document.getElementById('cloudPathOpenGDrive');
+  if (openS3Btn) {
+    openS3Btn.onclick = () => cloudBrowser.open('s3');
+  }
+  if (openGDriveBtn) {
+    openGDriveBtn.onclick = async () => {
+      try {
+        const isAuth = await GDriveAuth.checkStatus();
+        if (!isAuth) {
+          const success = await GDriveAuth.login();
+          if (!success) {
+            alert('Google Drive login failed or was cancelled. Please try again.');
+            return;
+          }
+          GDriveAuth.updateStatusIndicator(true);
+        }
+        cloudBrowser.open('gdrive');
+      } catch (error) {
+        console.error('Error opening Google Drive:', error);
+        alert(`Google Drive error: ${error.message}`);
+      }
+    };
+  }
+
+  // Highlight current source button
+  if (openS3Btn) openS3Btn.classList.toggle('active', context.source === 's3');
+  if (openGDriveBtn) openGDriveBtn.classList.toggle('active', context.source === 'gdrive');
 
   pathBar.style.display = 'flex';
 }

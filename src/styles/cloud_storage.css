@@ -500,6 +500,17 @@ body:not(.dark-mode) .cloud-item-size { color: #999; }
   border-bottom: 1px solid #333;
   font-size: 0.85rem;
   gap: 8px;
+  transition: margin 0.3s ease-in-out;
+}
+
+/* Shift cloud path bar when tree panel is visible (left side) */
+body.tree-panel-visible .panel-left ~ .cloud-path-bar {
+  margin-left: var(--tree-panel-width, 280px);
+}
+
+/* Shift cloud path bar when tree panel is visible (right side) */
+body.tree-panel-visible .panel-right ~ .cloud-path-bar {
+  margin-right: var(--tree-panel-width, 280px);
 }
 
 .cloud-path-icon {
@@ -541,6 +552,32 @@ body:not(.dark-mode) .cloud-item-size { color: #999; }
   background: rgba(255,255,255,0.1);
 }
 
+/* Divider between browse and open buttons */
+.cloud-path-divider {
+  width: 1px;
+  height: 18px;
+  background: #444;
+  flex-shrink: 0;
+}
+
+/* Open S3/GDrive buttons */
+.cloud-path-open-btn {
+  font-size: 0.75rem;
+  gap: 4px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.cloud-path-open-btn i {
+  font-size: 0.7rem;
+}
+
+.cloud-path-open-btn.active {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
 body:not(.dark-mode) .cloud-path-bar {
   background: #f0f0f5;
   border-bottom-color: #ddd;
@@ -551,3 +588,5 @@ body:not(.dark-mode) .cloud-path-item { color: #555; }
 body:not(.dark-mode) .cloud-path-sep { color: #999; }
 body:not(.dark-mode) .cloud-path-btn { color: #666; }
 body:not(.dark-mode) .cloud-path-btn:hover { color: #333; background: rgba(0,0,0,0.05); }
+body:not(.dark-mode) .cloud-path-divider { background: #ccc; }
+body:not(.dark-mode) .cloud-path-open-btn.active { color: #333; background: rgba(0,0,0,0.08); }

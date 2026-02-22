@@ -615,6 +615,7 @@ body:not(.dark-mode) .tree-history-empty {
 /* Disable transitions during active resizing to prevent jerky movements */
 body.is-resizing .tree-folder-panel,
 body.is-resizing #viewerContainer,
+body.is-resizing .cloud-path-bar,
 body.tile-slider-active #viewerContainer {
   transition: none !important;
 }
@@ -673,6 +674,35 @@ body:not(.dark-mode) .tree-container li.selected .chevron-icon {
 
 .icon-flipped-horizontal {
   transform: scaleX(-1);
+}
+
+/* Cloud source badge on root node */
+.tree-cloud-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.tree-cloud-badge.s3 {
+  background: rgba(255, 153, 0, 0.12);
+  color: #ff9900;
+}
+.tree-cloud-badge.gdrive {
+  background: rgba(66, 133, 244, 0.12);
+  color: #4285f4;
+}
+
+/* Loading spinner for expanding cloud folders */
+.tree-cloud-loading {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--theme-accent, #9b77ff);
+  font-size: 0.7rem;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

@@ -228,6 +228,9 @@ body.matrix-theme .cloud-path-bar {
   background: #0a100a !important;
   border-color: #0a3a0a !important;
 }
+body.matrix-theme .cloud-path-divider {
+  background: #0a3a0a !important;
+}
 
 /* ── Tree folder panel ──
    background overrides --theme-bg with a slightly different shade, needs !important.
