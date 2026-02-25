@@ -1,0 +1,1057 @@
+/* ================================================================
+   Video Editor - Bottom toolbar + timeline + panels UI
+   All classes prefixed with ve- to avoid conflicts.
+   Theme-aware: derives from --theme-* CSS custom properties.
+   Mirrors image_viewer.css (iv-*) architecture.
+   ================================================================ */
+
+/* --- Theme Variable Bridge --- */
+.ve-toolbar,
+.ve-timeline,
+.ve-filter-panel,
+.ve-export-panel,
+.ve-concat-panel,
+.ve-crop-presets {
+  --ve-accent: var(--theme-accent);
+  --ve-bg: color-mix(in srgb, var(--theme-bg) 92%, transparent);
+  --ve-bg-solid: var(--theme-bg);
+  --ve-surface: var(--theme-surface);
+  --ve-border: var(--theme-border);
+  --ve-fg: var(--theme-text);
+  --ve-text: var(--theme-text);
+  --ve-muted: var(--theme-muted);
+  --ve-btn-bg: color-mix(in srgb, var(--theme-accent) 4%, transparent);
+  --ve-btn-hover-bg: color-mix(in srgb, var(--theme-accent) 8%, transparent);
+  --ve-btn-hover-border: color-mix(in srgb, var(--theme-accent) 40%, var(--theme-border));
+  --ve-btn-hover-text: color-mix(in srgb, var(--theme-accent) 70%, var(--theme-text));
+  --ve-active-bg: color-mix(in srgb, var(--theme-accent) 14%, transparent);
+  --ve-active-glow: color-mix(in srgb, var(--theme-accent) 20%, transparent);
+  --ve-glow: color-mix(in srgb, var(--theme-accent) 5%, transparent);
+}
+
+/* Light-mode override: force dark palette since overlay bg is always dark */
+body:not(.dark-mode) .ve-toolbar,
+body:not(.dark-mode) .ve-timeline,
+body:not(.dark-mode) .ve-filter-panel,
+body:not(.dark-mode) .ve-export-panel,
+body:not(.dark-mode) .ve-concat-panel,
+body:not(.dark-mode) .ve-crop-presets {
+  --ve-bg: color-mix(in srgb, #121212 92%, transparent);
+  --ve-bg-solid: #121212;
+  --ve-surface: #2a2a2a;
+  --ve-border: #444;
+  --ve-fg: #e0e0e0;
+  --ve-text: #e0e0e0;
+  --ve-muted: #888;
+  --ve-btn-bg: color-mix(in srgb, var(--theme-accent) 4%, transparent);
+  --ve-btn-hover-bg: color-mix(in srgb, var(--theme-accent) 8%, transparent);
+  --ve-btn-hover-border: color-mix(in srgb, var(--theme-accent) 40%, #444);
+  --ve-btn-hover-text: color-mix(in srgb, var(--theme-accent) 70%, #e0e0e0);
+  --ve-active-bg: color-mix(in srgb, var(--theme-accent) 14%, transparent);
+  --ve-active-glow: color-mix(in srgb, var(--theme-accent) 20%, transparent);
+  --ve-glow: color-mix(in srgb, var(--theme-accent) 5%, transparent);
+}
+
+/* --- Hide old UI elements when video editor is active --- */
+.ve-fullscreen #returnButton,
+.ve-fullscreen .fullscreen-info,
+.ve-fullscreen .fullscreen-edit-btn,
+.ve-fullscreen .image-controls {
+  display: none !important;
+}
+
+/* Expand video area to fill viewport minus toolbar + timeline */
+.ve-fullscreen #fullscreenContent {
+  top: 0;
+  left: 0;
+  transform: none;
+  width: 100%;
+  height: calc(100% - 92px); /* 52px toolbar + 40px timeline */
+}
+
+.ve-fullscreen #fullscreenViewerWrap {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+.ve-fullscreen #fullscreenViewer {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.ve-fullscreen #fullscreenViewer video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+/* Narrower nav areas when video editor is active */
+.ve-fullscreen .fullscreen-nav {
+  width: 60px;
+  background: transparent;
+}
+
+/* ================================================================
+   Bottom Toolbar
+   ================================================================ */
+.ve-toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: var(--ve-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--ve-border);
+  box-shadow: 0 -1px 10px var(--ve-glow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: calc(var(--z-fullscreen) + 3);
+  gap: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: 'Courier New', Courier, monospace;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.ve-toolbar.ve-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+
+/* Toolbar sections */
+.ve-toolbar-left,
+.ve-toolbar-center,
+.ve-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ve-toolbar-left {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ve-toolbar-center {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.ve-toolbar-right {
+  flex: 0 0 auto;
+}
+
+/* ================================================================
+   Buttons
+   ================================================================ */
+.ve-btn {
+  background: var(--ve-btn-bg);
+  border: 1px solid var(--ve-border);
+  color: var(--ve-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.ve-btn:hover {
+  background: var(--ve-btn-hover-bg);
+  border-color: var(--ve-btn-hover-border);
+  color: var(--ve-btn-hover-text);
+}
+
+.ve-btn.ve-active {
+  background: var(--ve-active-bg);
+  border-color: var(--ve-accent);
+  color: var(--ve-accent);
+  box-shadow: 0 0 8px var(--ve-active-glow);
+}
+
+.ve-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Trim bracket icons (text-based) */
+.ve-trim-icon {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1;
+}
+
+/* Text buttons */
+.ve-btn-text {
+  width: auto;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ================================================================
+   Divider
+   ================================================================ */
+.ve-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--ve-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   Volume Control
+   ================================================================ */
+.ve-volume-group {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+
+.ve-volume-slider-wrap {
+  width: 0;
+  overflow: hidden;
+  transition: width 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.ve-volume-group:hover .ve-volume-slider-wrap,
+.ve-volume-slider-wrap:focus-within {
+  width: 80px;
+}
+
+.ve-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 72px;
+  height: 4px;
+  background: var(--ve-border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  margin: 0 4px;
+}
+
+.ve-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ve-accent);
+  cursor: pointer;
+  border: none;
+}
+
+.ve-volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ve-accent);
+  cursor: pointer;
+  border: none;
+}
+
+/* ================================================================
+   Filename & Time Display
+   ================================================================ */
+.ve-filename {
+  font-size: 13px;
+  color: var(--ve-accent);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Courier New', Courier, monospace;
+  text-shadow: 0 0 6px var(--ve-active-glow);
+}
+
+.ve-time-display {
+  font-size: 11px;
+  color: var(--ve-muted);
+  white-space: nowrap;
+  font-family: 'Courier New', Courier, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================================================================
+   Timeline
+   ================================================================ */
+.ve-timeline {
+  position: fixed;
+  bottom: 52px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: var(--ve-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--ve-border);
+  z-index: calc(var(--z-fullscreen) + 2);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: 'Courier New', Courier, monospace;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.ve-timeline.ve-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+
+.ve-timeline-time {
+  font-size: 11px;
+  color: var(--ve-muted);
+  min-width: 52px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.ve-timeline-track {
+  flex: 1;
+  height: 6px;
+  background: var(--ve-surface);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+}
+
+.ve-timeline-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: color-mix(in srgb, var(--ve-accent) 40%, transparent);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.ve-timeline-trim-region {
+  position: absolute;
+  top: -2px;
+  height: calc(100% + 4px);
+  background: color-mix(in srgb, var(--ve-accent) 12%, transparent);
+  border-top: 2px solid var(--ve-accent);
+  border-bottom: 2px solid var(--ve-accent);
+  pointer-events: none;
+}
+
+.ve-timeline-playhead {
+  position: absolute;
+  top: -8px;
+  width: 3px;
+  height: 22px;
+  background: var(--ve-accent);
+  border-radius: 1px;
+  transform: translateX(-1px);
+  pointer-events: none;
+  box-shadow: 0 0 6px var(--ve-active-glow);
+  z-index: 2;
+}
+
+.ve-timeline-playhead::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 9px;
+  background: var(--ve-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--ve-active-glow);
+}
+
+.ve-trim-handle {
+  position: absolute;
+  top: -6px;
+  width: 10px;
+  height: calc(100% + 12px);
+  cursor: ew-resize;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ve-trim-handle::after {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: var(--ve-accent);
+  border-radius: 2px;
+  box-shadow: 0 0 4px var(--ve-active-glow);
+}
+
+.ve-trim-handle:hover::after {
+  width: 5px;
+  background: var(--ve-text);
+}
+
+.ve-trim-handle-in {
+  transform: translateX(-5px);
+}
+
+.ve-trim-handle-out {
+  transform: translateX(-5px);
+}
+
+/* ================================================================
+   Filter Panel
+   ================================================================ */
+.ve-filter-panel {
+  position: fixed;
+  bottom: 100px;
+  left: 16px;
+  width: 320px;
+  background: color-mix(in srgb, var(--ve-bg-solid) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: 1px solid var(--ve-border);
+  z-index: calc(var(--z-fullscreen) + 4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 10px var(--ve-glow);
+  overflow: hidden;
+  animation: ve-slide-up 0.2s ease-out;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.ve-filter-header {
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--ve-border);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ve-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ve-filter-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ve-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ve-filter-row label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ve-muted);
+  min-width: 76px;
+  flex-shrink: 0;
+}
+
+.ve-filter-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 2px;
+  background: var(--ve-border);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+
+.ve-filter-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ve-accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--ve-active-glow);
+}
+
+.ve-filter-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ve-accent);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--ve-active-glow);
+}
+
+.ve-filter-value {
+  font-size: 11px;
+  color: var(--ve-muted);
+  min-width: 42px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ve-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid var(--ve-glow);
+  margin-top: 4px;
+}
+
+.ve-filter-actions .ve-btn {
+  width: auto;
+  padding: 0 12px;
+  height: 30px;
+  font-size: 11px;
+  gap: 4px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ================================================================
+   Export Panel
+   ================================================================ */
+.ve-export-panel {
+  position: fixed;
+  bottom: 100px;
+  right: 16px;
+  width: 320px;
+  background: color-mix(in srgb, var(--ve-bg-solid) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: 1px solid var(--ve-border);
+  z-index: calc(var(--z-fullscreen) + 4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 10px var(--ve-glow);
+  overflow: hidden;
+  animation: ve-slide-up 0.2s ease-out;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.ve-export-header {
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--ve-border);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ve-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ve-export-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ve-export-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ve-export-row > label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ve-muted);
+  font-weight: 500;
+}
+
+.ve-export-formats,
+.ve-export-resolutions {
+  display: flex;
+  gap: 6px;
+}
+
+.ve-export-fmt,
+.ve-export-res {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--ve-border);
+  background: var(--ve-btn-bg);
+  color: var(--ve-muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Courier New', Courier, monospace;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ve-export-fmt:hover,
+.ve-export-res:hover {
+  background: var(--ve-btn-hover-bg);
+  border-color: var(--ve-btn-hover-border);
+  color: var(--ve-btn-hover-text);
+}
+
+.ve-export-fmt.ve-active,
+.ve-export-res.ve-active {
+  background: var(--ve-active-bg);
+  color: var(--ve-accent);
+  border-color: var(--ve-accent);
+  box-shadow: 0 0 6px var(--ve-active-glow);
+}
+
+.ve-quality-row {
+  flex-direction: row;
+  align-items: center;
+}
+
+.ve-quality-row label {
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.ve-quality-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 2px;
+  background: var(--ve-border);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+
+.ve-quality-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ve-accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--ve-active-glow);
+}
+
+.ve-quality-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ve-accent);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--ve-active-glow);
+}
+
+.ve-quality-value {
+  font-size: 12px;
+  color: var(--ve-muted);
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ve-export-summary {
+  font-size: 11px;
+  color: var(--ve-muted);
+  padding: 8px 10px;
+  background: var(--ve-btn-bg);
+  border-radius: 4px;
+  border: 1px solid var(--ve-glow);
+  line-height: 1.5;
+}
+
+.ve-export-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--ve-surface);
+  border-radius: 3px;
+  overflow: hidden;
+  display: none;
+}
+
+.ve-export-progress-bar {
+  height: 100%;
+  background: var(--ve-accent);
+  border-radius: 3px;
+  transition: width 0.2s;
+  box-shadow: 0 0 6px var(--ve-active-glow);
+}
+
+.ve-export-progress-text {
+  font-size: 11px;
+  color: var(--ve-muted);
+  text-align: center;
+  display: none;
+}
+
+.ve-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ve-export-actions .ve-btn {
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  gap: 6px;
+  flex: 1;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.ve-export-actions .ve-btn i {
+  font-size: 12px;
+}
+
+.ve-export-download {
+  background: var(--ve-active-bg) !important;
+  color: var(--ve-accent) !important;
+  border-color: var(--ve-accent) !important;
+  box-shadow: 0 0 8px var(--ve-active-glow) !important;
+}
+
+.ve-export-download:hover {
+  background: var(--ve-active-glow) !important;
+}
+
+/* ================================================================
+   Crop Overlay
+   ================================================================ */
+.ve-crop-overlay {
+  position: absolute;
+  /* top, left, width, height set by JS to match video content area */
+  z-index: calc(var(--z-fullscreen) + 1);
+  pointer-events: none;
+}
+
+.ve-crop-overlay.ve-crop-active {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+/* Darkened regions outside crop */
+.ve-crop-mask {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Crop region */
+.ve-crop-region {
+  position: absolute;
+  border: 2px solid var(--ve-accent, #4a9eff);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  cursor: move;
+}
+
+/* Rule-of-thirds grid */
+.ve-crop-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ve-crop-grid-line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.ve-crop-grid-line-h {
+  left: 0;
+  width: 100%;
+  height: 1px;
+}
+
+.ve-crop-grid-line-v {
+  top: 0;
+  height: 100%;
+  width: 1px;
+}
+
+/* 8 resize handles */
+.ve-crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--ve-accent, #4a9eff);
+  border: 2px solid #fff;
+  border-radius: 2px;
+  z-index: 2;
+}
+
+.ve-crop-handle-tl { top: -6px; left: -6px; cursor: nw-resize; }
+.ve-crop-handle-tc { top: -6px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+.ve-crop-handle-tr { top: -6px; right: -6px; cursor: ne-resize; }
+.ve-crop-handle-ml { top: 50%; left: -6px; transform: translateY(-50%); cursor: w-resize; }
+.ve-crop-handle-mr { top: 50%; right: -6px; transform: translateY(-50%); cursor: e-resize; }
+.ve-crop-handle-bl { bottom: -6px; left: -6px; cursor: sw-resize; }
+.ve-crop-handle-bc { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.ve-crop-handle-br { bottom: -6px; right: -6px; cursor: se-resize; }
+
+/* Crop aspect presets bar */
+.ve-crop-presets {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: calc(var(--z-fullscreen) + 4);
+  background: var(--ve-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--ve-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  animation: ve-slide-down 0.2s ease-out;
+}
+
+.ve-crop-preset {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--ve-border);
+  background: var(--ve-btn-bg);
+  color: var(--ve-muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Courier New', Courier, monospace;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ve-crop-preset:hover {
+  background: var(--ve-btn-hover-bg);
+  border-color: var(--ve-btn-hover-border);
+  color: var(--ve-btn-hover-text);
+}
+
+.ve-crop-preset.ve-active {
+  background: var(--ve-active-bg);
+  color: var(--ve-accent);
+  border-color: var(--ve-accent);
+  box-shadow: 0 0 6px var(--ve-active-glow);
+}
+
+/* ================================================================
+   Concat Panel
+   ================================================================ */
+.ve-concat-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  max-width: 90vw;
+  max-height: 70vh;
+  background: color-mix(in srgb, var(--ve-bg-solid) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: 1px solid var(--ve-border);
+  z-index: calc(var(--z-fullscreen) + 4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 10px var(--ve-glow);
+  overflow: hidden;
+  animation: ve-slide-up 0.2s ease-out;
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  flex-direction: column;
+}
+
+.ve-concat-header {
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--ve-border);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ve-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.ve-concat-body {
+  padding: 14px 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ve-concat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+
+.ve-concat-item {
+  aspect-ratio: 16/9;
+  border-radius: 4px;
+  border: 2px solid var(--ve-border);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ve-concat-item:hover {
+  border-color: var(--ve-btn-hover-border);
+}
+
+.ve-concat-item.ve-active {
+  border-color: var(--ve-accent);
+  box-shadow: 0 0 8px var(--ve-active-glow);
+}
+
+.ve-concat-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.ve-concat-item-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2px 4px;
+  font-size: 9px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ve-concat-position {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.ve-concat-pos-btn {
+  padding: 6px 20px;
+  border-radius: 4px;
+  border: 1px solid var(--ve-border);
+  background: var(--ve-btn-bg);
+  color: var(--ve-muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Courier New', Courier, monospace;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ve-concat-pos-btn:hover {
+  background: var(--ve-btn-hover-bg);
+  border-color: var(--ve-btn-hover-border);
+  color: var(--ve-btn-hover-text);
+}
+
+.ve-concat-pos-btn.ve-active {
+  background: var(--ve-active-bg);
+  color: var(--ve-accent);
+  border-color: var(--ve-accent);
+}
+
+/* ================================================================
+   Confirm Dialog
+   ================================================================ */
+.ve-confirm-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--ve-bg-solid, #121212) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  border: 1px solid var(--ve-border, #444);
+  z-index: calc(var(--z-fullscreen, 9000) + 10);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+  padding: 20px 24px;
+  min-width: 300px;
+  font-family: 'Courier New', Courier, monospace;
+  animation: ve-slide-up 0.15s ease-out;
+}
+
+.ve-confirm-dialog p {
+  color: var(--ve-text, #e0e0e0);
+  font-size: 13px;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.ve-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ve-confirm-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: calc(var(--z-fullscreen, 9000) + 9);
+}
+
+/* ================================================================
+   Animations
+   ================================================================ */
+@keyframes ve-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ve-slide-down {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

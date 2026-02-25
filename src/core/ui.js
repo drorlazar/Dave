@@ -474,6 +474,16 @@ function initializeElements() {
               }
               return;
             }
+            // Video editor handles its own keys via capture phase
+            if (currentFullscreenViewer?.videoEditor) {
+              if (event.key === 'Escape' && !event.defaultPrevented) {
+                // Async dirty-state check before closing
+                currentFullscreenViewer.videoEditor.requestClose().then(closed => {
+                  if (closed) exitFullscreen(currentFullscreenViewer);
+                });
+              }
+              return;
+            }
             // 3D Inspector shortcuts
             if (currentFullscreenViewer?.inspector) {
               const inspector = currentFullscreenViewer.inspector;
@@ -796,16 +806,20 @@ export function exitFullscreen(currentFullscreenViewer) {
 
   if (currentFullscreenViewer) {
     if (currentFullscreenViewer.type === 'video' && fullscreenVideo) {
-      // Stop both fullscreen video and any preview video
+      // Stop the old fullscreen video element (may not be in use with video editor)
       fullscreenVideo.pause();
       fullscreenVideo.currentTime = 0;
-      fullscreenVideo.src = ''; // Clear src to stop loading
+      fullscreenVideo.src = '';
       if (currentFullscreenViewer.previewVideo) {
         currentFullscreenViewer.previewVideo.pause();
         currentFullscreenViewer.previewVideo.currentTime = 0;
       }
+      // Call cleanup (handles video editor close + URL revoke)
+      if (currentFullscreenViewer.cleanup) {
+        currentFullscreenViewer.cleanup();
+      }
     } else if (currentFullscreenViewer.type === 'font' && currentFullscreenViewer.cleanup) {
-        currentFullscreenViewer.cleanup(); // Call cleanup for font if defined
+        currentFullscreenViewer.cleanup();
     } else if (currentFullscreenViewer.cleanup) {
       currentFullscreenViewer.cleanup();
     }
