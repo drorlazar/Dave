@@ -63,7 +63,59 @@ const FILE_TYPE_MAPPINGS = {
   '.ini': { type: 'text', subtype: 'ini' },
   '.cfg': { type: 'text', subtype: 'cfg' },
   '.conf': { type: 'text', subtype: 'conf' },
-  '.toml': { type: 'text', subtype: 'toml' }
+  '.toml': { type: 'text', subtype: 'toml' },
+
+  // Code files
+  '.py': { type: 'text', subtype: 'py' },
+  '.js': { type: 'text', subtype: 'js' },
+  '.mjs': { type: 'text', subtype: 'js' },
+  '.cjs': { type: 'text', subtype: 'js' },
+  '.ts': { type: 'text', subtype: 'ts' },
+  '.tsx': { type: 'text', subtype: 'ts' },
+  '.jsx': { type: 'text', subtype: 'jsx' },
+  '.html': { type: 'text', subtype: 'html' },
+  '.htm': { type: 'text', subtype: 'html' },
+  '.css': { type: 'text', subtype: 'css' },
+  '.sh': { type: 'text', subtype: 'sh' },
+  '.bash': { type: 'text', subtype: 'sh' },
+  '.zsh': { type: 'text', subtype: 'sh' },
+  '.bat': { type: 'text', subtype: 'bat' },
+  '.cmd': { type: 'text', subtype: 'bat' },
+  '.rb': { type: 'text', subtype: 'rb' },
+  '.php': { type: 'text', subtype: 'php' },
+  '.java': { type: 'text', subtype: 'java' },
+  '.go': { type: 'text', subtype: 'go' },
+  '.rs': { type: 'text', subtype: 'rs' },
+  '.swift': { type: 'text', subtype: 'swift' },
+  '.kt': { type: 'text', subtype: 'kt' },
+  '.kts': { type: 'text', subtype: 'kt' },
+  '.c': { type: 'text', subtype: 'c' },
+  '.h': { type: 'text', subtype: 'c' },
+  '.cpp': { type: 'text', subtype: 'cpp' },
+  '.hpp': { type: 'text', subtype: 'cpp' },
+  '.cc': { type: 'text', subtype: 'cpp' },
+  '.cxx': { type: 'text', subtype: 'cpp' },
+  '.cs': { type: 'text', subtype: 'cs' },
+  '.sql': { type: 'text', subtype: 'sql' },
+  '.r': { type: 'text', subtype: 'r' },
+  '.lua': { type: 'text', subtype: 'lua' },
+  '.dart': { type: 'text', subtype: 'dart' },
+  '.scala': { type: 'text', subtype: 'scala' },
+
+  // Config/env files
+  '.env': { type: 'text', subtype: 'env' },
+  '.example': { type: 'text', subtype: 'example' },
+  '.local': { type: 'text', subtype: 'local' },
+  '.properties': { type: 'text', subtype: 'properties' },
+  '.dockerfile': { type: 'text', subtype: 'dockerfile' },
+
+  // Style preprocessors & data
+  '.scss': { type: 'text', subtype: 'scss' },
+  '.sass': { type: 'text', subtype: 'scss' },
+  '.less': { type: 'text', subtype: 'scss' },
+  '.graphql': { type: 'text', subtype: 'graphql' },
+  '.gql': { type: 'text', subtype: 'graphql' },
+  '.proto': { type: 'text', subtype: 'proto' }
 };
 
 function detectFileType(filename) {

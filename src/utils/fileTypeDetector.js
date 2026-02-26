@@ -57,7 +57,44 @@ const FILE_TYPE_MAPPINGS = {
   ini: { type: 'text', subtype: 'ini', extensions: ['.ini'] },
   cfg: { type: 'text', subtype: 'cfg', extensions: ['.cfg'] },
   conf: { type: 'text', subtype: 'conf', extensions: ['.conf'] },
-  toml: { type: 'text', subtype: 'toml', extensions: ['.toml'] }
+  toml: { type: 'text', subtype: 'toml', extensions: ['.toml'] },
+
+  // Code files
+  py: { type: 'text', subtype: 'py', extensions: ['.py'] },
+  js: { type: 'text', subtype: 'js', extensions: ['.js', '.mjs', '.cjs'] },
+  ts: { type: 'text', subtype: 'ts', extensions: ['.ts', '.tsx'] },
+  jsx: { type: 'text', subtype: 'jsx', extensions: ['.jsx'] },
+  html: { type: 'text', subtype: 'html', extensions: ['.html', '.htm'] },
+  css: { type: 'text', subtype: 'css', extensions: ['.css'] },
+  sh: { type: 'text', subtype: 'sh', extensions: ['.sh', '.bash', '.zsh'] },
+  bat: { type: 'text', subtype: 'bat', extensions: ['.bat', '.cmd'] },
+  rb: { type: 'text', subtype: 'rb', extensions: ['.rb'] },
+  php: { type: 'text', subtype: 'php', extensions: ['.php'] },
+  java: { type: 'text', subtype: 'java', extensions: ['.java'] },
+  go: { type: 'text', subtype: 'go', extensions: ['.go'] },
+  rs: { type: 'text', subtype: 'rs', extensions: ['.rs'] },
+  swift: { type: 'text', subtype: 'swift', extensions: ['.swift'] },
+  kt: { type: 'text', subtype: 'kt', extensions: ['.kt', '.kts'] },
+  c: { type: 'text', subtype: 'c', extensions: ['.c', '.h'] },
+  cpp: { type: 'text', subtype: 'cpp', extensions: ['.cpp', '.hpp', '.cc', '.cxx'] },
+  cs: { type: 'text', subtype: 'cs', extensions: ['.cs'] },
+  sql: { type: 'text', subtype: 'sql', extensions: ['.sql'] },
+  r: { type: 'text', subtype: 'r', extensions: ['.r', '.R'] },
+  lua: { type: 'text', subtype: 'lua', extensions: ['.lua'] },
+  dart: { type: 'text', subtype: 'dart', extensions: ['.dart'] },
+  scala: { type: 'text', subtype: 'scala', extensions: ['.scala'] },
+
+  // Config/env files
+  env: { type: 'text', subtype: 'env', extensions: ['.env'] },
+  example: { type: 'text', subtype: 'example', extensions: ['.example'] },
+  local: { type: 'text', subtype: 'local', extensions: ['.local'] },
+  properties: { type: 'text', subtype: 'properties', extensions: ['.properties'] },
+  dockerfile: { type: 'text', subtype: 'dockerfile', extensions: ['.dockerfile'] },
+
+  // Style preprocessors & data
+  scss: { type: 'text', subtype: 'scss', extensions: ['.scss', '.sass', '.less'] },
+  graphql: { type: 'text', subtype: 'graphql', extensions: ['.graphql', '.gql'] },
+  proto: { type: 'text', subtype: 'proto', extensions: ['.proto'] }
 };
 
 // Build reverse lookup map for faster detection

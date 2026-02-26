@@ -1246,6 +1246,13 @@ async function handleFolderSelection() {
     }
 
     await handleFolderPick(dirHandle);
+
+    try {
+      const { processFolderDrop } = await import('../viewers/tree_folder_view.js');
+      await processFolderDrop(dirHandle);
+    } catch (e) {
+      console.warn('Could not update tree view:', e);
+    }
   } catch (error) {
     console.error("Error selecting folder:", error);
     if (error.name !== 'AbortError') {

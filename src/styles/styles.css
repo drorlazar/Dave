@@ -48,7 +48,7 @@
   --z-fullscreen:     1200;
   --z-iv-annotation:  calc(var(--z-fullscreen) + 2);
   --z-iv-toolbar:     calc(var(--z-fullscreen) + 3);
-  --z-iv-panel:       calc(var(--z-fullscreen) + 4);
+  --z-iv-panel:       calc(var(--z-fullscreen) + 5);
   --z-modal:          1500;
   --z-dave-alive:     1700;
   --z-dave-presence:  2000;
@@ -2904,4 +2904,12 @@ body:not(.dark-mode) .fullscreen-error small {
   font-size: 1.1rem;
   max-width: 400px;
   line-height: 1.5;
+}
+
+/* --- High-Resolution Display Scaling --- */
+@media (min-width: 2000px) {
+  html { font-size: 120%; }
+}
+@media (min-width: 3000px) {
+  html { font-size: 140%; }
 }
