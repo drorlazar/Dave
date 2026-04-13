@@ -13,6 +13,7 @@ let _loadSubfolders = true;
 let _subfolderDepth = 'all';
 let _currentSort = { field: 'name', direction: 'asc' };
 let _selectedFiles = new Set();
+let _lastSelectedIndex = -1;
 let _searchTerm = '';
 
 // Cloud URL detection helper
@@ -545,6 +546,21 @@ function initializeElements() {
         new ResizeObserver(updateTopBarHeight).observe(topBar);
       }
 
+      // Save as Default button
+      const saveDefaultRow = document.getElementById('saveDefaultSettingsRow');
+      if (saveDefaultRow) {
+        saveDefaultRow.addEventListener('click', (e) => {
+          e.stopPropagation();
+          saveDefaultSettings();
+          const span = saveDefaultRow.querySelector('span');
+          if (span) {
+            const original = span.textContent;
+            span.textContent = 'Saved!';
+            setTimeout(() => { span.textContent = original; }, 1500);
+          }
+        });
+      }
+
       // Mark initialization as complete
       console.log('INIT DIAGNOSTICS: UI initialization complete, setting uiInitialized=true');
       uiInitialized = true;
@@ -569,6 +585,55 @@ function initializeElements() {
 // Export function to get UI elements
 export function getUIElements() {
   return window.uiElements || {};
+}
+
+export function saveDefaultSettings() {
+  const sizeSlider = document.getElementById('sizeSlider');
+  const settings = {
+    size: sizeSlider ? parseInt(sizeSlider.value) : 220,
+    itemsPerPage: _itemsPerPage,
+    filters: Array.from(activeFilters)
+  };
+  localStorage.setItem('dave_default_settings', JSON.stringify(settings));
+}
+
+export function loadDefaultSettings() {
+  const saved = localStorage.getItem('dave_default_settings');
+  if (!saved) return;
+  try {
+    const settings = JSON.parse(saved);
+
+    if (settings.size) {
+      const sizeSlider = document.getElementById('sizeSlider');
+      const sizeValue = document.getElementById('sizeValue');
+      if (sizeSlider) {
+        sizeSlider.value = settings.size;
+        document.documentElement.style.setProperty('--tile-size', `${settings.size}px`);
+        if (sizeValue) sizeValue.textContent = `${settings.size}px`;
+      }
+    }
+
+    if (settings.itemsPerPage) {
+      setItemsPerPage(settings.itemsPerPage);
+    }
+
+    if (Array.isArray(settings.filters)) {
+      const savedFilters = new Set(settings.filters);
+      document.querySelectorAll('.filter-option').forEach(option => {
+        const type = option.dataset.type;
+        if (!type) return;
+        if (savedFilters.has(type)) {
+          option.classList.add('active');
+          activeFilters.add(type);
+        } else {
+          option.classList.remove('active');
+          activeFilters.delete(type);
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load default settings:', e);
+  }
 }
 
 
@@ -859,54 +924,81 @@ export function saveSelection(modelFiles) {
   URL.revokeObjectURL(url);
 }
 
+async function _getFileBlob(model) {
+  if (model.file) {
+    return new Blob([await model.file.arrayBuffer()]);
+  } else if (model.source === 's3' || model.source === 'gdrive') {
+    const { getFileUrl } = await import('../cloud/CloudStorageProvider.js');
+    const url = await getFileUrl(model);
+    const response = await fetch(url);
+    return response.blob();
+  }
+  return null;
+}
+
 export async function downloadSelected(modelFiles) {
   if (_selectedFiles.size === 0) return;
 
-  console.log(`DOWNLOAD DIAGNOSTICS: Starting download for ${_selectedFiles.size} selected files`);
+  const selected = Array.from(_selectedFiles)
+    .map(fileName => modelFiles.find(m => m.name === fileName))
+    .filter(Boolean);
 
-  for (const fileName of _selectedFiles) {
-    const model = modelFiles.find(m => m.name === fileName);
-    if (model) {
-      console.log(`DOWNLOAD DIAGNOSTICS: Processing ${fileName}, type=${model.type}`);
+  if (selected.length === 1) {
+    // Single file — download directly
+    const model = selected[0];
+    try {
+      const blob = await _getFileBlob(model);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = model.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(`Error downloading ${model.name}:`, error);
+      alert(`Failed to download ${model.name}: ${error.message}`);
+    }
+  } else {
+    // Multiple files — bundle into a ZIP
+    if (typeof JSZip === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      document.head.appendChild(script);
+      await new Promise((resolve, reject) => {
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Failed to load JSZip'));
+      });
+    }
 
+    const zip = new JSZip();
+    for (const model of selected) {
       try {
-        let blob;
-
-        if (model.file) {
-          // Local file
-          console.log(`DOWNLOAD DIAGNOSTICS: Creating blob from local file ${fileName}`);
-          blob = new Blob([await model.file.arrayBuffer()]);
-        } else if (model.source === 's3' || model.source === 'gdrive') {
-          // Cloud file - fetch via URL
-          console.log(`DOWNLOAD DIAGNOSTICS: Fetching cloud file ${fileName}`);
-          const { getFileUrl } = await import('../cloud/CloudStorageProvider.js');
-          const url = await getFileUrl(model);
-          const response = await fetch(url);
-          blob = await response.blob();
-        }
-
-        // Create download link and trigger download
-        console.log(`DOWNLOAD DIAGNOSTICS: Creating object URL for ${fileName}`);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = model.name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        console.log(`DOWNLOAD DIAGNOSTICS: Download triggered for ${model.name}`);
+        const blob = await _getFileBlob(model);
+        if (blob) zip.file(model.name, blob);
       } catch (error) {
-        console.error(`Error downloading ${model.name}:`, error);
-        alert(`Failed to download ${model.name}: ${error.message}`);
+        console.error(`Error adding ${model.name} to zip:`, error);
       }
     }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dave_selection.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
+
+  clearSelection();
 }
 
 // Selection management function for UI interaction
-export function toggleSelectionUI(fileName) {
+export function toggleSelectionUI(fileName, index = -1) {
   const isSelected = _selectedFiles.has(fileName);
   const tile = document.querySelector(`.model-tile[data-model-name="${fileName}"]`);
 
@@ -917,6 +1009,28 @@ export function toggleSelectionUI(fileName) {
     _selectedFiles.add(fileName);
     tile?.classList.add('selected');
   }
+  if (index >= 0) _lastSelectedIndex = index;
+  updateSelectionCount();
+  document.dispatchEvent(new CustomEvent('dave:selection', { detail: { count: _selectedFiles.size } }));
+}
+
+export const getLastSelectedIndex = () => _lastSelectedIndex;
+export const resetLastSelectedIndex = () => { _lastSelectedIndex = -1; };
+
+// Selects all assets between fromIndex and toIndex (inclusive) in the current page
+export function selectRangeUI(pageItems, fromIndex, toIndex) {
+  const start = Math.min(fromIndex, toIndex);
+  const end = Math.max(fromIndex, toIndex);
+  for (let i = start; i <= end; i++) {
+    const model = pageItems[i];
+    if (!model) continue;
+    if (!_selectedFiles.has(model.name)) {
+      _selectedFiles.add(model.name);
+      const tile = document.querySelector(`.model-tile[data-model-name="${model.name}"]`);
+      tile?.classList.add('selected');
+    }
+  }
+  _lastSelectedIndex = toIndex;
   updateSelectionCount();
   document.dispatchEvent(new CustomEvent('dave:selection', { detail: { count: _selectedFiles.size } }));
 }

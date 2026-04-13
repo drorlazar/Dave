@@ -24,6 +24,9 @@ import {
   setCurrentSort,
   updatePagination,
   toggleSelectionUI,
+  getLastSelectedIndex,
+  resetLastSelectedIndex,
+  selectRangeUI,
   fileMatchesSearch,
   getUIElements,
   initializeUI,
@@ -792,7 +795,7 @@ function renderPage(pageIndex) {
   const pageItems = filteredModelFiles.slice(startIndex, startIndex + getItemsPerPage());
   const selectedFiles = getSelectedFiles();
 
-  pageItems.forEach(model => {
+  pageItems.forEach((model, tileIndex) => {
     const tile = document.createElement("div");
     tile.className = "model-tile" + (selectedFiles.has(model.name) ? " selected" : "");
     tile.dataset.modelType = model.type;
@@ -803,12 +806,23 @@ function renderPage(pageIndex) {
     selectionIndicator.innerHTML = '<i class="fa fa-check"></i>';
     tile.appendChild(selectionIndicator);
 
+    tile.addEventListener('mousedown', (e) => {
+      if (e.shiftKey && e.target.closest('.selection-indicator')) {
+        e.preventDefault(); // prevent browser text selection on shift+click
+      }
+    });
+
     tile.addEventListener('click', (e) => {
       if (e.target.closest('.fullscreen-btn') || e.target.closest('.scrub-bar-container')) {
         return;
       }
       if (e.target.closest('.selection-indicator')) {
-        toggleSelectionUI(model.name);
+        const lastIndex = getLastSelectedIndex();
+        if (e.shiftKey && lastIndex >= 0) {
+          selectRangeUI(pageItems, lastIndex, tileIndex);
+        } else {
+          toggleSelectionUI(model.name, tileIndex);
+        }
       }
     });
 
@@ -1512,6 +1526,7 @@ initializeUI().then(() => {
     prevPageBtn.addEventListener("click", () => {
       const currentPage = getCurrentPage();
       if (currentPage > 0) {
+        resetLastSelectedIndex();
         setCurrentPage(currentPage - 1);
         renderPage(getCurrentPage());
         updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
@@ -1522,6 +1537,7 @@ initializeUI().then(() => {
       const currentPage = getCurrentPage();
       const maxPage = Math.ceil(filteredModelFiles.length / getItemsPerPage()) - 1;
       if (currentPage < maxPage) {
+        resetLastSelectedIndex();
         setCurrentPage(currentPage + 1);
         renderPage(getCurrentPage());
         updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
