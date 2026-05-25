@@ -24,6 +24,8 @@ import {
   setCurrentSort,
   updatePagination,
   toggleSelectionUI,
+  getLastSelectedIndex,
+  selectRangeUI,
   fileMatchesSearch,
   getUIElements,
   initializeUI,
@@ -792,7 +794,7 @@ function renderPage(pageIndex) {
   const pageItems = filteredModelFiles.slice(startIndex, startIndex + getItemsPerPage());
   const selectedFiles = getSelectedFiles();
 
-  pageItems.forEach(model => {
+  pageItems.forEach((model, tileIndex) => {
     const tile = document.createElement("div");
     tile.className = "model-tile" + (selectedFiles.has(model.name) ? " selected" : "");
     tile.dataset.modelType = model.type;
@@ -803,12 +805,24 @@ function renderPage(pageIndex) {
     selectionIndicator.innerHTML = '<i class="fa fa-check"></i>';
     tile.appendChild(selectionIndicator);
 
+    tile.addEventListener('mousedown', (e) => {
+      if (e.shiftKey && e.target.closest('.selection-indicator')) {
+        e.preventDefault(); // prevent browser text selection on shift+click
+      }
+    });
+
     tile.addEventListener('click', (e) => {
       if (e.target.closest('.fullscreen-btn') || e.target.closest('.scrub-bar-container')) {
         return;
       }
       if (e.target.closest('.selection-indicator')) {
-        toggleSelectionUI(model.name);
+        const globalIndex = startIndex + tileIndex;
+        const lastIndex = getLastSelectedIndex();
+        if (e.shiftKey && lastIndex >= 0) {
+          selectRangeUI(filteredModelFiles, lastIndex, globalIndex);
+        } else {
+          toggleSelectionUI(model.name, globalIndex);
+        }
       }
     });
 

@@ -45,6 +45,9 @@ window.APP_DEBUG = {
 UI.initializeUI().then(() => {
   console.log('[Main] UI initialized successfully');
 
+  // Restore saved default settings (must run after all modules finish initializing)
+  UI.loadDefaultSettings();
+
   // Initialize tree folder view
   TreeFolderView.initTreeFolderView();
   console.log('[Main] Tree folder view initialized');
