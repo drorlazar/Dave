@@ -631,6 +631,11 @@ export function loadDefaultSettings() {
         }
       });
     }
+
+    if (filteredModelFiles && filteredModelFiles.length) {
+      updateFilteredModelFiles();
+      renderPage(getCurrentPage());
+    }
   } catch (e) {
     console.error('Failed to load default settings:', e);
   }
@@ -987,7 +992,8 @@ export async function downloadSelected(modelFiles) {
     const url = URL.createObjectURL(zipBlob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'dave_selection.zip';
+    const ts = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
+    a.download = `dave_download_${ts}.zip`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1017,12 +1023,15 @@ export function toggleSelectionUI(fileName, index = -1) {
 export const getLastSelectedIndex = () => _lastSelectedIndex;
 export const resetLastSelectedIndex = () => { _lastSelectedIndex = -1; };
 
-// Selects all assets between fromIndex and toIndex (inclusive) in the current page
-export function selectRangeUI(pageItems, fromIndex, toIndex) {
+// Selects assets between fromIndex and toIndex (inclusive) into _selectedFiles.
+// Indices are into the global filteredModelFiles array so the range can span pages;
+// tiles on the current page get the .selected class, off-page tiles render selected
+// when their page is visited.
+export function selectRangeUI(files, fromIndex, toIndex) {
   const start = Math.min(fromIndex, toIndex);
   const end = Math.max(fromIndex, toIndex);
   for (let i = start; i <= end; i++) {
-    const model = pageItems[i];
+    const model = files[i];
     if (!model) continue;
     if (!_selectedFiles.has(model.name)) {
       _selectedFiles.add(model.name);

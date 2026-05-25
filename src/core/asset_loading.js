@@ -25,7 +25,6 @@ import {
   updatePagination,
   toggleSelectionUI,
   getLastSelectedIndex,
-  resetLastSelectedIndex,
   selectRangeUI,
   fileMatchesSearch,
   getUIElements,
@@ -817,11 +816,12 @@ function renderPage(pageIndex) {
         return;
       }
       if (e.target.closest('.selection-indicator')) {
+        const globalIndex = startIndex + tileIndex;
         const lastIndex = getLastSelectedIndex();
         if (e.shiftKey && lastIndex >= 0) {
-          selectRangeUI(pageItems, lastIndex, tileIndex);
+          selectRangeUI(filteredModelFiles, lastIndex, globalIndex);
         } else {
-          toggleSelectionUI(model.name, tileIndex);
+          toggleSelectionUI(model.name, globalIndex);
         }
       }
     });
@@ -1526,7 +1526,6 @@ initializeUI().then(() => {
     prevPageBtn.addEventListener("click", () => {
       const currentPage = getCurrentPage();
       if (currentPage > 0) {
-        resetLastSelectedIndex();
         setCurrentPage(currentPage - 1);
         renderPage(getCurrentPage());
         updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));
@@ -1537,7 +1536,6 @@ initializeUI().then(() => {
       const currentPage = getCurrentPage();
       const maxPage = Math.ceil(filteredModelFiles.length / getItemsPerPage()) - 1;
       if (currentPage < maxPage) {
-        resetLastSelectedIndex();
         setCurrentPage(currentPage + 1);
         renderPage(getCurrentPage());
         updatePagination(Math.ceil(filteredModelFiles.length / getItemsPerPage()));

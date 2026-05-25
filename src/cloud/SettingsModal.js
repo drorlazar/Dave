@@ -671,6 +671,15 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.5.0', date: 'May 25, 2026', title: 'Multi-select Workflow + Saved Defaults',
+        features: [
+          'Shift-click range selection on the grid, anchored on the global filtered list so ranges span across pages',
+          'Bulk download bundles 2+ selected files into a timestamped dave_download_<YYYY-MM-DD_HH-MM-SS>.zip',
+          'Selection auto-clears after a download completes',
+          'Save as Default persists tile size, items per page, and active filters across sessions',
+        ]
+      },
+      {
         version: '2.4.0', date: 'Feb 15, 2026', title: 'Project Health Audit #4 — Deep Overhaul',
         features: [
           'CSS monolith split: styles.css reduced from 5,780 to 2,868 lines (-50.4%), 3 new CSS files extracted',
