@@ -19,7 +19,7 @@ curl -s -X POST http://localhost:7778/api/control/show \
   -d '{"files":["/absolute/path/to/file.png"], "fullscreen": 0}'
 
 # 3. Or open directly in browser
-open "https://drorlazar-sett.github.io/Dave/?server=localhost:7778&file=/path/to/file.png"
+open "https://drorlazar.github.io/Dave/?server=localhost:7778&file=/path/to/file.png"
 ```
 
 ## Setup (automatic)
@@ -173,5 +173,5 @@ curl -s -X POST http://localhost:7778/api/control/show \
 |-------|-----|
 | "Connection refused" | Helper not running. Start with `node ~/.claude/skills/dave-show/dave-helper.cjs &` |
 | "File not found" | Use absolute paths, not relative |
-| State returns timeout | Dave must be open in a browser. Open https://drorlazar-sett.github.io/Dave/?server=localhost:7778 |
+| State returns timeout | Dave must be open in a browser. Open https://drorlazar.github.io/Dave/?server=localhost:7778 |
 | Files don't appear in Dave | Check browser console for CORS errors. Helper must be running on port 7778 |

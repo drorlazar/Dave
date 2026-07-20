@@ -4,7 +4,7 @@ A powerful web-based viewer for digital assets including 3D models, videos, audi
 
 ## Live Demo
 
-🌐 **[Try Dave Online](https://drorlazar-sett.github.io/Dave/)** - No installation required!
+🌐 **[Try Dave Online](https://drorlazar.github.io/Dave/)** - No installation required!
 
 ## Local Development
 

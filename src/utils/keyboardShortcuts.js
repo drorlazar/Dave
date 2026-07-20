@@ -193,7 +193,7 @@ function showKeyboardHelp() {
         <div class="help-collapsible-body">
           <div class="help-resources">
             <a href="docs/cloud-setup.html" target="_blank"><i class="fa fa-cloud"></i> Cloud Storage Setup Guide</a>
-            <a href="https://github.com/DrorLazar-Sett/Dave" target="_blank"><i class="fab fa-github"></i> GitHub Repository</a>
+            <a href="https://github.com/drorlazar/Dave" target="_blank"><i class="fab fa-github"></i> GitHub Repository</a>
           </div>
         </div>
       </div>

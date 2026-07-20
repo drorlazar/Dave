@@ -17,7 +17,7 @@ const path = require('path');
 const args = process.argv.slice(2);
 const PORT = getArg('--port', 7778);
 const OPEN_FILE = getArg('--open', null);
-const DAVE_URL = getArg('--dave', 'https://drorlazar-sett.github.io/Dave/');
+const DAVE_URL = getArg('--dave', 'https://drorlazar.github.io/Dave/');
 
 // ---------------------------------------------------------------------------
 // SSE clients + command queue

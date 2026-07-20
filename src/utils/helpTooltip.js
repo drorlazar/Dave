@@ -143,10 +143,10 @@ export class HelpTooltip {
               <a href="docs/cloud-setup.html" target="_blank" rel="noopener">
                 <i class="fa fa-cloud"></i> Cloud Storage Setup Guide
               </a>
-              <a href="https://github.com/drorlazar-sett/Dave" target="_blank" rel="noopener">
+              <a href="https://github.com/drorlazar/Dave" target="_blank" rel="noopener">
                 <i class="fab fa-github"></i> GitHub Repository
               </a>
-              <a href="https://github.com/drorlazar-sett/Dave/issues" target="_blank" rel="noopener">
+              <a href="https://github.com/drorlazar/Dave/issues" target="_blank" rel="noopener">
                 <i class="fa fa-bug"></i> Report Issues
               </a>
             </div>
@@ -382,7 +382,7 @@ export class HelpTooltip {
     navigator.clipboard.writeText(text).catch(() => {});
     const title = encodeURIComponent(text.slice(0, 80));
     const body = encodeURIComponent(`## Feedback\n\n${text}\n\n---\n*Sent from Dave's Help tooltip*`);
-    window.open(`https://github.com/drorlazar-sett/Dave/issues/new?title=${title}&body=${body}`, '_blank');
+    window.open(`https://github.com/drorlazar/Dave/issues/new?title=${title}&body=${body}`, '_blank');
   }
 
   _resetFeedback() {

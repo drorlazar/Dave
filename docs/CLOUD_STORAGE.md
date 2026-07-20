@@ -6,7 +6,7 @@ DAVE can browse and display assets from **AWS S3** and **Google Drive** in addit
 
 ## Quick Start
 
-1. Open DAVE in your browser (locally or at the [live site](https://drorlazar-sett.github.io/Dave/))
+1. Open DAVE in your browser (locally or at the [live site](https://drorlazar.github.io/Dave/))
 2. Click the **gear icon** in the top bar to open Settings
 3. Enter your credentials for S3 and/or Google Drive
 4. Click **Source** in the toolbar and pick your cloud source
@@ -44,7 +44,7 @@ This is required so DAVE can access your bucket from the browser.
 
 6. Click **Save changes**
 
-> **Note**: For better security, replace `"*"` in `AllowedOrigins` with your specific URLs, e.g. `["https://drorlazar-sett.github.io", "http://localhost:7777"]`.
+> **Note**: For better security, replace `"*"` in `AllowedOrigins` with your specific URLs, e.g. `["https://drorlazar.github.io", "http://localhost:7777"]`.
 
 ### Step 2: Add Your Credentials
 
@@ -103,7 +103,7 @@ A Google Cloud OAuth 2.0 Client ID (just the Client ID string, not a full JSON f
    - Add your email as a test user
 8. For Application type, choose **Web application**
 9. Under **Authorized JavaScript origins**, add:
-   - `https://drorlazar-sett.github.io` (for the live site)
+   - `https://drorlazar.github.io` (for the live site)
    - `http://localhost:7777` (for local development)
 10. Click **Create**
 11. Copy the **Client ID** (it ends with `.apps.googleusercontent.com`)
