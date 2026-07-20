@@ -3,7 +3,7 @@
 import * as CloudStorage from '../cloud/CloudStorageProvider.js';
 
 const EDITORS = {
-  image:   { name: 'Photopea',         url: 'https://www.photopea.com/',        tip: 'Opens Photopea \u2014 copy image, paste there' },
+  image:   { name: 'Photopea',         url: 'https://www.photopea.com/',        tip: 'Edit in Photopea' },
   model3d: { name: 'Three.js Editor',  url: 'https://threejs.org/editor/',      tip: 'Opens Three.js Editor \u2014 drag your file in' },
   video:   { name: 'Video Editor',     url: 'https://online-video-cutter.com/', tip: 'Opens video cutter \u2014 upload your clip' },
   audio:   { name: 'AudioMass',        url: 'https://audiomass.co/',            tip: 'Opens AudioMass \u2014 drop your file in' },
@@ -19,7 +19,7 @@ export function getEditorForType(type, subtype) {
   if (type === 'image')  return EDITORS.image;
   if (type === 'video')  return EDITORS.video;
   if (type === 'audio')  return EDITORS.audio;
-  if (type === 'text')   return EDITORS.text;
+  if (type === 'text' || type === 'ai') return EDITORS.text;
   return null; // fonts, unknown types
 }
 

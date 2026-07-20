@@ -83,6 +83,7 @@ const THEMES = [
 ];
 
 const THEME_STORAGE_KEY = 'dave_theme';
+const SYSTEM_THEME_KEY = 'dave_system_theme';
 
 export class SettingsModal {
   constructor() {
@@ -585,7 +586,119 @@ export class SettingsModal {
     document.dispatchEvent(new CustomEvent('dave:themeChange', { detail: { theme: themeId } }));
   }
 
+  // --- System theme (follow OS colour scheme) ---
+
+  static isSystemThemeEnabled() {
+    return localStorage.getItem(SYSTEM_THEME_KEY) === 'true';
+  }
+
+  static systemPrefersDark() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+
+  /**
+   * Apply the OS colour scheme, ignoring (but preserving) any saved custom theme
+   * so it can be restored when the user turns System Theme back off.
+   */
+  static applySystemTheme() {
+    document.body.classList.remove('matrix-theme');
+    stopMatrixBackground();
+
+    const root = document.documentElement;
+    // Drop custom theme variables so the built-in dark/light CSS defaults apply.
+    ['--theme-bg', '--theme-surface', '--theme-text', '--theme-border', '--theme-accent']
+      .forEach(prop => root.style.removeProperty(prop));
+
+    const prefersDark = SettingsModal.systemPrefersDark();
+    root.classList.toggle('dark-mode', prefersDark);
+    document.body.classList.toggle('dark-mode', prefersDark);
+
+    // Keep the (dimmed) dark-mode indicator informative
+    const indicator = document.getElementById('darkModeIndicator');
+    if (indicator) {
+      indicator.textContent = prefersDark ? 'ON' : 'OFF';
+      indicator.classList.toggle('off', !prefersDark);
+    }
+
+    // De-highlight theme swatches — none is "active" while following the system
+    document.querySelectorAll('#themeGridDD .theme-swatch, #themeGrid .theme-swatch')
+      .forEach(s => s.classList.remove('active'));
+
+    document.dispatchEvent(new CustomEvent('dave:themeChange', {
+      detail: { theme: prefersDark ? 'system-dark' : 'system-light' }
+    }));
+  }
+
+  /** Enable/disable "follow system" mode. */
+  static setSystemTheme(enabled) {
+    if (enabled) {
+      localStorage.setItem(SYSTEM_THEME_KEY, 'true');
+      SettingsModal.applySystemTheme();
+    } else {
+      localStorage.removeItem(SYSTEM_THEME_KEY);
+      // Restore the saved custom theme, else honour the manual light/dark pref.
+      const saved = localStorage.getItem(THEME_STORAGE_KEY);
+      if (saved) {
+        if (saved === 'matrix') matrixModeIndex = 0;
+        SettingsModal.applyTheme(saved);
+      } else {
+        const wantLight = localStorage.getItem('theme') === 'light';
+        const root = document.documentElement;
+        root.classList.toggle('dark-mode', !wantLight);
+        document.body.classList.toggle('dark-mode', !wantLight);
+        const indicator = document.getElementById('darkModeIndicator');
+        if (indicator) {
+          indicator.textContent = wantLight ? 'OFF' : 'ON';
+          indicator.classList.toggle('off', wantLight);
+        }
+      }
+    }
+    SettingsModal._updateSystemThemeIndicator();
+  }
+
+  /** Clear the flag without re-applying (used when the user picks a theme explicitly). */
+  static _clearSystemThemeFlag() {
+    if (localStorage.getItem(SYSTEM_THEME_KEY)) {
+      localStorage.removeItem(SYSTEM_THEME_KEY);
+    }
+    SettingsModal._updateSystemThemeIndicator();
+  }
+
+  static _updateSystemThemeIndicator() {
+    const enabled = SettingsModal.isSystemThemeEnabled();
+    const indicator = document.getElementById('systemThemeIndicator');
+    if (indicator) {
+      indicator.textContent = enabled ? 'ON' : 'OFF';
+      indicator.classList.toggle('off', !enabled);
+    }
+    // Dim the manual controls that System Theme overrides (still clickable —
+    // interacting with them takes back manual control).
+    const darkRow = document.getElementById('darkModeRow');
+    if (darkRow) darkRow.classList.toggle('settings-row-disabled', enabled);
+    const themeGrid = document.getElementById('themeGridDD');
+    if (themeGrid) themeGrid.classList.toggle('settings-section-disabled', enabled);
+  }
+
+  static _attachSystemThemeListener() {
+    if (SettingsModal._systemThemeListenerAttached || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => {
+      if (SettingsModal.isSystemThemeEnabled()) SettingsModal.applySystemTheme();
+    };
+    if (mq.addEventListener) mq.addEventListener('change', handler);
+    else if (mq.addListener) mq.addListener(handler); // Safari < 14
+    SettingsModal._systemThemeListenerAttached = true;
+  }
+
   static initTheme() {
+    SettingsModal._attachSystemThemeListener();
+
+    // System Theme takes precedence over any saved custom theme.
+    if (SettingsModal.isSystemThemeEnabled()) {
+      SettingsModal.applySystemTheme();
+      return;
+    }
+
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
     if (saved) {
       if (saved === 'matrix') matrixModeIndex = 0;
@@ -624,6 +737,8 @@ export class SettingsModal {
       themeGrid.addEventListener('click', (e) => {
         // ── Matrix trigger click ──
         if (e.target.closest('.matrix-trigger')) {
+          // Picking a theme explicitly overrides "follow system"
+          SettingsModal._clearSystemThemeFlag();
           // If matrix is already active, advance to next mode; otherwise start at 0
           const isActive = document.body.classList.contains('matrix-theme');
           if (isActive) {
@@ -640,6 +755,8 @@ export class SettingsModal {
 
         const swatch = e.target.closest('.theme-swatch');
         if (!swatch) return;
+        // Picking a theme explicitly overrides "follow system"
+        SettingsModal._clearSystemThemeFlag();
         const themeId = swatch.dataset.theme;
         SettingsModal.applyTheme(themeId);
         themeGrid.querySelectorAll('.theme-swatch').forEach(s =>
@@ -660,6 +777,24 @@ export class SettingsModal {
       releaseLogBody.innerHTML = SettingsModal._releaseLogEntriesHTML();
     }
 
+    // System Theme toggle row
+    const systemThemeRow = document.getElementById('systemThemeRow');
+    if (systemThemeRow) {
+      SettingsModal._updateSystemThemeIndicator();
+      systemThemeRow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        SettingsModal.setSystemTheme(!SettingsModal.isSystemThemeEnabled());
+      });
+    }
+
+    // A manual dark-mode toggle also counts as taking back control from the OS.
+    const darkModeRow = document.getElementById('darkModeRow');
+    if (darkModeRow) {
+      darkModeRow.addEventListener('click', () => {
+        if (SettingsModal.isSystemThemeEnabled()) SettingsModal._clearSystemThemeFlag();
+      });
+    }
+
     // Collapsible section toggles
     document.querySelectorAll('.settings-dd-section-header').forEach(header => {
       header.addEventListener('click', () => {
@@ -670,6 +805,24 @@ export class SettingsModal {
 
   static _releaseLogEntriesHTML() {
     const releases = [
+      {
+        version: '2.7.0', date: 'Jul 20, 2026', title: 'Edit in Photopea',
+        features: [
+          'Edit any image in Photopea without leaving Dave — an embedded editor panel opens with the image already loaded',
+          'Injects the image straight into Photopea via its postMessage API — no clipboard, no manual paste',
+          'Available from the image viewer toolbar and the grid-tile hover edit button; works for local and cloud images',
+          'Falls back to opening Photopea in a new tab if it can\'t be embedded',
+        ]
+      },
+      {
+        version: '2.6.0', date: 'Jul 20, 2026', title: 'AI Files, System Theme & Text Viewer Upgrades',
+        features: [
+          'New "AI Files" filter category for Markdown, JSON and YAML — distinct from plain Text, still text-rendered',
+          'OS/system junk (.DS_Store, Thumbs.db, .git, __MACOSX, …) filtered out at scan, drop and display',
+          'Text viewer: true browser fullscreen (F), large-file guard, empty-file placeholder, and markdown list rendering',
+          'System Theme setting follows the OS light/dark scheme live, with manual override when you pick a theme',
+        ]
+      },
       {
         version: '2.5.0', date: 'May 25, 2026', title: 'Multi-select Workflow + Saved Defaults',
         features: [

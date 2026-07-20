@@ -343,3 +343,50 @@ body:not(.dark-mode) .text-rendered-md h1 {
 body:not(.dark-mode) .text-rendered-md h2 {
   border-bottom-color: #eee;
 }
+
+/* Markdown lists (wrapped <li> runs) */
+.text-rendered-md .md-list {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+  list-style-position: outside;
+}
+
+.text-rendered-md .md-list li {
+  margin-left: 0;
+}
+
+/* ===========================
+   Robustness helpers
+   =========================== */
+
+/* Large-file warning chip in the toolbar */
+.text-large-note {
+  color: #f9a825 !important;
+  font-weight: 600;
+}
+
+.text-large-note i {
+  margin-right: 3px;
+}
+
+/* Empty-file placeholder */
+.text-empty-note {
+  display: block;
+  padding: 24px;
+  color: #6c7086;
+  font-style: italic;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+body:not(.dark-mode) .text-empty-note {
+  color: #999;
+}
+
+/* True fullscreen (Fullscreen API) — make the viewer fill the whole screen */
+.text-fullscreen-wrapper:fullscreen,
+.text-fullscreen-wrapper:-webkit-full-screen,
+.text-fullscreen-wrapper.text-is-fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+}

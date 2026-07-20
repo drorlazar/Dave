@@ -108,6 +108,9 @@ export class TextHandler extends BaseAssetHandler {
     // Ordered lists
     html = html.replace(/^[\s]*\d+\.\s+(.+)$/gm, '<li>$1</li>');
 
+    // Wrap consecutive <li> items in a <ul> so lists render as real lists
+    html = html.replace(/(<li>[\s\S]*?<\/li>(?:\s*<li>[\s\S]*?<\/li>)*)/g, '<ul class="md-list">$1</ul>');
+
     // Blockquotes
     html = html.replace(/^&gt;\s+(.+)$/gm, '<blockquote class="md-blockquote">$1</blockquote>');
 
@@ -132,7 +135,7 @@ export class TextHandler extends BaseAssetHandler {
 
   escapeHtml(text) {
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = text == null ? '' : String(text);
     return div.innerHTML;
   }
 
@@ -195,6 +198,12 @@ export class TextHandler extends BaseAssetHandler {
       const label = this.getFormatLabel(model.subtype);
       const isJson = model.subtype === 'json';
       const isMd = model.subtype === 'md' || model.subtype === 'markdown';
+      const totalLines = text.length ? text.split('\n').length : 0;
+      const isEmpty = text.length === 0;
+      // Very large files: disable expensive rendering (per-line gutter, markdown
+      // parsing) by default so the viewer stays responsive. The user can still
+      // opt back in via the toolbar toggles.
+      const isLarge = text.length > 1500000 || totalLines > 30000;
 
       container.style.display = 'flex';
       container.innerHTML = '';
@@ -212,12 +221,21 @@ export class TextHandler extends BaseAssetHandler {
       badgeEl.textContent = label;
       toolbar.appendChild(badgeEl);
 
-      // Line count
-      const lineCount = text.split('\n').length;
+      // Line count (or empty/large hints)
       const lineCountEl = document.createElement('span');
       lineCountEl.className = 'text-toolbar-info';
-      lineCountEl.textContent = `${lineCount} lines`;
+      lineCountEl.textContent = isEmpty
+        ? 'empty file'
+        : `${totalLines.toLocaleString()} line${totalLines === 1 ? '' : 's'}`;
       toolbar.appendChild(lineCountEl);
+
+      if (isLarge) {
+        const largeNote = document.createElement('span');
+        largeNote.className = 'text-toolbar-info text-large-note';
+        largeNote.title = 'Large file — rich rendering is off by default for performance';
+        largeNote.innerHTML = '<i class="fa fa-triangle-exclamation"></i> large';
+        toolbar.appendChild(largeNote);
+      }
 
       // Spacer
       const spacer = document.createElement('div');
@@ -262,8 +280,8 @@ export class TextHandler extends BaseAssetHandler {
       wrapBtn.title = 'Toggle word wrap (W)';
       toolbar.appendChild(wrapBtn);
 
-      // Line numbers toggle
-      let lineNumbersEnabled = localStorage.getItem('textViewerLineNumbers') !== 'false';
+      // Line numbers toggle (forced off for very large files to avoid jank)
+      let lineNumbersEnabled = !isLarge && localStorage.getItem('textViewerLineNumbers') !== 'false';
       const lineNumBtn = document.createElement('button');
       lineNumBtn.className = 'text-toolbar-btn' + (lineNumbersEnabled ? ' active' : '');
       lineNumBtn.innerHTML = '<i class="fa fa-list-ol"></i>';
@@ -271,7 +289,7 @@ export class TextHandler extends BaseAssetHandler {
       toolbar.appendChild(lineNumBtn);
 
       // MD/JSON render toggle
-      let renderMode = isMd; // Markdown starts rendered, JSON starts raw
+      let renderMode = isMd && !isLarge; // Markdown starts rendered (unless huge), JSON starts raw
       let renderToggleBtn = null;
       if (isMd || isJson) {
         toolbar.appendChild(this.createToolbarSeparator());
@@ -294,6 +312,13 @@ export class TextHandler extends BaseAssetHandler {
       copyBtn.title = 'Copy to clipboard';
       toolbar.appendChild(copyBtn);
 
+      // Fullscreen (true browser fullscreen) toggle
+      const fullscreenBtn = document.createElement('button');
+      fullscreenBtn.className = 'text-toolbar-btn';
+      fullscreenBtn.innerHTML = '<i class="fa fa-expand"></i>';
+      fullscreenBtn.title = 'Toggle fullscreen (F)';
+      toolbar.appendChild(fullscreenBtn);
+
       wrapper.appendChild(toolbar);
 
       // --- Content area ---
@@ -307,6 +332,11 @@ export class TextHandler extends BaseAssetHandler {
       if (lineNumbersEnabled) pre.classList.add('text-line-numbers');
 
       const renderContent = () => {
+        if (isEmpty) {
+          pre.classList.remove('text-line-numbers', 'text-rendered-md');
+          pre.innerHTML = '<span class="text-empty-note">— empty file —</span>';
+          return;
+        }
         if (renderMode) {
           if (isMd) {
             pre.innerHTML = '';
@@ -395,11 +425,53 @@ export class TextHandler extends BaseAssetHandler {
         }
       });
 
+      // --- True browser fullscreen (Fullscreen API) ---
+      const fsEl = wrapper;
+      const fsActive = () =>
+        (document.fullscreenElement || document.webkitFullscreenElement) === fsEl;
+      const enterFullscreen = () => {
+        const req = fsEl.requestFullscreen || fsEl.webkitRequestFullscreen;
+        if (!req) return;
+        try {
+          const p = req.call(fsEl);
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } catch { /* fullscreen may be blocked; ignore */ }
+      };
+      const exitFullscreen = () => {
+        if (!(document.fullscreenElement || document.webkitFullscreenElement)) return;
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (!exit) return;
+        try {
+          const p = exit.call(document);
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } catch { /* ignore */ }
+      };
+      const toggleFullscreen = () => {
+        if (fsActive()) exitFullscreen();
+        else enterFullscreen();
+      };
+      const onFullscreenChange = () => {
+        const active = fsActive();
+        fullscreenBtn.classList.toggle('active', active);
+        fullscreenBtn.innerHTML = active
+          ? '<i class="fa fa-compress"></i>'
+          : '<i class="fa fa-expand"></i>';
+        fullscreenBtn.title = active ? 'Exit fullscreen (F)' : 'Toggle fullscreen (F)';
+        wrapper.classList.toggle('text-is-fullscreen', active);
+      };
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
+      document.addEventListener('fullscreenchange', onFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
       // Keyboard shortcuts within fullscreen
       const keyHandler = (e) => {
+        // Ignore while typing in a field
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
         if (e.key === '+' || e.key === '=') updateFontSize(currentFontSize + 2);
         else if (e.key === '-') updateFontSize(currentFontSize - 2);
         else if (e.key === 'w' || e.key === 'W') wrapBtn.click();
+        else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(); }
       };
       document.addEventListener('keydown', keyHandler);
 
@@ -408,6 +480,10 @@ export class TextHandler extends BaseAssetHandler {
         element: wrapper,
         cleanup: () => {
           document.removeEventListener('keydown', keyHandler);
+          document.removeEventListener('fullscreenchange', onFullscreenChange);
+          document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+          // Leave true-fullscreen if we're still in it when the viewer closes
+          if (fsActive()) exitFullscreen();
         }
       };
     } catch (error) {

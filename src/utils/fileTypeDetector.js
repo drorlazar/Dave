@@ -46,13 +46,17 @@ const FILE_TYPE_MAPPINGS = {
   // Document formats
   pdf: { type: 'document', subtype: 'pdf', extensions: ['.pdf'] },
 
+  // AI files — Markdown, YAML and JSON are the formats most commonly used
+  // for LLM prompts, agent configs and structured data, so they get their own
+  // "AI Files" category (still rendered by the text viewer).
+  md: { type: 'ai', subtype: 'md', extensions: ['.md', '.markdown'] },
+  json: { type: 'ai', subtype: 'json', extensions: ['.json'] },
+  yaml: { type: 'ai', subtype: 'yaml', extensions: ['.yaml', '.yml'] },
+
   // Text formats
   txt: { type: 'text', subtype: 'txt', extensions: ['.txt', '.text'] },
-  md: { type: 'text', subtype: 'md', extensions: ['.md', '.markdown'] },
-  json: { type: 'text', subtype: 'json', extensions: ['.json'] },
   xml: { type: 'text', subtype: 'xml', extensions: ['.xml'] },
   csv: { type: 'text', subtype: 'csv', extensions: ['.csv'] },
-  yaml: { type: 'text', subtype: 'yaml', extensions: ['.yaml', '.yml'] },
   log: { type: 'text', subtype: 'log', extensions: ['.log'] },
   ini: { type: 'text', subtype: 'ini', extensions: ['.ini'] },
   cfg: { type: 'text', subtype: 'cfg', extensions: ['.cfg'] },

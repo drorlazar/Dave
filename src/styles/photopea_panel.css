@@ -1,0 +1,113 @@
+/* photopea_panel.css - Embedded "Edit in Photopea" overlay (.pp-*)
+ *
+ * Full-screen editor chrome hosting Photopea in an iframe. Sits above the image
+ * viewer (--z-modal > the viewer's ~--z-fullscreen+10). Forced dark regardless
+ * of Dave's theme, matching the video editor's convention. */
+
+.pp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1500);
+  display: flex;
+  flex-direction: column;
+  background: #0b0d10;
+  animation: pp-fade-in 0.18s ease-out;
+}
+
+@keyframes pp-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* --- Top bar --- */
+.pp-bar {
+  flex: 0 0 auto;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px 0 14px;
+  background: #14171c;
+  border-bottom: 1px solid rgba(0, 255, 65, 0.16);
+  color: #e6e6e6;
+  font-family: 'Courier New', ui-monospace, monospace;
+  user-select: none;
+}
+
+.pp-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.pp-title i {
+  color: #00ff41;              /* Dave green accent */
+}
+
+.pp-file {
+  font-weight: 400;
+  color: #8a8fa0;
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-status {
+  flex: 1 1 auto;
+  text-align: center;
+  font-size: 12.5px;
+  color: #8a8fa0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-bar-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 4px;
+}
+
+.pp-btn {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #cfd3dc;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.pp-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+}
+
+.pp-close:hover {
+  background: rgba(255, 90, 90, 0.16);
+  color: #ff6b6b;
+}
+
+/* --- Frame --- */
+.pp-frame-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #191c21;
+}
+
+.pp-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

@@ -49,16 +49,18 @@ const FILE_TYPE_MAPPINGS = {
   // Document formats
   '.pdf': { type: 'document', subtype: 'pdf' },
 
+  // AI files (Markdown / JSON / YAML) — own category, still text-rendered
+  '.md': { type: 'ai', subtype: 'md' },
+  '.markdown': { type: 'ai', subtype: 'md' },
+  '.json': { type: 'ai', subtype: 'json' },
+  '.yaml': { type: 'ai', subtype: 'yaml' },
+  '.yml': { type: 'ai', subtype: 'yaml' },
+
   // Text formats
   '.txt': { type: 'text', subtype: 'txt' },
   '.text': { type: 'text', subtype: 'txt' },
-  '.md': { type: 'text', subtype: 'md' },
-  '.markdown': { type: 'text', subtype: 'md' },
-  '.json': { type: 'text', subtype: 'json' },
   '.xml': { type: 'text', subtype: 'xml' },
   '.csv': { type: 'text', subtype: 'csv' },
-  '.yaml': { type: 'text', subtype: 'yaml' },
-  '.yml': { type: 'text', subtype: 'yaml' },
   '.log': { type: 'text', subtype: 'log' },
   '.ini': { type: 'text', subtype: 'ini' },
   '.cfg': { type: 'text', subtype: 'cfg' },
@@ -78,10 +80,39 @@ function detectFileType(filename) {
   return FILE_TYPE_MAPPINGS[extension] || null;
 }
 
+// --- System / junk file filtering ---
+// Inline copy of src/utils/systemFiles.js (workers can't import ES modules).
+// Keep the two in sync when editing.
+const SYSTEM_FILE_NAMES = new Set([
+  'thumbs.db', 'ehthumbs.db', 'ehthumbs_vista.db',
+  'desktop.ini', 'iconcache.db', 'icon\r'
+]);
+const SYSTEM_DIR_NAMES = new Set([
+  '$recycle.bin', 'recycler', 'system volume information', '__macosx'
+]);
+
+function isSystemFile(name) {
+  const base = String(name || '').trim();
+  if (!base) return false;
+  if (base.charAt(0) === '.') return true;            // all dotfiles (.DS_Store, ._*, ...)
+  return SYSTEM_FILE_NAMES.has(base.toLowerCase());
+}
+
+function isSystemDir(name) {
+  const base = String(name || '').trim();
+  if (!base) return false;
+  if (base.charAt(0) === '.') return true;            // hidden folders (.git, .Trashes, ...)
+  return SYSTEM_DIR_NAMES.has(base.toLowerCase());
+}
+
 async function scanDirectory(dirHandle, currentRecursiveDepth, maxDepth, pathPrefix) {
   try {
     let fileCountInDir = 0;
     for await (const [name, handle] of dirHandle.entries()) {
+      // Skip generic OS/system junk (.DS_Store, Thumbs.db, .git folders, ...)
+      if (handle.kind === 'file' ? isSystemFile(name) : isSystemDir(name)) {
+        continue;
+      }
       if (handle.kind === 'file') {
         try {
           const file = await handle.getFile();

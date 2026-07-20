@@ -619,6 +619,10 @@ export function loadDefaultSettings() {
 
     if (Array.isArray(settings.filters)) {
       const savedFilters = new Set(settings.filters);
+      // Backward-compat: the "AI Files" filter was added after some users saved
+      // their defaults. If it's absent from an older saved set, default it ON so
+      // markdown/JSON/YAML files aren't unexpectedly hidden.
+      if (!savedFilters.has('ai')) savedFilters.add('ai');
       document.querySelectorAll('.filter-option').forEach(option => {
         const type = option.dataset.type;
         if (!type) return;

@@ -657,6 +657,17 @@ body:not(.dark-mode) .rc-steps em { color: #444; }
   color: #666;
 }
 
+/* Controls overridden by "System Theme" — dimmed but still clickable
+   (interacting with them takes back manual control). */
+.settings-row-disabled,
+.settings-section-disabled {
+  opacity: 0.45;
+}
+
+.settings-row-disabled .settings-toggle-indicator {
+  filter: grayscale(1);
+}
+
 body:not(.dark-mode) .dropdown-setting-row {
   color: #333;
 }

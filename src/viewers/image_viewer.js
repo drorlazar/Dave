@@ -4,6 +4,8 @@
  * Coordinates annotation and export sub-modules.
  */
 
+import { photopeaPanel } from './photopea_panel.js';
+
 class ImageViewer {
   constructor() {
     // State
@@ -269,6 +271,9 @@ class ImageViewer {
         <button class="iv-btn iv-tool-bg" title="Toggle background (D)">
           <i class="fa fa-chess-board"></i>
         </button>
+        <button class="iv-btn iv-tool-edit" title="Edit in Photopea">
+          <i class="fa fa-pen-to-square"></i>
+        </button>
       </div>
       <div class="iv-toolbar-right">
         <button class="iv-btn iv-close" title="Close (Escape)">
@@ -305,6 +310,7 @@ class ImageViewer {
     tb.querySelector('.iv-tool-info').addEventListener('click', () => this._toggleInfoPanel());
     tb.querySelector('.iv-tool-rotate').addEventListener('click', () => this._rotate());
     tb.querySelector('.iv-tool-bg').addEventListener('click', () => this._toggleBackground());
+    tb.querySelector('.iv-tool-edit').addEventListener('click', () => photopeaPanel.open(this.model));
 
     // Close
     tb.querySelector('.iv-close').addEventListener('click', () => {
