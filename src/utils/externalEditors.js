@@ -19,7 +19,7 @@ export function getEditorForType(type, subtype) {
   if (type === 'image')  return EDITORS.image;
   if (type === 'video')  return EDITORS.video;
   if (type === 'audio')  return EDITORS.audio;
-  if (type === 'text')   return EDITORS.text;
+  if (type === 'text' || type === 'ai') return EDITORS.text;
   return null; // fonts, unknown types
 }
 

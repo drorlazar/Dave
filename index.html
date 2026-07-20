@@ -16,6 +16,14 @@
   <script>
     // Apply saved theme before render to prevent flash of wrong colors
     (function() {
+      // "System Theme" mode overrides any custom theme: follow the OS scheme.
+      if (localStorage.getItem('dave_system_theme') === 'true') {
+        const prefersDark = window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) document.documentElement.classList.add('dark-mode');
+        else document.documentElement.classList.remove('dark-mode');
+        return;
+      }
       const themeId = localStorage.getItem('dave_theme');
       if (themeId) {
         // Theme data is stored as CSS custom properties - apply from saved values
@@ -92,7 +100,7 @@
 </head>
 <body class="dark-mode">
   <a href="#viewerContainer" class="skip-link">Skip to content</a>
-  <script>if(localStorage.getItem('dave_theme')==='matrix')document.body.classList.add('matrix-theme');</script>
+  <script>if(localStorage.getItem('dave_theme')==='matrix'&&localStorage.getItem('dave_system_theme')!=='true')document.body.classList.add('matrix-theme');</script>
   <!-- Top bar with header and all UI controls -->
   <div id="topBar" role="banner">
     <div class="logo-container">
@@ -227,6 +235,10 @@
             <i class="fa fa-font filter-type-icon" style="color: #f56565;"></i>
             <span style="color: #f56565;">Fonts</span>
           </label>
+          <label class="filter-option" data-type="ai">
+            <i class="fa fa-robot filter-type-icon" style="color: #2dd4bf;"></i>
+            <span style="color: #2dd4bf;">AI Files</span>
+          </label>
           <label class="filter-option" data-type="text">
             <i class="fa fa-file-lines filter-type-icon" style="color: #8a8fa0;"></i>
             <span style="color: #8a8fa0;">Text</span>
@@ -242,6 +254,11 @@
           <i class="fa fa-gear"></i>
         </button>
         <div class="dropdown-content settings-dropdown-content">
+          <label class="dropdown-setting-row" id="systemThemeRow">
+            <i class="fa fa-desktop"></i>
+            <span>System Theme</span>
+            <span class="settings-toggle-indicator off" id="systemThemeIndicator">OFF</span>
+          </label>
           <label class="dropdown-setting-row" id="darkModeRow">
             <i class="fa fa-moon"></i>
             <span>Dark Mode</span>

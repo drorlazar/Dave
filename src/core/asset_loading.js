@@ -1,6 +1,7 @@
 // asset_loading.js
 import { memoryManager } from '../utils/memoryManager.js';
 import { detectFileType } from '../utils/fileTypeDetector.js';
+import { isSystemFile } from '../utils/systemFiles.js';
 import { assetHandlerFactory } from '../handlers/AssetHandlerFactory.js';
 import { TextHandler } from '../handlers/TextHandler.js';
 import { errorHandler } from '../utils/errorHandler.js';
@@ -294,10 +295,19 @@ function formatTime(seconds) {
   return `${h > 0 ? `${h}:` : ''}${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
+const TYPE_LABELS = {
+  '3d': '3D model', video: 'video', audio: 'audio', image: 'image',
+  font: 'font', ai: 'AI file', text: 'text', document: 'document', other: 'file'
+};
+
+function typeLabel(type) {
+  return TYPE_LABELS[type] || type || 'file';
+}
+
 function createPlaceholder(type) {
   const placeholder = document.createElement('div');
   placeholder.className = 'placeholder';
-  placeholder.innerHTML = `<i class="fa fa-spinner fa-spin"></i><br>Loading ${type}...`;
+  placeholder.innerHTML = `<i class="fa fa-spinner fa-spin"></i><br>Loading ${typeLabel(type)}...`;
   return placeholder;
 }
 
@@ -356,6 +366,7 @@ function sortFiles() {
 function updateFilteredModelFiles() {
   const previousLength = filteredModelFiles.length;
   filteredModelFiles = modelFiles.filter(item =>
+    !isSystemFile(item.name) &&
     (activeFilters.has(item.type) || activeFilters.has(item.subtype)) && fileMatchesSearch(item)
   );
 
@@ -498,7 +509,7 @@ async function loadTileContent(tile) {
         tile.appendChild(placeholder);
     }
   } else {
-    placeholder.innerHTML = `<i class="fa fa-spinner fa-spin"></i><br>Loading ${model.type}...`;
+    placeholder.innerHTML = `<i class="fa fa-spinner fa-spin"></i><br>Loading ${typeLabel(model.type)}...`;
     placeholder.style.display = 'block'; // Make sure it's visible
   }
 
@@ -743,8 +754,8 @@ async function loadTileContent(tile) {
         console.error(`Error loading font ${model.name}:`, fontLoadError);
         placeholder.innerHTML = `<i class="fa fa-exclamation-triangle"></i><br>Error loading font`;
       }
-    } else if (model.type === "text") {
-      // Use TextHandler for text file preview
+    } else if (model.type === "text" || model.type === "ai") {
+      // Use TextHandler for text file preview (AI files are text-rendered too)
       const textContainer = document.createElement('div');
       textContainer.style.width = '100%';
       textContainer.style.height = '100%';
@@ -1188,7 +1199,7 @@ async function showFullscreen(model) {
         console.error(`Error loading font ${model.name} for fullscreen:`, fontLoadError);
         fullscreenViewer.innerHTML = `<div class="fullscreen-error"><i class="fa fa-exclamation-triangle fa-2x"></i><br>Error loading font</div>`;
       }
-    } else if (model.type === "text") {
+    } else if (model.type === "text" || model.type === "ai") {
       fullscreenViewer.style.display = 'flex';
       fullscreenVideo.style.display = 'none';
 
@@ -1614,6 +1625,11 @@ async function handleDrop(e) {
 
       // Process each dropped file
       for (const file of droppedFiles) {
+        // Skip generic OS/system junk (.DS_Store, Thumbs.db, ...)
+        if (isSystemFile(file.name)) {
+          console.log("Skipping system file:", file.name);
+          continue;
+        }
         console.log("Processing file:", file.name, "size:", file.size, "type:", file.type);
 
         // Determine file type using centralized detector
