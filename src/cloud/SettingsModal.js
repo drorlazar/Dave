@@ -806,6 +806,24 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.7.0', date: 'Jul 20, 2026', title: 'Edit in Photopea',
+        features: [
+          'Edit any image in Photopea without leaving Dave — an embedded editor panel opens with the image already loaded',
+          'Injects the image straight into Photopea via its postMessage API — no clipboard, no manual paste',
+          'Available from the image viewer toolbar and the grid-tile hover edit button; works for local and cloud images',
+          'Falls back to opening Photopea in a new tab if it can\'t be embedded',
+        ]
+      },
+      {
+        version: '2.6.0', date: 'Jul 20, 2026', title: 'AI Files, System Theme & Text Viewer Upgrades',
+        features: [
+          'New "AI Files" filter category for Markdown, JSON and YAML — distinct from plain Text, still text-rendered',
+          'OS/system junk (.DS_Store, Thumbs.db, .git, __MACOSX, …) filtered out at scan, drop and display',
+          'Text viewer: true browser fullscreen (F), large-file guard, empty-file placeholder, and markdown list rendering',
+          'System Theme setting follows the OS light/dark scheme live, with manual override when you pick a theme',
+        ]
+      },
+      {
         version: '2.5.0', date: 'May 25, 2026', title: 'Multi-select Workflow + Saved Defaults',
         features: [
           'Shift-click range selection on the grid, anchored on the global filtered list so ranges span across pages',

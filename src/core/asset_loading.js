@@ -11,6 +11,7 @@ import { GDriveAuth } from '../cloud/GDriveAuth.js';
 import { SettingsModal } from '../cloud/SettingsModal.js';
 import * as CloudStorage from '../cloud/CloudStorageProvider.js';
 import { getEditorForType, openInEditor } from '../utils/externalEditors.js';
+import { photopeaPanel } from '../viewers/photopea_panel.js';
 import { destroyDAV9000Terminal, markHadFiles, cancelTakeover } from './dav9000_terminal.js';
 import {
   getCurrentPage,
@@ -849,7 +850,12 @@ function renderPage(pageIndex) {
       editBtn.className = 'edit-btn';
       editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
       editBtn.title = editorInfo.tip;
-      editBtn.onclick = (e) => { e.stopPropagation(); openInEditor(model); };
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        // Images edit in the embedded Photopea panel; other types open their web editor.
+        if (model.type === 'image') photopeaPanel.open(model);
+        else openInEditor(model);
+      };
       tile.appendChild(editBtn);
     }
 
