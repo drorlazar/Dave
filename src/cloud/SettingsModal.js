@@ -806,6 +806,16 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.7.1', date: 'Jul 23, 2026', title: 'Capture-Ready Polish',
+        features: [
+          '3D grid tiles now autoplay embedded animation and slowly auto-rotate, so GLB models read as alive instead of frozen',
+          'Drag-and-drop target reskinned to Dave green (#00ff41) with a Courier "Drop files here" label',
+          'Branded welcome card: a Courier-green [ ·_· ] glyph replaces the generic pictograph',
+          'Folder-scan message swaps the spinner for an in-font ·, +, * Courier escalation ladder (respects reduced-motion)',
+          'Removed the third-party counter.dev analytics beacon from the app — no external tracking on load',
+        ]
+      },
+      {
         version: '2.7.0', date: 'Jul 20, 2026', title: 'Edit in Photopea',
         features: [
           'Edit any image in Photopea without leaving Dave — an embedded editor panel opens with the image already loaded',
