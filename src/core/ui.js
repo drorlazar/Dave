@@ -1579,8 +1579,8 @@ export function showWelcomeMessage() {
     _currentWelcomeMsg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
   }
   container.innerHTML = `
-    <div class="welcome-message">
-      <i class="fa-solid ${_currentWelcomeMsg.icon}"></i>
+    <div class="welcome-message welcome-message--brand">
+      <div class="welcome-glyph">[ ·_· ]</div>
       <p>${_currentWelcomeMsg.text}</p>
     </div>`;
 

@@ -404,7 +404,7 @@ async function handleFolderPick(dirHandle, basePath) {
 
   modelFiles = []; // Clear existing model files
   hideCloudPathBar(); // Hide cloud path bar when loading local files
-  viewerContainer.innerHTML = `<div class="loading-message"><i class="fa fa-spinner fa-spin"></i> Scanning folder... <span id="file-scan-count">0</span> files found.</div>`;
+  viewerContainer.innerHTML = `<div class="loading-message"><span class="scan-ladder" aria-hidden="true"></span> Scanning folder... <span id="file-scan-count">0</span> files found.</div>`;
   const fileScanCountElement = document.getElementById('file-scan-count');
 
   try {
@@ -560,6 +560,8 @@ async function loadTileContent(tile) {
       mv.setAttribute("camera-controls", "");
       mv.setAttribute("environment-image", "neutral");
       mv.setAttribute("animation-name", "*");
+      mv.setAttribute("autoplay", ""); // Play any embedded GLB animation unattended (capture-ready)
+      mv.setAttribute("auto-rotate", ""); // Idle turntable so static GLB grid tiles read as alive
       mv.setAttribute("disable-zoom", ""); // Disable mouse wheel zoom to allow page scrolling
       placeholder.replaceWith(mv);
 
