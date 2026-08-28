@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 
 // Load environment variables from .env at project root
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
@@ -31,15 +30,10 @@ const controlRoutes = require('./routes/control.cjs');
 app.use('/api/control', controlRoutes);
 app.get('/api/file', controlRoutes.fileHandler);
 
-// Vendored OpenReel video editor (built with base "/openreel/")
-// Express serves .wasm as application/wasm out of the box.
-const openreelDir = path.join(__dirname, '..', 'vendor', 'openreel');
-app.use('/openreel', express.static(openreelDir));
-// SPA fallback so deep links such as /openreel/#/editor always resolve
-app.get('/openreel/*', (req, res, next) => {
-  const indexPath = path.join(openreelDir, 'index.html');
-  fs.access(indexPath, fs.constants.R_OK, (err) => (err ? next() : res.sendFile(indexPath)));
-});
+// The vendored OpenReel video editor is built with a relative base ("./") and
+// is served by the project-root static handler below at /vendor/openreel/.
+// It uses hash routing, so no SPA rewrite is needed. Express serves .wasm as
+// application/wasm out of the box.
 
 // URL rewriting middleware (preserve existing behavior)
 // When index.html references "styles/styles.css", it becomes "/styles/styles.css"

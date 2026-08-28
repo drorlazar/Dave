@@ -809,7 +809,7 @@ export class SettingsModal {
         version: '2.9.0', date: 'Aug 28, 2026', title: 'OpenReel Studio Integration',
         features: [
           'New selection option "Edit video from selection" — sends the selected videos, images and audio straight into a full multi-track video editor',
-          'OpenReel (open source, MIT) is bundled and served locally at /openreel — everything stays on your machine, nothing is uploaded',
+          'OpenReel (open source, MIT) is bundled and served locally from Dave itself — everything stays on your machine, nothing is uploaded',
           'Works with local, remote-control and cloud (S3/Google Drive) files — cloud assets are fetched and handed over automatically',
         ]
       },
