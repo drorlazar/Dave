@@ -1,6 +1,6 @@
 /**
  * video_editor.js - Video Editor for Dave
- * Bottom toolbar, timeline, trim, filters, crop, concat, export.
+ * Bottom toolbar, timeline, trim, filters, crop, export.
  * Mirrors ImageViewer architecture with sub-module orchestration.
  */
 
@@ -30,13 +30,10 @@ class VideoEditor {
       sepia: 0
     };
     this.cropRect = null; // { x, y, w, h } normalized 0-1, or null
-    this.concatBefore = null;
-    this.concatAfter = null;
 
     // Panel state
     this._filterPanelOpen = false;
     this._exportPanelOpen = false;
-    this._concatPanelOpen = false;
     this._cropActive = false;
     this._helpEl = null;
 
@@ -45,7 +42,6 @@ class VideoEditor {
     this._filterModule = null;
     this._cropModule = null;
     this._exportModule = null;
-    this._concatModule = null;
 
     // DOM refs
     this.overlay = null;
@@ -71,8 +67,6 @@ class VideoEditor {
     this.trimOut = 0;
     this.filters = { brightness: 100, contrast: 100, saturate: 100, hueRotate: 0, blur: 0, sepia: 0 };
     this.cropRect = null;
-    this.concatBefore = null;
-    this.concatAfter = null;
     this._loop = true;
 
     // DOM refs
@@ -246,9 +240,6 @@ class VideoEditor {
         <button class="ve-btn ve-tool-crop" title="Crop (C)">
           <i class="fa fa-crop-simple"></i>
         </button>
-        <button class="ve-btn ve-tool-concat" title="Concat (+)">
-          <i class="fa fa-plus"></i>
-        </button>
         <button class="ve-btn ve-tool-export" title="Export (E)">
           <i class="fa fa-download"></i>
         </button>
@@ -287,7 +278,6 @@ class VideoEditor {
     tb.querySelector('.ve-tool-trim-out').addEventListener('click', () => this.setTrimOut());
     tb.querySelector('.ve-tool-filters').addEventListener('click', () => this._toggleFilters());
     tb.querySelector('.ve-tool-crop').addEventListener('click', () => this._toggleCrop());
-    tb.querySelector('.ve-tool-concat').addEventListener('click', () => this._toggleConcat());
     tb.querySelector('.ve-tool-export').addEventListener('click', () => this._toggleExport());
     tb.querySelector('.ve-tool-reset').addEventListener('click', () => this.resetAll());
     tb.querySelector('.ve-tool-help').addEventListener('click', () => this._toggleHelp());
@@ -440,7 +430,6 @@ class VideoEditor {
       this._closeFilters();
     } else {
       this._closeExport();
-      this._closeConcat();
       await this._openFilters();
     }
   }
@@ -489,7 +478,6 @@ class VideoEditor {
   async _activateCrop() {
     this._closeFilters();
     this._closeExport();
-    this._closeConcat();
     if (!this._cropModule) {
       const { VideoCrop } = await import('./video_crop.js');
       this._cropModule = new VideoCrop(this);
@@ -526,7 +514,6 @@ class VideoEditor {
       this._closeExport();
     } else {
       this._closeFilters();
-      this._closeConcat();
       if (this._cropActive) this._cancelCrop();
       await this._openExport();
     }
@@ -546,37 +533,6 @@ class VideoEditor {
     if (this._exportModule) this._exportModule.close();
     this._exportPanelOpen = false;
     if (this.toolbar) this.toolbar.querySelector('.ve-tool-export')?.classList.remove('ve-active');
-  }
-
-  // ===========================================================
-  //  CONCAT
-  // ===========================================================
-
-  async _toggleConcat() {
-    if (this._concatPanelOpen) {
-      this._closeConcat();
-    } else {
-      this._closeFilters();
-      this._closeExport();
-      if (this._cropActive) this._cancelCrop();
-      await this._openConcat();
-    }
-  }
-
-  async _openConcat() {
-    if (!this._concatModule) {
-      const { VideoConcat } = await import('./video_concat.js');
-      this._concatModule = new VideoConcat(this);
-    }
-    this._concatModule.open();
-    this._concatPanelOpen = true;
-    this.toolbar.querySelector('.ve-tool-concat').classList.add('ve-active');
-  }
-
-  _closeConcat() {
-    if (this._concatModule) this._concatModule.close();
-    this._concatPanelOpen = false;
-    if (this.toolbar) this.toolbar.querySelector('.ve-tool-concat')?.classList.remove('ve-active');
   }
 
   // ===========================================================
@@ -664,8 +620,6 @@ class VideoEditor {
     this.trimOut = this.videoEl.duration || 0;
     this.filters = { brightness: 100, contrast: 100, saturate: 100, hueRotate: 0, blur: 0, sepia: 0 };
     this.cropRect = null;
-    this.concatBefore = null;
-    this.concatAfter = null;
     this._loop = true;
 
     this.applyFilters();
@@ -712,8 +666,6 @@ class VideoEditor {
           this._closeFilters();
         } else if (this._exportPanelOpen) {
           this._closeExport();
-        } else if (this._concatPanelOpen) {
-          this._closeConcat();
         } else if (this._cropActive) {
           this._cancelCrop();
         } else {
@@ -846,7 +798,7 @@ class VideoEditor {
   _hideChrome() {
     if (!this.chromeVisible) return;
     // Don't hide if any panel is open or crop active
-    if (this._filterPanelOpen || this._exportPanelOpen || this._concatPanelOpen || this._cropActive) return;
+    if (this._filterPanelOpen || this._exportPanelOpen || this._cropActive) return;
 
     this.chromeVisible = false;
     if (this.toolbar) this.toolbar.classList.add('ve-hidden');
@@ -879,7 +831,6 @@ class VideoEditor {
   _closeAllPanels() {
     this._closeFilters();
     this._closeExport();
-    this._closeConcat();
   }
 
   _waitForMetadata() {
@@ -987,7 +938,6 @@ class VideoEditor {
     if (f.brightness !== 100 || f.contrast !== 100 || f.saturate !== 100 ||
         f.hueRotate !== 0 || f.blur !== 0 || f.sepia !== 0) return true;
     if (this.cropRect) return true;
-    if (this.concatBefore || this.concatAfter) return true;
     return false;
   }
 
@@ -1003,8 +953,6 @@ class VideoEditor {
                           f.hueRotate !== 0 || f.blur !== 0 || f.sepia !== 0;
     if (filterActive) parts.push('Filters active');
     if (this.cropRect) parts.push('Crop active');
-    if (this.concatBefore) parts.push(`Prepend: ${this.concatBefore.name}`);
-    if (this.concatAfter) parts.push(`Append: ${this.concatAfter.name}`);
     return parts.length ? parts.join('\n') : 'No edits';
   }
 }

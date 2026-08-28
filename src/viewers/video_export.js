@@ -1,7 +1,6 @@
 /**
  * video_export.js - Canvas + MediaRecorder export pipeline
- * Renders trimmed, cropped, filtered video to WebM via real-time canvas capture.
- * Supports concat segments (before/after).
+ * Renders trimmed, cropped, filtered video to MP4 or WebM via real-time canvas capture.
  */
 
 export class VideoExport {
@@ -14,10 +13,10 @@ export class VideoExport {
     this._exporting = false;
     this._cancelled = false;
     this._recorder = null;
-    this._tempUrls = [];
     this._audioCtx = null;
     this._audioDest = null;
     this._audioSources = new WeakMap();
+    this._container = 'webm';
   }
 
   open() {
@@ -126,9 +125,10 @@ export class VideoExport {
   async _updateEstimate() {
     const el = this.panel?.querySelector('.ve-export-estimate');
     if (!el) return;
-    el.textContent = 'Output: WebM \u2014 estimating\u2026';
+    const label = this._probeContainer().label;
+    el.textContent = `Output: ${label} \u2014 estimating\u2026`;
     const total = await this._getTotalDuration();
-    el.textContent = `Output: WebM \u2014 about ${this._formatDuration(total)} to export. `
+    el.textContent = `Output: ${label} \u2014 about ${this._formatDuration(total)} to export. `
       + 'Export runs in real time \u2014 keep this tab focused.';
   }
 
@@ -144,44 +144,8 @@ export class VideoExport {
     el.style.display = message ? 'block' : 'none';
   }
 
-  /** Build the segment list, resolving concat clip durations up front. */
-  async _getSegments() {
-    const segments = [];
-    if (this.editor.concatBefore) segments.push({ model: this.editor.concatBefore, type: 'before' });
-    segments.push({ type: 'main', duration: Math.max(0, this.editor.trimOut - this.editor.trimIn) });
-    if (this.editor.concatAfter) segments.push({ model: this.editor.concatAfter, type: 'after' });
-
-    for (const seg of segments) {
-      if (seg.type === 'main') continue;
-      seg.url = await this._resolveModelUrl(seg.model);
-      seg.duration = seg.url ? await this._probeDuration(seg.url) : 0;
-    }
-    return segments;
-  }
-
   async _getTotalDuration() {
-    const segments = await this._getSegments();
-    this._releaseTempUrls();
-    return segments.reduce((sum, s) => sum + (s.duration || 0), 0);
-  }
-
-  _probeDuration(url) {
-    return new Promise((resolve) => {
-      const probe = document.createElement('video');
-      probe.preload = 'metadata';
-      const finish = (d) => {
-        probe.removeAttribute('src');
-        resolve(isFinite(d) && d > 0 ? d : 0);
-      };
-      probe.addEventListener('loadedmetadata', () => finish(probe.duration), { once: true });
-      probe.addEventListener('error', () => finish(0), { once: true });
-      probe.src = url;
-    });
-  }
-
-  _releaseTempUrls() {
-    for (const url of this._tempUrls) URL.revokeObjectURL(url);
-    this._tempUrls = [];
+    return Math.max(0, this.editor.trimOut - this.editor.trimIn);
   }
 
   _getTargetDimensions() {
@@ -239,13 +203,15 @@ export class VideoExport {
     const fps = 30;
 
     try {
-      // Precompute every segment duration so progress is monotonic 0-100%
-      const segments = await this._getSegments();
-      const totalDuration = segments.reduce((sum, s) => sum + (s.duration || 0), 0) || 1;
+      // Precompute the duration up front so progress is monotonic 0-100%
+      const totalDuration = (await this._getTotalDuration()) || 1;
 
       const stream = canvas.captureStream(fps);
       const withAudio = this._attachAudio(stream);
-      const mime = this._pickMimeType(withAudio);
+      const picked = this._pickMimeType(withAudio);
+      const mime = picked.mime;
+      this._container = picked.container;
+      this._format = picked.container;
       const bitRate = Math.round(w * h * fps * this._quality * 0.1);
 
       this._recorder = new MediaRecorder(stream, {
@@ -275,18 +241,14 @@ export class VideoExport {
         `sepia(${f.sepia}%)`
       ].join(' ');
 
-      // Process each segment via real-time playback
-      let elapsed = 0;
-      for (const segment of segments) {
-        if (this._cancelled) break;
-        if (!segment.duration) continue;
-
+      // Render via real-time playback
+      if (!this._cancelled) {
         await this._renderSegment(
-          segment, ctx, w, h, filterStr, elapsed, totalDuration,
+          ctx, w, h, filterStr, totalDuration,
           progressFill, progressText, withAudio
         );
-        elapsed += segment.duration;
       }
+      const elapsed = totalDuration;
 
       // Stop recording
       if (this._recorder.state !== 'inactive') {
@@ -299,7 +261,7 @@ export class VideoExport {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const baseName = this.editor.model.name.replace(/\.[^.]+$/, '');
-        a.download = `${baseName}_export.webm`;
+        a.download = `${baseName}_export.${this._container}`;
         a.href = url;
         document.body.appendChild(a);
         a.click();
@@ -327,8 +289,6 @@ export class VideoExport {
       this.editor._showNotification('Export failed');
     }
 
-    this._releaseTempUrls();
-
     // Reset UI
     this._exporting = false;
     exportBtn.style.display = 'flex';
@@ -339,10 +299,34 @@ export class VideoExport {
   }
 
   _pickMimeType(withAudio) {
-    const candidates = withAudio
-      ? ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
-      : ['video/webm;codecs=vp9', 'video/webm'];
-    return candidates.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+    const supported = (m) => {
+      try {
+        return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m);
+      } catch {
+        return false;
+      }
+    };
+    const mp4Audio = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2'];
+    const mp4Video = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4'];
+    const webmAudio = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    const webmVideo = ['video/webm;codecs=vp9', 'video/webm'];
+
+    if (withAudio) {
+      const mp4 = mp4Audio.find(supported);
+      if (mp4) return { mime: mp4, container: 'mp4', hasAudio: true };
+      const webm = webmAudio.find(supported);
+      if (webm) return { mime: webm, container: 'webm', hasAudio: true };
+    }
+    const mp4 = mp4Video.find(supported);
+    if (mp4) return { mime: mp4, container: 'mp4', hasAudio: false };
+    const webm = webmVideo.find(supported);
+    return { mime: webm || 'video/webm', container: 'webm', hasAudio: false };
+  }
+
+  /** Resolve, without recording, which container the export will produce. */
+  _probeContainer() {
+    const picked = this._pickMimeType(true);
+    return { ...picked, label: picked.container === 'mp4' ? 'MP4' : 'WebM' };
   }
 
   /**
@@ -388,36 +372,15 @@ export class VideoExport {
   }
 
   /**
-   * Render a single segment via real-time playback.
+   * Render the trimmed range via real-time playback.
    * The video plays at normal speed while we draw each frame to the canvas.
    * MediaRecorder captures the canvas in real time -> correct output speed.
    */
-  async _renderSegment(segment, ctx, w, h, filterStr, elapsedSoFar, totalDuration, progressFill, progressText, withAudio) {
-    let video;
-    let startTime, endTime;
-    let isTemp = false;
-    let crop = null;
-
-    if (segment.type === 'main') {
-      video = this.editor.videoEl;
-      startTime = this.editor.trimIn;
-      endTime = this.editor.trimOut;
-      crop = this.editor.cropRect;
-    } else {
-      video = document.createElement('video');
-      video.preload = 'auto';
-      video.src = segment.url;
-
-      await new Promise((resolve) => {
-        if (video.readyState >= 1) { resolve(); return; }
-        video.addEventListener('loadedmetadata', resolve, { once: true });
-        video.addEventListener('error', () => resolve(), { once: true });
-      });
-
-      startTime = 0;
-      endTime = segment.duration;
-      isTemp = true;
-    }
+  async _renderSegment(ctx, w, h, filterStr, totalDuration, progressFill, progressText, withAudio) {
+    const video = this.editor.videoEl;
+    const startTime = this.editor.trimIn;
+    const endTime = this.editor.trimOut;
+    const crop = this.editor.cropRect;
 
     const segDuration = Math.max(0.001, endTime - startTime);
     const vidW = video.videoWidth || w;
@@ -447,7 +410,6 @@ export class VideoExport {
         video.removeEventListener('timeupdate', timeCheck);
         video.pause();
         video.muted = wasMuted;
-        if (isTemp) video.removeAttribute('src');
         resolve();
       };
 
@@ -458,7 +420,7 @@ export class VideoExport {
         this._drawFrame(ctx, video, w, h, crop, vidW, vidH, filterStr);
 
         const segProgress = Math.min(1, (video.currentTime - startTime) / segDuration);
-        const overallPct = Math.min(100, Math.round(((elapsedSoFar + segProgress * segDuration) / totalDuration) * 100));
+        const overallPct = Math.min(100, Math.round(((segProgress * segDuration) / totalDuration) * 100));
         progressFill.style.width = `${overallPct}%`;
         progressText.textContent = `${overallPct}% - Exporting...`;
 
@@ -490,32 +452,6 @@ export class VideoExport {
       ctx.drawImage(video, 0, 0, w, h);
     }
     ctx.filter = 'none';
-  }
-
-  /** Resolve a playable URL from a Dave model object */
-  async _resolveModelUrl(model) {
-    if (!model) return null;
-    // Remote URL (CDN, etc.)
-    if (model.remoteUrl) return model.remoteUrl;
-    // Local File object (from drag & drop / file input)
-    if (model.file) {
-      const url = URL.createObjectURL(model.file);
-      this._tempUrls.push(url);
-      return url;
-    }
-    // Cloud storage
-    if (model.source === 's3' || model.source === 'gdrive') {
-      try {
-        const { CloudStorage } = await import('../core/cloud_storage.js');
-        return await CloudStorage.getFileUrl(model);
-      } catch {
-        return null;
-      }
-    }
-    // Blob URL already available
-    if (model.blobUrl) return model.blobUrl;
-    // Fallback: try the name as a relative path
-    return model.name;
   }
 
   _waitForSeek(video) {

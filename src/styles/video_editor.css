@@ -10,7 +10,6 @@
 .ve-timeline,
 .ve-filter-panel,
 .ve-export-panel,
-.ve-concat-panel,
 .ve-help-overlay,
 .ve-toast,
 .ve-crop-presets {
@@ -36,8 +35,7 @@ body:not(.dark-mode) .ve-toolbar,
 body:not(.dark-mode) .ve-timeline,
 body:not(.dark-mode) .ve-filter-panel,
 body:not(.dark-mode) .ve-export-panel,
-body:not(.dark-mode) .ve-concat-panel,
-body:not(.dark-mode) .ve-help-overlay,
+body:not(.dark-mode) body:not(.dark-mode) .ve-help-overlay,
 body:not(.dark-mode) .ve-toast,
 body:not(.dark-mode) .ve-crop-presets {
   --ve-bg: color-mix(in srgb, #121212 92%, transparent);
@@ -867,128 +865,6 @@ body:not(.dark-mode) .ve-crop-presets {
   color: var(--ve-accent);
   border-color: var(--ve-accent);
   box-shadow: 0 0 6px var(--ve-active-glow);
-}
-
-/* ================================================================
-   Concat Panel
-   ================================================================ */
-.ve-concat-panel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 500px;
-  max-width: 90vw;
-  max-height: 70vh;
-  background: color-mix(in srgb, var(--ve-bg-solid) 95%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 6px;
-  border: 1px solid var(--ve-border);
-  z-index: calc(var(--z-fullscreen) + 4);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 10px var(--ve-glow);
-  overflow: hidden;
-  animation: ve-slide-up 0.2s ease-out;
-  font-family: 'Courier New', Courier, monospace;
-  display: flex;
-  flex-direction: column;
-}
-
-.ve-concat-header {
-  padding: 10px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--ve-border);
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--ve-accent);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  flex-shrink: 0;
-}
-
-.ve-concat-body {
-  padding: 14px 16px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.ve-concat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 8px;
-}
-
-.ve-concat-item {
-  aspect-ratio: 16/9;
-  border-radius: 4px;
-  border: 2px solid var(--ve-border);
-  overflow: hidden;
-  cursor: pointer;
-  position: relative;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.ve-concat-item:hover {
-  border-color: var(--ve-btn-hover-border);
-}
-
-.ve-concat-item.ve-active {
-  border-color: var(--ve-accent);
-  box-shadow: 0 0 8px var(--ve-active-glow);
-}
-
-.ve-concat-item video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-}
-
-.ve-concat-item-name {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 2px 4px;
-  font-size: 9px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ve-concat-position {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  justify-content: center;
-}
-
-.ve-concat-pos-btn {
-  padding: 6px 20px;
-  border-radius: 4px;
-  border: 1px solid var(--ve-border);
-  background: var(--ve-btn-bg);
-  color: var(--ve-muted);
-  cursor: pointer;
-  font-size: 12px;
-  font-family: 'Courier New', Courier, monospace;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.ve-concat-pos-btn:hover {
-  background: var(--ve-btn-hover-bg);
-  border-color: var(--ve-btn-hover-border);
-  color: var(--ve-btn-hover-text);
-}
-
-.ve-concat-pos-btn.ve-active {
-  background: var(--ve-active-bg);
-  color: var(--ve-accent);
-  border-color: var(--ve-accent);
 }
 
 /* ================================================================
