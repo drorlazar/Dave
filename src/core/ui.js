@@ -540,6 +540,12 @@ function initializeElements() {
 
         fullscreenOverlay.addEventListener('click', function(event) {
           if (event.target === fullscreenOverlay) {
+            // In the video editor a stray backdrop click reveals the auto-hidden
+            // controls instead of exiting; close only via X or Escape.
+            if (currentFullscreenViewer?.videoEditor) {
+              currentFullscreenViewer.videoEditor.showChrome?.();
+              return;
+            }
             requestFullscreenExit();
           }
         });

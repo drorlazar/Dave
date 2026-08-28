@@ -227,8 +227,8 @@ export class VideoExport {
 
     exportBtn.style.display = 'none';
     cancelBtn.style.display = 'flex';
-    progressBar.style.display = '';
-    progressText.style.display = '';
+    progressBar.style.display = 'block';
+    progressText.style.display = 'block';
 
     const { w, h } = this._getTargetDimensions();
     const canvas = document.createElement('canvas');

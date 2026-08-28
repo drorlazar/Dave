@@ -832,6 +832,10 @@ class VideoEditor {
     this._startAutoHideTimer();
   }
 
+  showChrome() {
+    this._handleMouseActivity();
+  }
+
   _showChrome() {
     if (this.chromeVisible) return;
     this.chromeVisible = true;
