@@ -806,6 +806,14 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.9.0', date: 'Aug 28, 2026', title: 'OpenReel Studio Integration',
+        features: [
+          'New selection option "Edit video from selection" — sends the selected videos, images and audio straight into a full multi-track video editor',
+          'OpenReel (open source, MIT) is bundled and served locally at /openreel — everything stays on your machine, nothing is uploaded',
+          'Works with local, remote-control and cloud (S3/Google Drive) files — cloud assets are fetched and handed over automatically',
+        ]
+      },
+      {
         version: '2.8.0', date: 'Aug 28, 2026', title: 'Built-in Video Editor',
         features: [
           'Open any video in Dave\'s own editor — timeline scrubbing, trim in/out, loop, volume and frame stepping',

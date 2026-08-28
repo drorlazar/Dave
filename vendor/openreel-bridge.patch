@@ -1,0 +1,192 @@
+diff --git a/apps/web/public/sw.js b/apps/web/public/sw.js
+index a5165d3..f826898 100644
+--- a/apps/web/public/sw.js
++++ b/apps/web/public/sw.js
+@@ -18,7 +18,13 @@ const DYNAMIC_CACHE_NAME = "openreel-dynamic-v2";
+  * Static assets to cache on install
+  * These are the core application files needed for offline functionality
+  */
+-const STATIC_ASSETS = ["/", "/index.html", "/manifest.json"];
++// Scope-relative so the app works when served from a sub-path (e.g. "/openreel/").
++const SCOPE_PATH = new URL(self.registration.scope).pathname;
++const STATIC_ASSETS = [
++  SCOPE_PATH,
++  `${SCOPE_PATH}index.html`,
++  `${SCOPE_PATH}manifest.json`,
++];
+ 
+ /**
+  * Patterns for assets that should be cached dynamically
+@@ -190,7 +196,7 @@ self.addEventListener("fetch", (event) => {
+               return cachedResponse;
+             }
+             // Fall back to index.html for SPA routing
+-            return caches.match("/index.html");
++            return caches.match(`${SCOPE_PATH}index.html`);
+           });
+         })
+     );
+diff --git a/apps/web/src/bridges/external-import.ts b/apps/web/src/bridges/external-import.ts
+new file mode 100644
+index 0000000..6d1bc9a
+--- /dev/null
++++ b/apps/web/src/bridges/external-import.ts
+@@ -0,0 +1,102 @@
++/**
++ * External import bridge (Dave integration).
++ *
++ * Listens on BroadcastChannel('dave-openreel') for File objects pushed by a
++ * host application running on the same origin (Dave, served at "/"), and feeds
++ * each File through the exact same ingest path used by the Import button and
++ * drag-and-drop: `useProjectStore.getState().importMedia(file)`.
++ *
++ * Message contract:
++ *   in  { type: "dave:ping" }                  -> replies { type: "openreel:ready" }
++ *   in  { type: "dave:import", files: File[] } -> replies { type: "openreel:imported", count }
++ *   out { type: "openreel:ready" }             (also posted once on boot)
++ *   out { type: "openreel:imported", count }
++ *   out { type: "openreel:import-error", error }
++ *
++ * Everything is guarded: if BroadcastChannel is unavailable or anything throws,
++ * the application boots and runs exactly as before.
++ */
++
++const CHANNEL_NAME = "dave-openreel";
++
++type DaveMessage =
++  | { type: "dave:ping" }
++  | { type: "dave:import"; files?: unknown };
++
++let channel: BroadcastChannel | null = null;
++let importing = false;
++
++function post(message: Record<string, unknown>): void {
++  try {
++    channel?.postMessage(message);
++  } catch {
++    // Channel closed or structured-clone failure — nothing to do.
++  }
++}
++
++async function importFiles(files: File[]): Promise<void> {
++  if (importing) return;
++  importing = true;
++
++  let count = 0;
++  try {
++    const { useProjectStore } = await import("../stores/project-store");
++    for (const file of files) {
++      try {
++        const result = await useProjectStore.getState().importMedia(file);
++        if (result?.success) count += 1;
++      } catch (error) {
++        console.warn("[dave-bridge] import failed for", file?.name, error);
++      }
++    }
++    post({ type: "openreel:imported", count });
++  } catch (error) {
++    console.warn("[dave-bridge] import batch failed", error);
++    post({
++      type: "openreel:import-error",
++      error: error instanceof Error ? error.message : String(error),
++    });
++  } finally {
++    importing = false;
++  }
++}
++
++function handleMessage(event: MessageEvent<DaveMessage>): void {
++  try {
++    const data = event?.data;
++    if (!data || typeof data !== "object") return;
++
++    if (data.type === "dave:ping") {
++      post({ type: "openreel:ready" });
++      return;
++    }
++
++    if (data.type === "dave:import") {
++      const files = Array.isArray(data.files)
++        ? (data.files.filter((f) => f instanceof File) as File[])
++        : [];
++      if (files.length === 0) {
++        post({ type: "openreel:imported", count: 0 });
++        return;
++      }
++      void importFiles(files);
++    }
++  } catch (error) {
++    console.warn("[dave-bridge] message handling failed", error);
++  }
++}
++
++export function initExternalImportBridge(): void {
++  try {
++    if (typeof window === "undefined") return;
++    if (typeof BroadcastChannel === "undefined") return;
++    if (channel) return;
++
++    channel = new BroadcastChannel(CHANNEL_NAME);
++    channel.onmessage = handleMessage;
++    post({ type: "openreel:ready" });
++  } catch (error) {
++    console.warn("[dave-bridge] unavailable", error);
++    channel = null;
++  }
++}
+diff --git a/apps/web/src/main.tsx b/apps/web/src/main.tsx
+index 925d496..0d671bb 100644
+--- a/apps/web/src/main.tsx
++++ b/apps/web/src/main.tsx
+@@ -10,6 +10,7 @@ import { registerServiceWorker } from "./services/service-worker";
+ import { initCustomFonts } from "./components/editor/inspector/font-options";
+ import { setEncoderBackendFactory } from "@openreel/core";
+ import { NativeFFmpegBackend } from "./services/native-ffmpeg-backend";
++import { initExternalImportBridge } from "./bridges/external-import";
+ 
+ const DesktopApp = React.lazy(() =>
+   import("./desktop/DesktopApp").then((module) => ({
+@@ -38,6 +39,8 @@ registerServiceWorker().then((registration) => {
+ 
+ void initCustomFonts();
+ 
++initExternalImportBridge();
++
+ const root = document.getElementById("root")!;
+ 
+ async function renderApplication(): Promise<void> {
+diff --git a/apps/web/src/services/service-worker.ts b/apps/web/src/services/service-worker.ts
+index 15a5bc7..9668ef1 100644
+--- a/apps/web/src/services/service-worker.ts
++++ b/apps/web/src/services/service-worker.ts
+@@ -61,9 +61,13 @@ class ServiceWorkerManager {
+     }
+ 
+     try {
+-      const registration = await navigator.serviceWorker.register("/sw.js", {
+-        scope: "/",
+-      });
++      // Respect the deployment base so a sub-path host (e.g. "/openreel/")
++      // does not claim the whole origin.
++      const base = import.meta.env.BASE_URL || "/";
++      const registration = await navigator.serviceWorker.register(
++        `${base}sw.js`.replace(/\/{2,}/g, "/"),
++        { scope: base },
++      );
+ 
+       this.registration = registration;
+ 
+diff --git a/apps/web/vite.config.ts b/apps/web/vite.config.ts
+index 4df4d45..68b824a 100644
+--- a/apps/web/vite.config.ts
++++ b/apps/web/vite.config.ts
+@@ -29,7 +29,8 @@ function desktopHtmlPlugin() {
+ }
+ 
+ export default defineConfig({
+-  base: isDesktop ? "./" : "/",
++  // OPENREEL_BASE lets a host serve the app from a sub-path (e.g. "/openreel/").
++  base: isDesktop ? "./" : (process.env.OPENREEL_BASE || "/"),
+   plugins: [react(), desktopHtmlPlugin(), stripFfmpegPlugin(isDesktop), pruneFontsPlugin(isDesktop)],
+   assetsInclude: ["**/*.wasm"],
+   resolve: {

@@ -31,6 +31,16 @@ const controlRoutes = require('./routes/control.cjs');
 app.use('/api/control', controlRoutes);
 app.get('/api/file', controlRoutes.fileHandler);
 
+// Vendored OpenReel video editor (built with base "/openreel/")
+// Express serves .wasm as application/wasm out of the box.
+const openreelDir = path.join(__dirname, '..', 'vendor', 'openreel');
+app.use('/openreel', express.static(openreelDir));
+// SPA fallback so deep links such as /openreel/#/editor always resolve
+app.get('/openreel/*', (req, res, next) => {
+  const indexPath = path.join(openreelDir, 'index.html');
+  fs.access(indexPath, fs.constants.R_OK, (err) => (err ? next() : res.sendFile(indexPath)));
+});
+
 // URL rewriting middleware (preserve existing behavior)
 // When index.html references "styles/styles.css", it becomes "/styles/styles.css"
 // We need to map these to "/src/styles/styles.css"
