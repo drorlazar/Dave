@@ -38,6 +38,7 @@ class VideoEditor {
     this._exportPanelOpen = false;
     this._concatPanelOpen = false;
     this._cropActive = false;
+    this._helpEl = null;
 
     // Sub-modules (lazy loaded)
     this._timelineModule = null;
@@ -96,7 +97,12 @@ class VideoEditor {
     this.videoEl.addEventListener('ended', () => this._onVideoEnded());
 
     // Wait for metadata
-    await this._waitForMetadata();
+    try {
+      await this._waitForMetadata();
+    } catch {
+      this._showLoadError(model.name);
+      return;
+    }
     this.trimOut = this.videoEl.duration || 0;
 
     // Create toolbar
@@ -162,6 +168,7 @@ class VideoEditor {
 
     // Close all panels
     this._closeAllPanels();
+    this._hideHelp();
 
     // Deactivate crop
     if (this._cropActive) this._deactivateCrop();
@@ -224,11 +231,11 @@ class VideoEditor {
 
         <div class="ve-divider"></div>
 
-        <button class="ve-btn ve-tool-trim-in" title="Set trim in ([)">
-          <span class="ve-trim-icon">[</span>
+        <button class="ve-btn ve-btn-trim ve-tool-trim-in" title="Set trim in ([)">
+          <span class="ve-trim-icon">[</span><span class="ve-trim-label">In</span>
         </button>
-        <button class="ve-btn ve-tool-trim-out" title="Set trim out (])">
-          <span class="ve-trim-icon">]</span>
+        <button class="ve-btn ve-btn-trim ve-tool-trim-out" title="Set trim out (])">
+          <span class="ve-trim-label">Out</span><span class="ve-trim-icon">]</span>
         </button>
 
         <div class="ve-divider"></div>
@@ -247,6 +254,9 @@ class VideoEditor {
         </button>
       </div>
       <div class="ve-toolbar-right">
+        <button class="ve-btn ve-tool-help" title="Keyboard shortcuts (?)">
+          <i class="fa fa-question"></i>
+        </button>
         <button class="ve-btn ve-tool-reset" title="Reset all edits (R)">
           <i class="fa fa-rotate-left"></i>
         </button>
@@ -280,10 +290,8 @@ class VideoEditor {
     tb.querySelector('.ve-tool-concat').addEventListener('click', () => this._toggleConcat());
     tb.querySelector('.ve-tool-export').addEventListener('click', () => this._toggleExport());
     tb.querySelector('.ve-tool-reset').addEventListener('click', () => this.resetAll());
-    tb.querySelector('.ve-close').addEventListener('click', () => {
-      const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
-      document.body.dispatchEvent(event);
-    });
+    tb.querySelector('.ve-tool-help').addEventListener('click', () => this._toggleHelp());
+    tb.querySelector('.ve-close').addEventListener('click', () => this.requestClose());
 
     // Prevent toolbar clicks from closing overlay
     tb.addEventListener('click', (e) => e.stopPropagation());
@@ -472,7 +480,7 @@ class VideoEditor {
 
   async _toggleCrop() {
     if (this._cropActive) {
-      this._deactivateCrop();
+      this._cancelCrop();
     } else {
       await this._activateCrop();
     }
@@ -491,10 +499,22 @@ class VideoEditor {
     this.toolbar.querySelector('.ve-tool-crop').classList.add('ve-active');
   }
 
+  /** Hide the crop UI without touching cropRect. */
   _deactivateCrop() {
     if (this._cropModule) this._cropModule.deactivate();
     this._cropActive = false;
     if (this.toolbar) this.toolbar.querySelector('.ve-tool-crop')?.classList.remove('ve-active');
+  }
+
+  _applyCrop() {
+    if (this._cropModule) this._cropModule.apply();
+    this._deactivateCrop();
+    this._showNotification('Crop applied');
+  }
+
+  _cancelCrop() {
+    if (this._cropModule) this._cropModule.cancel();
+    this._deactivateCrop();
   }
 
   // ===========================================================
@@ -507,7 +527,7 @@ class VideoEditor {
     } else {
       this._closeFilters();
       this._closeConcat();
-      if (this._cropActive) this._deactivateCrop();
+      if (this._cropActive) this._cancelCrop();
       await this._openExport();
     }
   }
@@ -538,7 +558,7 @@ class VideoEditor {
     } else {
       this._closeFilters();
       this._closeExport();
-      if (this._cropActive) this._deactivateCrop();
+      if (this._cropActive) this._cancelCrop();
       await this._openConcat();
     }
   }
@@ -560,11 +580,86 @@ class VideoEditor {
   }
 
   // ===========================================================
+  //  HELP OVERLAY
+  // ===========================================================
+
+  _toggleHelp() {
+    if (this._helpEl) this._hideHelp();
+    else this._showHelp();
+  }
+
+  _showHelp() {
+    const shortcuts = [
+      ['Space', 'Play / pause'],
+      ['K', 'Pause'],
+      ['J / L', 'Seek back / forward 5s'],
+      ['Left / Right', 'Seek 5s, or step one frame when paused'],
+      ['Home / End', 'Jump to trim in / trim out'],
+      ['[ / ]', 'Set trim in / trim out'],
+      ['O', 'Toggle loop'],
+      ['M', 'Toggle mute'],
+      ['F', 'Filters panel'],
+      ['C', 'Crop mode'],
+      ['E', 'Export panel'],
+      ['R', 'Reset all edits'],
+      ['?', 'This shortcut sheet'],
+      ['Escape', 'Close panel, or close the editor']
+    ];
+
+    this._helpEl = document.createElement('div');
+    this._helpEl.className = 've-help-overlay';
+
+    const sheet = document.createElement('div');
+    sheet.className = 've-help-sheet';
+
+    const header = document.createElement('div');
+    header.className = 've-help-header';
+    header.innerHTML = '<span>Keyboard Shortcuts</span><button class="ve-btn ve-help-close"><i class="fa fa-xmark"></i></button>';
+    sheet.appendChild(header);
+
+    const list = document.createElement('div');
+    list.className = 've-help-list';
+    for (const [keys, desc] of shortcuts) {
+      const row = document.createElement('div');
+      row.className = 've-help-row';
+      const k = document.createElement('span');
+      k.className = 've-help-keys';
+      k.textContent = keys;
+      const d = document.createElement('span');
+      d.className = 've-help-desc';
+      d.textContent = desc;
+      row.appendChild(k);
+      row.appendChild(d);
+      list.appendChild(row);
+    }
+    sheet.appendChild(list);
+    this._helpEl.appendChild(sheet);
+
+    this._helpEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (e.target === this._helpEl || e.target.closest('.ve-help-close')) this._hideHelp();
+    });
+    this._helpEl.addEventListener('mousedown', (e) => e.stopPropagation());
+
+    this.overlay.appendChild(this._helpEl);
+    this.toolbar?.querySelector('.ve-tool-help')?.classList.add('ve-active');
+  }
+
+  _hideHelp() {
+    if (this._helpEl) {
+      this._helpEl.remove();
+      this._helpEl = null;
+    }
+    this.toolbar?.querySelector('.ve-tool-help')?.classList.remove('ve-active');
+  }
+
+  // ===========================================================
   //  RESET
   // ===========================================================
 
   resetAll() {
     if (!this.videoEl) return;
+    if (this._cropActive) this._deactivateCrop();
     this.trimIn = 0;
     this.trimOut = this.videoEl.duration || 0;
     this.filters = { brightness: 100, contrast: 100, saturate: 100, hueRotate: 0, blur: 0, sepia: 0 };
@@ -577,7 +672,6 @@ class VideoEditor {
     this._updateLoopButton();
     if (this._timelineModule) this._timelineModule.updateTrimHandles();
     if (this._filterModule && this._filterPanelOpen) this._filterModule.updateSliders();
-    if (this._cropActive) this._deactivateCrop();
 
     this._showNotification('All edits reset');
   }
@@ -612,14 +706,16 @@ class VideoEditor {
         this.togglePlay();
         break;
       case 'Escape':
-        if (this._filterPanelOpen) {
+        if (this._helpEl) {
+          this._hideHelp();
+        } else if (this._filterPanelOpen) {
           this._closeFilters();
         } else if (this._exportPanelOpen) {
           this._closeExport();
         } else if (this._concatPanelOpen) {
           this._closeConcat();
         } else if (this._cropActive) {
-          this._deactivateCrop();
+          this._cancelCrop();
         } else {
           // Let it propagate to close fullscreen
           return;
@@ -703,6 +799,11 @@ class VideoEditor {
         e.preventDefault();
         this.resetAll();
         break;
+      case '?':
+        e.preventDefault();
+        e.stopPropagation();
+        this._toggleHelp();
+        break;
       case 'Home':
         e.preventDefault();
         if (this.videoEl) this.videoEl.currentTime = this.trimIn;
@@ -778,14 +879,40 @@ class VideoEditor {
   }
 
   _waitForMetadata() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      const check = () => {
+        const d = this.videoEl.duration;
+        if (!d || !isFinite(d)) reject(new Error('undecodable'));
+        else resolve();
+      };
       if (this.videoEl.readyState >= 1) {
-        resolve();
+        check();
       } else {
-        this.videoEl.addEventListener('loadedmetadata', () => resolve(), { once: true });
-        this.videoEl.addEventListener('error', () => resolve(), { once: true });
+        this.videoEl.addEventListener('loadedmetadata', check, { once: true });
+        this.videoEl.addEventListener('error', () => reject(new Error('undecodable')), { once: true });
       }
     });
+  }
+
+  _showLoadError(filename) {
+    if (this.videoEl) {
+      this.videoEl.removeAttribute('src');
+      this.videoEl.load();
+      this.videoEl = null;
+    }
+    this.viewer.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'fullscreen-error';
+    box.innerHTML = '<i class="fa fa-exclamation-triangle fa-2x"></i><br>';
+    box.appendChild(document.createTextNode(`Cannot play ${filename}`));
+    box.appendChild(document.createElement('br'));
+    const small = document.createElement('small');
+    small.textContent = 'Format not supported by this browser';
+    box.appendChild(small);
+    this.viewer.appendChild(box);
+    if (this.toolbar) this.toolbar.style.display = 'none';
+    if (this._timelineModule) this._timelineModule.hide();
+    this._bindEvents();
   }
 
   _formatTime(seconds) {
@@ -800,7 +927,13 @@ class VideoEditor {
   _showNotification(message) {
     if (window.errorHandler?.showNotification) {
       window.errorHandler.showNotification(message, 'info');
+      return;
     }
+    const toast = document.createElement('div');
+    toast.className = 've-toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2200);
   }
 
   _showConfirmDialog(message) {

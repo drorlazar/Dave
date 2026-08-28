@@ -526,9 +526,21 @@ function initializeElements() {
           }
         });
 
+        // Route close/navigation through the video editor's dirty check when it's active
+        const requestFullscreenExit = () => {
+          const viewer = currentFullscreenViewer;
+          if (viewer?.videoEditor) {
+            viewer.videoEditor.requestClose().then(closed => {
+              if (closed) exitFullscreen(viewer);
+            });
+            return;
+          }
+          exitFullscreen(viewer);
+        };
+
         fullscreenOverlay.addEventListener('click', function(event) {
           if (event.target === fullscreenOverlay) {
-            exitFullscreen(currentFullscreenViewer);
+            requestFullscreenExit();
           }
         });
 
@@ -536,12 +548,20 @@ function initializeElements() {
         const prevNav = document.getElementById('prevNav');
         const nextNav = document.getElementById('nextNav');
 
+        const navigateOrClose = (dir) => {
+          if (currentFullscreenViewer?.videoEditor) {
+            requestFullscreenExit();
+            return;
+          }
+          navigateFullscreen(dir);
+        };
+
         if (prevNav) {
-          prevNav.addEventListener('click', () => navigateFullscreen('prev'));
+          prevNav.addEventListener('click', () => navigateOrClose('prev'));
         }
 
         if (nextNav) {
-          nextNav.addEventListener('click', () => navigateFullscreen('next'));
+          nextNav.addEventListener('click', () => navigateOrClose('next'));
         }
       }
 

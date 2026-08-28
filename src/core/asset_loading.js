@@ -845,15 +845,18 @@ function renderPage(pageIndex) {
     tile.appendChild(fsBtn);
 
     const editorInfo = getEditorForType(model.type, model.subtype);
-    if (editorInfo) {
+    const isVideo = model.type === 'video';
+    if (editorInfo || isVideo) {
       const editBtn = document.createElement('button');
       editBtn.className = 'edit-btn';
       editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
-      editBtn.title = editorInfo.tip;
+      editBtn.title = isVideo ? 'Edit video' : editorInfo.tip;
       editBtn.onclick = (e) => {
         e.stopPropagation();
-        // Images edit in the embedded Photopea panel; other types open their web editor.
-        if (model.type === 'image') photopeaPanel.open(model);
+        // Videos open Dave's built-in editor, images the embedded Photopea panel,
+        // everything else its web editor.
+        if (isVideo) showFullscreen(model);
+        else if (model.type === 'image') photopeaPanel.open(model);
         else openInEditor(model);
       };
       tile.appendChild(editBtn);

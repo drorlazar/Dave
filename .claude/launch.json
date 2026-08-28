@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dave",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/server.cjs"],
+      "port": 7777
+    }
+  ]
+}

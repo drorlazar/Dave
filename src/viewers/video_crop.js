@@ -40,6 +40,7 @@ export class VideoCrop {
       this._h = 0.8;
     }
     this._activePreset = 'free';
+    this._savedRect = this.editor.cropRect ? { ...this.editor.cropRect } : null;
 
     if (!this._overlayEl) this._create();
     this._overlayEl.style.display = '';
@@ -67,9 +68,16 @@ export class VideoCrop {
       this._resizeObserver.disconnect();
       this._resizeObserver = null;
     }
+  }
 
-    // Save to editor
+  /** Commit the current region to the editor. */
+  apply() {
     this.editor.cropRect = { x: this._x, y: this._y, w: this._w, h: this._h };
+  }
+
+  /** Restore the crop that existed before this activation. */
+  cancel() {
+    this.editor.cropRect = this._savedRect ? { ...this._savedRect } : null;
   }
 
   _create() {
@@ -125,6 +133,22 @@ export class VideoCrop {
       btn.addEventListener('click', () => this._applyPreset(p.key));
       this._presetsEl.appendChild(btn);
     }
+
+    const sep = document.createElement('div');
+    sep.className = 've-crop-presets-sep';
+    this._presetsEl.appendChild(sep);
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 've-crop-action ve-crop-cancel';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => this.editor._cancelCrop());
+    this._presetsEl.appendChild(cancelBtn);
+
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 've-crop-action ve-crop-apply';
+    applyBtn.textContent = 'Apply';
+    applyBtn.addEventListener('click', () => this.editor._applyCrop());
+    this._presetsEl.appendChild(applyBtn);
 
     this.editor.overlay.appendChild(this._presetsEl);
     this._bindEvents();
