@@ -47,20 +47,47 @@ function isEditable(model) {
  * @param {Array<Object>} modelFiles
  * @returns {Array<File>}
  */
-export function collectEditableFiles(selectedNames, modelFiles) {
-  return Array.from(selectedNames)
+export async function collectEditableFiles(selectedNames, modelFiles) {
+  const models = Array.from(selectedNames)
     .map(name => modelFiles.find(m => m.name === name))
-    .filter(model => model && model.file instanceof File && isEditable(model))
-    .map(model => model.file);
+    .filter(model => model && isEditable(model));
+
+  const files = await Promise.all(models.map(model => hydrateFile(model)));
+  return files.filter(Boolean);
+}
+
+/**
+ * Returns a File for the model: the local File when present, otherwise fetched
+ * from its remote-control URL or cloud source.
+ */
+async function hydrateFile(model) {
+  if (model.file instanceof File) return model.file;
+
+  try {
+    let url = model.remoteUrl || null;
+    if (!url && (model.source === 's3' || model.source === 'gdrive')) {
+      const { getFileUrl } = await import('../cloud/CloudStorageProvider.js');
+      url = await getFileUrl(model);
+    }
+    if (!url) return null;
+
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return new File([blob], model.name, { type: blob.type || '' });
+  } catch (error) {
+    console.warn(`Could not fetch ${model.name} for OpenReel:`, error);
+    return null;
+  }
 }
 
 /**
  * Opens OpenReel in a new tab and pushes the given files into its media library.
  * @param {Array<File>} files
  */
-export function sendFilesToOpenReel(files) {
+export function sendFilesToOpenReel(files, { skipOpen = false } = {}) {
   if (!files || files.length === 0) {
-    showNotification('No local video, image or audio files in the selection', 'warning');
+    showNotification('No video, image or audio files in the selection', 'warning');
     return;
   }
 
@@ -129,7 +156,7 @@ export function sendFilesToOpenReel(files) {
     }
   };
 
-  window.open(EDITOR_URL, '_blank');
+  if (!skipOpen) window.open(EDITOR_URL, '_blank');
 
   const ping = () => {
     try {
@@ -154,6 +181,13 @@ export function sendFilesToOpenReel(files) {
  * @param {Set<string>|Array<string>} selectedNames
  * @param {Array<Object>} modelFiles
  */
-export function editSelectionInOpenReel(selectedNames, modelFiles) {
-  sendFilesToOpenReel(collectEditableFiles(selectedNames, modelFiles));
+export async function editSelectionInOpenReel(selectedNames, modelFiles) {
+  // Open the tab synchronously inside the click gesture so the popup is not
+  // blocked, then hydrate files (may fetch remote/cloud assets) and hand over.
+  const editorWindow = window.open(EDITOR_URL, '_blank');
+  const files = await collectEditableFiles(selectedNames, modelFiles);
+  if (files.length === 0 && editorWindow) {
+    try { editorWindow.close(); } catch { /* COOP may block */ }
+  }
+  sendFilesToOpenReel(files, { skipOpen: true });
 }
