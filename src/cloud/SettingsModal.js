@@ -806,6 +806,16 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.8.0', date: 'Aug 28, 2026', title: 'Built-in Video Editor',
+        features: [
+          'Open any video in Dave\'s own editor — timeline scrubbing, trim in/out, loop, volume and frame stepping',
+          'Six live CSS filters and an 8-handle crop with aspect presets and explicit Apply/Cancel',
+          'Export to MP4 where the browser supports it (WebM otherwise) with audio, monotonic progress, an up-front real-time estimate and inline error reporting',
+          'The grid tile edit button now opens the built-in editor instead of an external site; unplayable formats show a clear message',
+          'Press ? for the keyboard shortcut sheet; closing always confirms before discarding unsaved edits',
+        ]
+      },
+      {
         version: '2.7.0', date: 'Jul 20, 2026', title: 'Edit in Photopea',
         features: [
           'Edit any image in Photopea without leaving Dave — an embedded editor panel opens with the image already loaded',

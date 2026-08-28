@@ -845,15 +845,18 @@ function renderPage(pageIndex) {
     tile.appendChild(fsBtn);
 
     const editorInfo = getEditorForType(model.type, model.subtype);
-    if (editorInfo) {
+    const isVideo = model.type === 'video';
+    if (editorInfo || isVideo) {
       const editBtn = document.createElement('button');
       editBtn.className = 'edit-btn';
       editBtn.innerHTML = '<i class="fa fa-pen-to-square"></i>';
-      editBtn.title = editorInfo.tip;
+      editBtn.title = isVideo ? 'Edit video' : editorInfo.tip;
       editBtn.onclick = (e) => {
         e.stopPropagation();
-        // Images edit in the embedded Photopea panel; other types open their web editor.
-        if (model.type === 'image') photopeaPanel.open(model);
+        // Videos open Dave's built-in editor, images the embedded Photopea panel,
+        // everything else its web editor.
+        if (isVideo) showFullscreen(model);
+        else if (model.type === 'image') photopeaPanel.open(model);
         else openInEditor(model);
       };
       tile.appendChild(editBtn);
@@ -1066,21 +1069,21 @@ async function showFullscreen(model) {
       };
 
     } else if (model.type === "video") {
-      fullscreenViewerWrap.style.display = 'none';
-      fullscreenViewer.style.display = 'none';
-      fullscreenVideo.style.display = 'block';
-      fullscreenVideo.src = fileUrl;
-      fullscreenVideo.play();
+      fullscreenViewerWrap.style.display = 'block';
+      fullscreenViewer.style.display = 'block';
+      fullscreenVideo.style.display = 'none';
 
-      // Store reference to preview video for cleanup
-      const previewVideo = viewerContainer.querySelector(`[data-model-name="${model.name}"] video`);
+      const { videoEditor } = await import('../viewers/video_editor.js');
+      await videoEditor.open(model, fileUrl);
+
       currentFullscreenViewer = {
         type: 'video',
-        previewVideo: previewVideo,
         fileName: model.name,
-        cleanup: needsCleanup ? () => {
-          if (fileUrl) URL.revokeObjectURL(fileUrl);
-        } : undefined
+        videoEditor,
+        cleanup: () => {
+          videoEditor.close();
+          if (needsCleanup && fileUrl) URL.revokeObjectURL(fileUrl);
+        }
       };
 
     } else if (model.type === "image") {
@@ -1277,6 +1280,13 @@ async function handleFolderSelection() {
     }
 
     await handleFolderPick(dirHandle);
+
+    try {
+      const { processFolderDrop } = await import('../viewers/tree_folder_view.js');
+      await processFolderDrop(dirHandle);
+    } catch (e) {
+      console.warn('Could not update tree view:', e);
+    }
   } catch (error) {
     console.error("Error selecting folder:", error);
     if (error.name !== 'AbortError') {

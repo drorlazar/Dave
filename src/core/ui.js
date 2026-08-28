@@ -475,6 +475,16 @@ function initializeElements() {
               }
               return;
             }
+            // Video editor handles its own keys via capture phase
+            if (currentFullscreenViewer?.videoEditor) {
+              if (event.key === 'Escape' && !event.defaultPrevented) {
+                // Async dirty-state check before closing
+                currentFullscreenViewer.videoEditor.requestClose().then(closed => {
+                  if (closed) exitFullscreen(currentFullscreenViewer);
+                });
+              }
+              return;
+            }
             // 3D Inspector shortcuts
             if (currentFullscreenViewer?.inspector) {
               const inspector = currentFullscreenViewer.inspector;
@@ -516,9 +526,27 @@ function initializeElements() {
           }
         });
 
+        // Route close/navigation through the video editor's dirty check when it's active
+        const requestFullscreenExit = () => {
+          const viewer = currentFullscreenViewer;
+          if (viewer?.videoEditor) {
+            viewer.videoEditor.requestClose().then(closed => {
+              if (closed) exitFullscreen(viewer);
+            });
+            return;
+          }
+          exitFullscreen(viewer);
+        };
+
         fullscreenOverlay.addEventListener('click', function(event) {
           if (event.target === fullscreenOverlay) {
-            exitFullscreen(currentFullscreenViewer);
+            // In the video editor a stray backdrop click reveals the auto-hidden
+            // controls instead of exiting; close only via X or Escape.
+            if (currentFullscreenViewer?.videoEditor) {
+              currentFullscreenViewer.videoEditor.showChrome?.();
+              return;
+            }
+            requestFullscreenExit();
           }
         });
 
@@ -526,12 +554,20 @@ function initializeElements() {
         const prevNav = document.getElementById('prevNav');
         const nextNav = document.getElementById('nextNav');
 
+        const navigateOrClose = (dir) => {
+          if (currentFullscreenViewer?.videoEditor) {
+            requestFullscreenExit();
+            return;
+          }
+          navigateFullscreen(dir);
+        };
+
         if (prevNav) {
-          prevNav.addEventListener('click', () => navigateFullscreen('prev'));
+          prevNav.addEventListener('click', () => navigateOrClose('prev'));
         }
 
         if (nextNav) {
-          nextNav.addEventListener('click', () => navigateFullscreen('next'));
+          nextNav.addEventListener('click', () => navigateOrClose('next'));
         }
       }
 
@@ -870,16 +906,20 @@ export function exitFullscreen(currentFullscreenViewer) {
 
   if (currentFullscreenViewer) {
     if (currentFullscreenViewer.type === 'video' && fullscreenVideo) {
-      // Stop both fullscreen video and any preview video
+      // Stop the old fullscreen video element (may not be in use with video editor)
       fullscreenVideo.pause();
       fullscreenVideo.currentTime = 0;
-      fullscreenVideo.src = ''; // Clear src to stop loading
+      fullscreenVideo.src = '';
       if (currentFullscreenViewer.previewVideo) {
         currentFullscreenViewer.previewVideo.pause();
         currentFullscreenViewer.previewVideo.currentTime = 0;
       }
+      // Call cleanup (handles video editor close + URL revoke)
+      if (currentFullscreenViewer.cleanup) {
+        currentFullscreenViewer.cleanup();
+      }
     } else if (currentFullscreenViewer.type === 'font' && currentFullscreenViewer.cleanup) {
-        currentFullscreenViewer.cleanup(); // Call cleanup for font if defined
+        currentFullscreenViewer.cleanup();
     } else if (currentFullscreenViewer.cleanup) {
       currentFullscreenViewer.cleanup();
     }
