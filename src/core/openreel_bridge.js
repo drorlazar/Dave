@@ -1,5 +1,5 @@
-// OpenReel bridge — hands the current selection to the self-hosted OpenReel
-// editor served at /openreel/ on the same origin.
+// OpenReel bridge — hands the current selection to the vendored OpenReel
+// editor served from Dave's own directory on the same origin.
 //
 // Message contract on BroadcastChannel('dave-openreel'):
 //   Dave     -> { type: 'dave:ping' }                   (polled until ready)
@@ -9,7 +9,10 @@
 //   OpenReel -> { type: 'openreel:import-error', error }
 
 const CHANNEL_NAME = 'dave-openreel';
-const EDITOR_URL = '/openreel/#/editor';
+// Resolved against Dave's base so it works both at http://localhost:7777/ and
+// under a project sub-path such as https://drorlazar.github.io/Dave/.
+const EDITOR_PATH = 'vendor/openreel/index.html#/editor';
+const EDITOR_URL = new URL(EDITOR_PATH, document.baseURI).href;
 const PING_INTERVAL_MS = 500;
 const TIMEOUT_MS = 20000;
 

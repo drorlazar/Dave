@@ -987,7 +987,7 @@ async function _getFileBlob(model) {
   return null;
 }
 
-// Hand the current selection to the self-hosted OpenReel editor at /openreel/
+// Hand the current selection to the vendored OpenReel editor
 export async function editSelectionInOpenReel(modelFiles) {
   if (_selectedFiles.size === 0) return;
 
