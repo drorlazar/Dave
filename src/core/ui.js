@@ -420,6 +420,8 @@ function initializeElements() {
             downloadSelected(modelFiles);
           } else if (action === 'save') {
             saveSelection(modelFiles);
+          } else if (action === 'openreel') {
+            editSelectionInOpenReel(modelFiles);
           } else if (action === 'clear') {
             clearSelection();
           } else if (action === 'selectAll') {
@@ -983,6 +985,18 @@ async function _getFileBlob(model) {
     return response.blob();
   }
   return null;
+}
+
+// Hand the current selection to the self-hosted OpenReel editor at /openreel/
+export async function editSelectionInOpenReel(modelFiles) {
+  if (_selectedFiles.size === 0) return;
+
+  try {
+    const { editSelectionInOpenReel: sendToOpenReel } = await import('./openreel_bridge.js');
+    sendToOpenReel(_selectedFiles, modelFiles);
+  } catch (error) {
+    console.error('Failed to load the OpenReel bridge:', error);
+  }
 }
 
 export async function downloadSelected(modelFiles) {
