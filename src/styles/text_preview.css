@@ -22,7 +22,8 @@ body:not(.dark-mode) .text-preview {
 .text-format-badge {
   position: absolute;
   top: 6px;
-  right: 6px;
+  left: 50%;
+  transform: translateX(-50%);
   background: rgba(100, 100, 255, 0.8);
   color: #fff;
   font-size: 10px;
@@ -355,8 +356,7 @@ body:not(.dark-mode) .text-rendered-md h2 {
   margin-left: 0;
 }
 
-/* ===========================
-   Robustness helpers
+/* ====================   Robustness helpers
    =========================== */
 
 /* Large-file warning chip in the toolbar */
@@ -389,4 +389,9 @@ body:not(.dark-mode) .text-empty-note {
   width: 100vw;
   height: 100vh;
   border-radius: 0;
+=======
+/* --- High-Resolution Display Scaling --- */
+@media (min-width: 2000px) {
+  .text-preview-content { font-size: 12px; }
+  .text-format-badge { font-size: 12px; }
 }
