@@ -1,3 +1,38 @@
+diff --git a/apps/web/public/manifest.json b/apps/web/public/manifest.json
+index 5525139..b17a739 100644
+--- a/apps/web/public/manifest.json
++++ b/apps/web/public/manifest.json
+@@ -2,26 +2,26 @@
+   "name": "OpenReel",
+   "short_name": "OpenReel",
+   "description": "Professional browser-based video, audio, and photo editing application",
+-  "start_url": "/",
++  "start_url": "./",
+   "display": "standalone",
+   "background_color": "#1C1C1E",
+   "theme_color": "#3b82f6",
+   "orientation": "landscape",
+   "icons": [
+     {
+-      "src": "/icons/icon-192.png",
++      "src": "./icons/icon-192.png",
+       "sizes": "192x192",
+       "type": "image/png",
+       "purpose": "any"
+     },
+     {
+-      "src": "/icons/icon-512.png",
++      "src": "./icons/icon-512.png",
+       "sizes": "512x512",
+       "type": "image/png",
+       "purpose": "any"
+     },
+     {
+-      "src": "/icons/icon-maskable-512.png",
++      "src": "./icons/icon-maskable-512.png",
+       "sizes": "512x512",
+       "type": "image/png",
+       "purpose": "maskable"
 diff --git a/apps/web/public/sw.js b/apps/web/public/sw.js
 index a5165d3..f826898 100644
 --- a/apps/web/public/sw.js
@@ -134,6 +169,30 @@ index 0000000..6d1bc9a
 +    channel = null;
 +  }
 +}
+diff --git a/apps/web/src/components/editor/preview/threejs-layer-renderer.ts b/apps/web/src/components/editor/preview/threejs-layer-renderer.ts
+index 8677e6a..cfd5d3e 100644
+--- a/apps/web/src/components/editor/preview/threejs-layer-renderer.ts
++++ b/apps/web/src/components/editor/preview/threejs-layer-renderer.ts
+@@ -17,8 +17,17 @@ import type { BlendMode } from "@openreel/core";
+ const FONT_CACHE = new Map<string, Font>();
+ const FONT_LOADING = new Map<string, Promise<Font>>();
+ 
+-const DEFAULT_3D_FONT_URL = "/fonts/helvetiker_regular.typeface.json";
+-const DEFAULT_3D_BOLD_FONT_URL = "/fonts/helvetiker_bold.typeface.json";
++// Resolved against the deployment base so a sub-path host (e.g. a vendored
++// build under "/Dave/vendor/openreel/") does not fetch from the site root.
++const ASSET_BASE = import.meta.env.BASE_URL || "/";
++const DEFAULT_3D_FONT_URL = new URL(
++  `${ASSET_BASE}fonts/helvetiker_regular.typeface.json`,
++  document.baseURI,
++).href;
++const DEFAULT_3D_BOLD_FONT_URL = new URL(
++  `${ASSET_BASE}fonts/helvetiker_bold.typeface.json`,
++  document.baseURI,
++).href;
+ 
+ /** Darken a #rrggbb / #rgb color toward black by `amount` (0..1).
+  *  Used as a sensible default for the extruded "side" face when the
 diff --git a/apps/web/src/main.tsx b/apps/web/src/main.tsx
 index 925d496..0d671bb 100644
 --- a/apps/web/src/main.tsx
