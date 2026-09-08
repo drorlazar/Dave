@@ -441,31 +441,12 @@ function initializeElements() {
           // Grid view shortcuts
           const isFullscreen = window.getComputedStyle(fullscreenOverlay).display === 'flex';
           if (!isFullscreen) {
+            // Page navigation keys (Arrow/PageUp/PageDown/Home/End) are owned
+            // by KeyboardShortcutManager (src/utils/keyboardShortcuts.js).
+            // Handling them here as well made every press jump two pages.
             if (event.ctrlKey && event.key === 'f') {
               event.preventDefault();
               searchInput.focus();
-            } else if (event.key === 'PageUp') {
-              event.preventDefault();
-              if (!prevPageBtn.disabled) {
-                setCurrentPage(getCurrentPage() - 1);
-                renderPage(getCurrentPage());
-              }
-            } else if (event.key === 'PageDown') {
-              event.preventDefault();
-              if (!nextPageBtn.disabled) {
-                setCurrentPage(getCurrentPage() + 1);
-                renderPage(getCurrentPage());
-              }
-            } else if (event.key === 'ArrowLeft') {
-              if (!prevPageBtn.disabled) {
-                setCurrentPage(getCurrentPage() - 1);
-                renderPage(getCurrentPage());
-              }
-            } else if (event.key === 'ArrowRight') {
-              if (!nextPageBtn.disabled) {
-                setCurrentPage(getCurrentPage() + 1);
-                renderPage(getCurrentPage());
-              }
             }
           }
           // Fullscreen view shortcuts
@@ -514,9 +495,14 @@ function initializeElements() {
             if (event.key === 'Escape') {
               exitFullscreen(currentFullscreenViewer);
             } else if (event.key === 'ArrowLeft') {
+              event.preventDefault(); // keep native <video> controls from seeking
               navigateFullscreen('prev');
             } else if (event.key === 'ArrowRight') {
+              event.preventDefault();
               navigateFullscreen('next');
+            } else if ((event.key === 'f' || event.key === 'F') && currentFullscreenViewer?.type === 'video') {
+              event.preventDefault();
+              toggleBrowserFullscreen();
             } else if (event.key === ' ' && currentFullscreenViewer?.type === 'video') {
               event.preventDefault();
               if (fullscreenVideo.paused) {
@@ -539,6 +525,20 @@ function initializeElements() {
           }
           exitFullscreen(viewer);
         };
+
+        // The native <video> control bar has its own fullscreen button. If the
+        // user clicks it, the browser promotes the bare <video> into the top
+        // layer, which hides Dave's nav/return chrome and lets the media
+        // controls eat the arrow keys. Redirect that onto the overlay so
+        // prev/next keep working in true fullscreen.
+        const onBrowserFullscreenChange = () => {
+          const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+          if (fsEl === fullscreenVideo) {
+            browserExitFullscreen().then(() => browserRequestFullscreen(fullscreenOverlay));
+          }
+        };
+        document.addEventListener('fullscreenchange', onBrowserFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onBrowserFullscreenChange);
 
         fullscreenOverlay.addEventListener('click', function(event) {
           if (event.target === fullscreenOverlay) {
@@ -876,11 +876,18 @@ export function updatePagination(totalPages) {
 }
 
 // Function to exit fullscreen
-export function exitFullscreen(currentFullscreenViewer) {
+export function exitFullscreen(currentFullscreenViewer, { keepBrowserFullscreen = false } = {}) {
   // Using direct DOM lookups instead of cached references for consistency
   const fullscreenOverlay = document.getElementById('fullscreenOverlay');
   const fullscreenVideo = document.getElementById('fullscreenVideo');
   // const fullscreenInfo = document.getElementById('fullscreenInfo'); // This was not used, so commented out
+
+  // Leave true browser fullscreen when closing the viewer for real. When
+  // navigating prev/next the overlay is re-shown synchronously, so keep it.
+  if (!keepBrowserFullscreen) {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl === fullscreenOverlay || fsEl === fullscreenVideo) browserExitFullscreen();
+  }
 
   // Hide the fullscreen overlay and info panel
   fullscreenOverlay.style.display = 'none';
@@ -1146,9 +1153,36 @@ function navigateFullscreen(direction) {
   if (newIndex >= 0 && newIndex < filteredModelFiles.length) {
     const nextFile = filteredModelFiles[newIndex];
     // const currentViewer = currentFullscreenViewer; // Not used
-    exitFullscreen(currentFullscreenViewer); // currentFullscreenViewer is modified by exitFullscreen
+    exitFullscreen(currentFullscreenViewer, { keepBrowserFullscreen: true }); // currentFullscreenViewer is modified by exitFullscreen
     showFullscreen(nextFile);
   }
+}
+
+// --- Browser Fullscreen API helpers (used by the video viewer) ---
+function browserRequestFullscreen(el) {
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!req) return Promise.resolve();
+  try {
+    const p = req.call(el);
+    return (p && typeof p.catch === 'function') ? p.catch(() => {}) : Promise.resolve();
+  } catch { return Promise.resolve(); }
+}
+
+function browserExitFullscreen() {
+  if (!(document.fullscreenElement || document.webkitFullscreenElement)) return Promise.resolve();
+  const exit = document.exitFullscreen || document.webkitExitFullscreen;
+  if (!exit) return Promise.resolve();
+  try {
+    const p = exit.call(document);
+    return (p && typeof p.catch === 'function') ? p.catch(() => {}) : Promise.resolve();
+  } catch { return Promise.resolve(); }
+}
+
+function toggleBrowserFullscreen() {
+  const overlay = document.getElementById('fullscreenOverlay');
+  const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+  if (fsEl) browserExitFullscreen();
+  else browserRequestFullscreen(overlay);
 }
 
 // --- Font Custom Text Modal Logic ---

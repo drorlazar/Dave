@@ -1614,6 +1614,14 @@ body:not(.dark-mode) .fullscreen-path {
   margin: auto;
 }
 
+/* True browser fullscreen (F key / native fullscreen button): fill the screen */
+#fullscreenOverlay:fullscreen #fullscreenVideo,
+#fullscreenOverlay:-webkit-full-screen #fullscreenVideo {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+}
+
 @media (max-width: 768px) {
   #fullscreenVideo {
     width: 90%;

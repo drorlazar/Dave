@@ -806,6 +806,15 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.9.1', date: 'Sep 8, 2026', title: 'Sidebar Scrolling & Viewer Key Fixes',
+        features: [
+          'Folder tree sidebar now scrolls: large folders were silently clipped at 1000px, so no scrollbar appeared and the mouse wheel did nothing',
+          'Video viewer: F toggles true fullscreen, and the native fullscreen button now fullscreens the viewer instead of the bare video, so Left/Right still switch videos',
+          'Left/Right in the fullscreen viewer no longer also flips the grid page behind it',
+          'Left/Right and PageUp/PageDown in grid view now move exactly one page (they used to jump two)',
+        ]
+      },
+      {
         version: '2.9.0', date: 'Aug 28, 2026', title: 'OpenReel Studio Integration',
         features: [
           'New selection option "Edit video from selection" — sends the selected videos, images and audio straight into a full multi-track video editor',
