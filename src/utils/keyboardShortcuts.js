@@ -20,6 +20,12 @@ export class KeyboardShortcutManager {
       return;
     }
 
+    // Don't paginate the grid while a fullscreen viewer is open: the viewer
+    // owns the arrow keys (next/prev asset) and already handled this event.
+    if (event.defaultPrevented || KeyboardShortcutManager.isViewerOpen()) {
+      return;
+    }
+
     // Build shortcut key string
     const keys = [];
     if (event.ctrlKey) keys.push('Ctrl');
@@ -39,6 +45,12 @@ export class KeyboardShortcutManager {
       event.preventDefault();
       handler(event);
     }
+  }
+
+  /** True when the fullscreen asset viewer overlay is showing. */
+  static isViewerOpen() {
+    const overlay = document.getElementById('fullscreenOverlay');
+    return !!overlay && window.getComputedStyle(overlay).display !== 'none';
   }
 
   register(shortcut, handler, description) {

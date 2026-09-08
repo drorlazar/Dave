@@ -498,17 +498,19 @@ body:not(.dark-mode) .tree-history-empty {
 
 .tree-container ul ul {
   padding-left: 16px; /* Indentation for nested levels */
-  display: block; /* Ensure vertical stacking */
-  max-height: 0; /* Start collapsed for animation */
-  overflow: hidden;
-  transition: max-height 0.3s ease-in-out; /* Animation for expand/collapse */
+  display: none; /* Collapsed by default */
   width: 100%; /* Force full width */
   position: relative; /* Ensure proper stacking context */
 }
 
+/* Expanded subtrees must never be height-capped: the scroll container
+   (#folderTreeContainer) can only scroll content that contributes to its
+   scrollHeight. A max-height + overflow:hidden cap silently clipped large
+   folders and left the sidebar with no scrollbar. */
 .tree-container li[aria-expanded="true"] > ul {
-  max-height: 1000px; /* Large enough value for content */
-  display: block; /* Force block display when expanded */
+  display: block;
+  max-height: none;
+  overflow: visible;
 }
 
 .tree-container li {
