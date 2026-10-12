@@ -20,17 +20,35 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    # The site itself lives on Vercel (https://dave-viewer.vercel.app/, its own domain, so its
+    # visit counter is separate). This old address only forwards there, keeping the path under
+    # /Dave/, the query (?server=...&file=...) and the hash; 404.html covers deep links.
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
+
+      - name: Write the redirect page
+        run: |
+          mkdir -p out
+          cat > out/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en"><head><meta charset="utf-8">
+          <title>Dave has moved</title>
+          <link rel="canonical" href="https://dave-viewer.vercel.app/">
+          <meta name="robots" content="noindex">
+          <script>
+          location.replace("https://dave-viewer.vercel.app/" + location.pathname.replace(/^\/Dave\/?/, "") + location.search + location.hash);
+          </script>
+          <noscript><meta http-equiv="refresh" content="0; url=https://dave-viewer.vercel.app/"></noscript>
+          </head><body><p>Dave has moved to <a href="https://dave-viewer.vercel.app/">dave-viewer.vercel.app</a>.</p></body></html>
+          EOF
+          cp out/index.html out/404.html
+          touch out/.nojekyll
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: out
 
       - name: Deploy to GitHub Pages
         id: deployment

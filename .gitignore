@@ -79,3 +79,6 @@ tests/package-lock.json
 *.p12
 *.pfx
 service-account*.json
+
+# Vercel project link (local)
+.vercel

@@ -22,7 +22,7 @@ That's it. The skill is installed.
 ## How it works
 
 1. **Claude Code starts a tiny local server** (dave-helper.cjs) on your machine
-2. **Dave opens in your browser** at https://drorlazar-sett.github.io/Dave/
+2. **Dave opens in your browser** at https://dave-viewer.vercel.app/
 3. **Dave connects to your local server** to load files from your disk
 4. **You see the files** — zoom, annotate, compare, inspect 3D models
 
