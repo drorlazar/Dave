@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * dave-helper.cjs — Tiny standalone file server for Dave remote control.
- * Zero dependencies. Run this locally so Dave (on GitHub Pages or localhost)
+ * Zero dependencies. Run this locally so Dave (on dave-viewer.vercel.app or localhost)
  * can load files from your disk and receive commands from Claude Code.
  *
  * Usage:
@@ -63,7 +63,7 @@ const MIME = {
 // Request handler
 // ---------------------------------------------------------------------------
 const server = http.createServer((req, res) => {
-  // CORS — allow any origin (GitHub Pages, localhost, etc.)
+  // CORS — allow any origin (the live site, localhost, etc.)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

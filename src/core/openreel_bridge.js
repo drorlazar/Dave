@@ -10,7 +10,7 @@
 
 const CHANNEL_NAME = 'dave-openreel';
 // Resolved against Dave's base so it works both at http://localhost:7777/ and
-// under a project sub-path such as https://drorlazar.github.io/Dave/.
+// at the live site (https://dave-viewer.vercel.app/) or under a project sub-path.
 const EDITOR_PATH = 'vendor/openreel/index.html#/editor';
 const EDITOR_URL = new URL(EDITOR_PATH, document.baseURI).href;
 const PING_INTERVAL_MS = 500;

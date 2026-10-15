@@ -5,7 +5,7 @@
  *
  * Two modes:
  *  - Same-origin: Dave runs locally at localhost:7777 (full server)
- *  - Cross-origin: Dave runs on GitHub Pages, connects to localhost helper
+ *  - Cross-origin: Dave runs on the live site (dave-viewer.vercel.app), connects to localhost helper
  *    via ?server=localhost:7778 URL parameter
  */
 
@@ -45,7 +45,7 @@ class RemoteControl {
       return;
     }
 
-    // On GitHub Pages or other remote host — try the default helper port
+    // On the live site or another remote host — try the default helper port
     this.serverBase = 'http://localhost:7778';
   }
 
