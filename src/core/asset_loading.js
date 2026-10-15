@@ -5,7 +5,7 @@ import { isSystemFile } from '../utils/systemFiles.js';
 import { assetHandlerFactory } from '../handlers/AssetHandlerFactory.js';
 import { TextHandler } from '../handlers/TextHandler.js';
 import { errorHandler } from '../utils/errorHandler.js';
-import { activeFilters } from '../shared/filters.js';
+import { activeFilters, getFilterCategory } from '../shared/filters.js';
 import { CloudBrowserModal } from '../cloud/CloudBrowserModal.js';
 import { GDriveAuth } from '../cloud/GDriveAuth.js';
 import { SettingsModal } from '../cloud/SettingsModal.js';
@@ -148,7 +148,7 @@ const tileObserver = new IntersectionObserver((entries, observer) => {
         const cleanupTimeout = setTimeout(() => {
         // Revoke blob URL if it exists (only for local files, cloud files don't have blob URLs)
         if (model.blobUrl && !model.source) {
-          URL.revokeObjectURL(model.blobUrl);
+          memoryManager.revokeBlobUrl(model.fullPath || model.name);
           model.blobUrl = null;
           model.blobData = null; // Clear blob data as well
           console.log(`Revoked blobUrl for out-of-view tile: ${model.name}`);
@@ -368,7 +368,7 @@ function updateFilteredModelFiles() {
   const previousLength = filteredModelFiles.length;
   filteredModelFiles = modelFiles.filter(item =>
     !isSystemFile(item.name) &&
-    (activeFilters.has(item.type) || activeFilters.has(item.subtype)) && fileMatchesSearch(item)
+    activeFilters.has(getFilterCategory(item)) && fileMatchesSearch(item)
   );
 
   // Only trigger full re-render if filter actually changed the visible items
@@ -522,7 +522,11 @@ async function loadTileContent(tile) {
     if (model.remoteUrl) {
       fileUrl = model.remoteUrl;
     } else if (model.file) {
+      // Track the URL so tile teardown (renderPage / out-of-view cleanup) revokes it;
+      // registerBlobUrl also revokes any URL left over from a previous render of this model.
       fileUrl = URL.createObjectURL(model.file);
+      model.blobUrl = fileUrl;
+      memoryManager.registerBlobUrl(model.fullPath || model.name, fileUrl);
     } else if (model.source === 's3' || model.source === 'gdrive') {
       fileUrl = await CloudStorage.getFileUrl(model);
       isCloudFile = true;
@@ -772,7 +776,8 @@ async function loadTileContent(tile) {
         console.error(`Error loading text file ${model.name}:`, textError);
         placeholder.innerHTML = `<i class="fa fa-exclamation-triangle"></i><br>Error loading text`;
       }
-    } else if (model.type === "other") {
+    } else {
+      // No previewer for this type (other, plus 3D formats beyond GLB/FBX and PDFs): generic file tile
       const otherTile = document.createElement("div");
       otherTile.className = "other-tile";
       const ext = model.name.split('.').pop().toUpperCase();
@@ -1226,7 +1231,7 @@ async function showFullscreen(model) {
         console.error(`Error loading text file ${model.name} for fullscreen:`, textError);
         fullscreenViewer.innerHTML = `<div class="fullscreen-error"><i class="fa fa-exclamation-triangle fa-2x"></i><br>Error loading text file</div>`;
       }
-    } else if (model.type === "other") {
+    } else {
       fullscreenViewer.style.display = 'flex';
       fullscreenVideo.style.display = 'none';
       const ext = model.name.split('.').pop().toUpperCase();

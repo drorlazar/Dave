@@ -187,6 +187,21 @@ test.describe('File Loading Tests', () => {
     }
   });
 
+  test('Accepted types without their own filter still show as tiles', async ({ page }) => {
+    // .gltf counts as GLB; the rest have no filter button and fall under "Other"
+    const names = ['box.gltf', 'teapot.obj', 'cube.stl', 'drip-sound.flac', 'sample-audio.m4a', 'moby_dick.pdf'];
+    await utils.dropFiles(names.map(n => path.join(TEST_CONFIG.testFolderPath, n)), names.length);
+    for (const name of names) {
+      await expect(page.locator(`.model-tile[data-model-name="${name}"]`)).toHaveCount(1);
+    }
+
+    // Turning "Other" off hides the uncategorized ones; glTF stays under GLB
+    await page.hover('#assetTypeFilterToggleBtn');
+    await page.locator('.filter-option[data-type="other"]').click();
+    await expect(page.locator('.model-tile')).toHaveCount(1);
+    await expect(page.locator('.model-tile[data-model-name="box.gltf"]')).toHaveCount(1);
+  });
+
   test('Reject unsupported files', async ({ page }) => {
     // Create a fake unsupported file
     const unsupportedContent = 'This is an unsupported file';

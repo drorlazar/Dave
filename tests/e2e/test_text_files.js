@@ -215,11 +215,9 @@ test.describe('Text File Support', () => {
     expect(await lineNums.count()).toBeGreaterThan(0);
   });
 
-  // APP BUG: TextHandler.renderContent() (raw branch) only ever *adds*
-  // `text-line-numbers` to the <pre>; it never removes it when line numbers are
-  // toggled off, so the `padding-left: 0` rule from text_preview.css stays
-  // applied to plain text. The line-number spans do go away (covered above).
-  test.fixme('Line numbers toggle removes the text-line-numbers class', async ({ page }) => {
+  // The `text-line-numbers` class (padding-left: 0 in text_preview.css) must
+  // follow the toggle, not just the line-number spans (covered above).
+  test('Line numbers toggle removes the text-line-numbers class', async ({ page }) => {
     await dropFiles(page, [path.join(TEST_FILES_DIR, 'notes.txt')]);
     await page.waitForTimeout(2000);
 
