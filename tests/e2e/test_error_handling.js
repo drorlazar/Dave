@@ -4,6 +4,15 @@ import { test, expect } from '@playwright/test';
 import { TEST_CONFIG } from './test_config.js';
 import { TestUtils } from './test_utils.js';
 
+// Helper: show a notification through the app's ErrorHandler singleton. The module is
+// imported by URL, so this is the same instance main.js / asset_loading.js use.
+async function showNotification(page, message, severity) {
+  await page.evaluate(async ({ message, severity }) => {
+    const { errorHandler } = await import('/src/utils/errorHandler.js');
+    errorHandler.showNotification(message, severity);
+  }, { message, severity });
+}
+
 test.describe('Error Handling Tests', () => {
   let utils;
 
@@ -55,37 +64,8 @@ test.describe('Error Handling Tests', () => {
     expect(errorPlaceholder + errorNotification).toBeGreaterThanOrEqual(0);
   });
 
-  test('Handle network errors for S3 files', async ({ page }) => {
-    // Simulate S3 file with network error
-    await page.evaluate(() => {
-      // Mock an S3 file
-      window.modelFiles = [{
-        name: 'network-error.jpg',
-        type: 'image',
-        isS3: true,
-        s3Url: 'https://invalid-bucket.s3.amazonaws.com/test.jpg',
-        file: { size: 1000, lastModified: Date.now() },
-        fullPath: 's3://invalid-bucket/test.jpg'
-      }];
-
-      window.filteredModelFiles = window.modelFiles;
-
-      // Trigger render
-      if (window.assetLoading?.renderPage) {
-        window.assetLoading.renderPage(0);
-      }
-    });
-
-    await page.waitForTimeout(3000);
-
-    // Check for error handling
-    const errorNotification = await page.locator('.error-notification').count();
-    const errorPlaceholder = await page.locator('.asset-placeholder.error').count();
-    const hasError = errorNotification > 0 || errorPlaceholder > 0;
-
-    // Should show some error indication
-    expect(hasError).toBe(true);
-  });
+  // "Handle network errors for S3 files" removed: S3 browsing (isS3 / s3Url model entries)
+  // no longer exists in the app, so there is no S3 load path to fail.
 
   test('Handle memory exhaustion scenario', async ({ page }) => {
     // Try to load a very large number of files
@@ -131,11 +111,7 @@ test.describe('Error Handling Tests', () => {
 
   test('Error notification display and dismissal', async ({ page }) => {
     // Trigger an error by calling error handler directly
-    await page.evaluate(() => {
-      if (window.errorHandler) {
-        window.errorHandler.showNotification('Test error message', 'error');
-      }
-    });
+    await showNotification(page, 'Test error message', 'error');
 
     await page.waitForTimeout(500);
 
@@ -150,11 +126,17 @@ test.describe('Error Handling Tests', () => {
 
     // Click close button
     await errorNotification.locator('.error-close').click();
-    await page.waitForTimeout(500);
 
     // Notification should be gone
-    const isHidden = await errorNotification.isHidden();
-    expect(isHidden).toBe(true);
+    await expect(errorNotification).toHaveCount(0);
+  });
+
+  // BUG: openreel_bridge.js and video_editor.js report problems via
+  // window.errorHandler?.showNotification(...), but nothing ever assigns window.errorHandler
+  // (main.js only imports the module), so those notifications are silently dropped.
+  test.fixme('ErrorHandler is exposed as window.errorHandler', async ({ page }) => {
+    const exposed = await page.evaluate(() => typeof window.errorHandler?.showNotification === 'function');
+    expect(exposed).toBe(true);
   });
 
   test('Multiple error types', async ({ page }) => {
@@ -162,11 +144,7 @@ test.describe('Error Handling Tests', () => {
     const severities = ['error', 'warning', 'info', 'success'];
 
     for (const severity of severities) {
-      await page.evaluate((sev) => {
-        if (window.errorHandler) {
-          window.errorHandler.showNotification(`Test ${sev} message`, sev);
-        }
-      }, severity);
+      await showNotification(page, `Test ${severity} message`, severity);
 
       await page.waitForTimeout(500);
 
@@ -177,23 +155,28 @@ test.describe('Error Handling Tests', () => {
 
       // Close it
       await notification.locator('.error-close').click();
-      await page.waitForTimeout(300);
+      await expect(notification).toHaveCount(0);
     }
   });
 
   test('Console error tracking', async ({ page }) => {
     // Trigger some console errors
+    const pageErrors = [];
+    page.on('pageerror', err => pageErrors.push(err.message));
+
     await page.evaluate(() => {
       console.error('Test error 1');
       console.error('Test error 2');
-      throw new Error('Test uncaught error');
+      // Throw outside the evaluate call so it surfaces as an uncaught page error
+      setTimeout(() => { throw new Error('Test uncaught error'); }, 0);
     });
 
     await page.waitForTimeout(1000);
 
     // Check that errors were tracked
     const consoleErrors = page.errors || [];
-    expect(consoleErrors.length).toBeGreaterThanOrEqual(2);
+    expect(consoleErrors).toEqual(expect.arrayContaining(['Test error 1', 'Test error 2']));
+    expect(pageErrors).toContain('Test uncaught error');
   });
 
   test('Recovery from file loading errors', async ({ page }) => {
@@ -232,28 +215,8 @@ test.describe('Error Handling Tests', () => {
     expect(isEnabled).toBe(true);
   });
 
-  test('S3 authentication error handling', async ({ page }) => {
-    // Simulate S3 auth error
-    await page.evaluate(() => {
-      // Trigger S3 operation that requires auth
-      window.dispatchEvent(new CustomEvent('test-s3-auth-required'));
-
-      // Simulate auth failure
-      if (window.cognitoAuth) {
-        window.cognitoAuth.isAuthenticated = false;
-      }
-    });
-
-    await page.waitForTimeout(1000);
-
-    // Should show auth-related error or prompt
-    const errorNotification = await page.locator('.error-notification').count();
-    const authModal = await page.locator('.auth-modal').count();
-
-    // Should show some indication of auth issue
-    const hasAuthIndication = errorNotification > 0 || authModal > 0;
-    expect(hasAuthIndication || true).toBe(true); // Pass if no auth UI implemented
-  });
+  // "S3 authentication error handling" removed: the Cognito/S3 auth flow no longer exists
+  // in the app (and the old assertion was `x || true`, so it could never fail).
 
   test('Graceful degradation without features', async ({ page }) => {
     // Disable various features to test graceful degradation

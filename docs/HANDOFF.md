@@ -97,7 +97,7 @@ client-side multi-track editor).
   `test_utils.js` imports from test files — pre-existing config issue in `tests/e2e/`).
   Fix candidate: rename helpers so they don't match testMatch, or set testMatch
   explicitly. Until then, verification is manual/browser-driven.
-- **Tests expect port 8080** (`PORT=8080 node scripts/server.cjs`); dev default is 7777.
+- **Tests run on port 8080**: `cd tests && npm test` starts the server itself (`DAVE_TEST_PORT` overrides); dev default is 7777.
 - Image reading in agent sessions: never Read images >800px; downscale first (see
   Dror's global tool-constraints rules).
 

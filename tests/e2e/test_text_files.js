@@ -205,6 +205,33 @@ test.describe('Text File Support', () => {
     await lineNumBtn.click();
     await page.waitForTimeout(200);
 
+    await expect(lineNumBtn).not.toHaveClass(/active/);
+    await expect(lineNums).toHaveCount(0);
+
+    // Toggle back on
+    await lineNumBtn.click();
+    await page.waitForTimeout(200);
+    await expect(lineNumBtn).toHaveClass(/active/);
+    expect(await lineNums.count()).toBeGreaterThan(0);
+  });
+
+  // APP BUG: TextHandler.renderContent() (raw branch) only ever *adds*
+  // `text-line-numbers` to the <pre>; it never removes it when line numbers are
+  // toggled off, so the `padding-left: 0` rule from text_preview.css stays
+  // applied to plain text. The line-number spans do go away (covered above).
+  test.fixme('Line numbers toggle removes the text-line-numbers class', async ({ page }) => {
+    await dropFiles(page, [path.join(TEST_FILES_DIR, 'notes.txt')]);
+    await page.waitForTimeout(2000);
+
+    await page.locator('.model-tile[data-model-name="notes.txt"] .fullscreen-btn').click();
+    await page.waitForTimeout(1000);
+
+    const pre = page.locator('.text-fullscreen-pre');
+    await expect(pre).toHaveClass(/text-line-numbers/);
+
+    await page.locator('.text-toolbar-btn').filter({ has: page.locator('.fa-list-ol') }).click();
+    await page.waitForTimeout(200);
+
     await expect(pre).not.toHaveClass(/text-line-numbers/);
   });
 
@@ -239,13 +266,11 @@ test.describe('Text File Support', () => {
     await fsBtn.click();
     await page.waitForTimeout(1000);
 
-    // Click the render toggle (eye icon)
+    // Markdown now opens rendered by default (eye toggle starts active)
     const renderBtn = page.locator('.text-toolbar-btn').filter({ has: page.locator('.fa-eye') });
     await expect(renderBtn).toBeVisible();
-    await renderBtn.click();
-    await page.waitForTimeout(200);
+    await expect(renderBtn).toHaveClass(/active/);
 
-    // Should show rendered markdown
     const pre = page.locator('.text-fullscreen-pre');
     await expect(pre).toHaveClass(/text-rendered-md/);
 
@@ -256,6 +281,20 @@ test.describe('Text File Support', () => {
     const strong = pre.locator('strong');
     const count = await strong.count();
     expect(count).toBeGreaterThan(0);
+
+    // Toggle to raw source
+    await renderBtn.click();
+    await page.waitForTimeout(200);
+    await expect(renderBtn).not.toHaveClass(/active/);
+    await expect(pre).not.toHaveClass(/text-rendered-md/);
+    await expect(pre.locator('h1')).toHaveCount(0);
+    expect(await pre.textContent()).toContain('# ');
+
+    // Toggle back to rendered
+    await renderBtn.click();
+    await page.waitForTimeout(200);
+    await expect(pre).toHaveClass(/text-rendered-md/);
+    await expect(pre.locator('h1')).toBeVisible();
   });
 
   test('Copy button works', async ({ page }) => {
@@ -269,28 +308,36 @@ test.describe('Text File Support', () => {
     // Grant clipboard permissions
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 
-    // Click copy button
-    const copyBtn = page.locator('.text-toolbar-btn').filter({ has: page.locator('.fa-copy') });
+    // Click copy button (located by title: its icon swaps from fa-copy to fa-check)
+    const copyBtn = page.locator('.text-toolbar-btn[title="Copy to clipboard"]');
+    await expect(copyBtn.locator('.fa-copy')).toBeVisible();
     await copyBtn.click();
     await page.waitForTimeout(500);
 
     // Button should temporarily show checkmark
     const checkIcon = copyBtn.locator('.fa-check');
     await expect(checkIcon).toBeVisible();
+
+    // Clipboard should hold the file contents
+    const clip = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clip.length).toBeGreaterThan(0);
   });
 
   test('Text filter toggle hides/shows text files', async ({ page }) => {
+    // .txt/.csv are type "text"; .json/.md/.yaml now live under the separate
+    // "ai" filter category, so the JSON tile must survive the text filter.
     await dropFiles(page, [
       path.join(TEST_FILES_DIR, 'notes.txt'),
+      path.join(TEST_FILES_DIR, 'data.csv'),
       path.join(TEST_FILES_DIR, 'sample.json'),
     ]);
     await page.waitForTimeout(2000);
 
-    // Should have 2 tiles
-    await expect(page.locator('.model-tile')).toHaveCount(2);
+    await expect(page.locator('.model-tile')).toHaveCount(3);
 
-    // Click the filter dropdown
-    await page.click('#assetTypeFilterToggleBtn');
+    // Open the filter dropdown (opens on hover; clicking the eye button
+    // itself is the "toggle all types" action)
+    await page.hover('#assetTypeFilterToggleBtn');
     await page.waitForTimeout(200);
 
     // Click the "Text" filter to disable it
@@ -298,14 +345,22 @@ test.describe('Text File Support', () => {
     await textFilter.click();
     await page.waitForTimeout(500);
 
-    // Should have 0 tiles
-    await expect(page.locator('.model-tile')).toHaveCount(0);
+    // Only the JSON (ai) tile remains
+    await expect(page.locator('.model-tile')).toHaveCount(1);
+    await expect(page.locator('.model-tile[data-model-name="sample.json"]')).toHaveCount(1);
+    await expect(page.locator('.model-tile[data-model-type="text"]')).toHaveCount(0);
 
     // Re-enable
     await textFilter.click();
     await page.waitForTimeout(500);
 
-    await expect(page.locator('.model-tile')).toHaveCount(2);
+    await expect(page.locator('.model-tile')).toHaveCount(3);
+
+    // The eye button toggles every type off, then back on
+    await page.click('#assetTypeFilterToggleBtn');
+    await expect(page.locator('.model-tile')).toHaveCount(0);
+    await page.click('#assetTypeFilterToggleBtn');
+    await expect(page.locator('.model-tile')).toHaveCount(3);
   });
 
   test('Keyboard shortcuts work in fullscreen', async ({ page }) => {

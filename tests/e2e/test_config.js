@@ -1,43 +1,42 @@
 // test_config.js - Test configuration and constants
 
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Sample assets shipped with the repo; global_setup.js flattens them into testFolderPath
+export const EXAMPLES_DIR = path.resolve(__dirname, '../../examples');
+
+// Port the Dave server runs on during tests (playwright.config.js starts it)
+export const TEST_PORT = Number(process.env.DAVE_TEST_PORT) || 8080;
+
 export const TEST_CONFIG = {
-  // Test folder path
-  testFolderPath: '/mnt/c/Users/drorl/Documents/Sett/Tools/HTMLPreviewer/TestFolder',
+  // Flat folder of fixture files (built by global_setup.js)
+  testFolderPath: path.resolve(__dirname, '../.fixtures'),
 
   // Server configuration
-  serverUrl: 'http://localhost:7777',
-  viewerUrl: 'http://localhost:7777/Digital_Asset_Viewer.html',
+  serverUrl: `http://localhost:${TEST_PORT}`,
+  viewerUrl: `http://localhost:${TEST_PORT}/`,
 
   // Test timeouts
   defaultTimeout: 30000,
   fileLoadTimeout: 10000,
 
-  // Expected file counts by type
-  expectedFiles: {
-    total: 75,
-    '3d': 19,  // GLB + FBX
-    'image': 16,
-    'video': 9,
-    'audio': 7,
-    'font': 3,
-    'document': 5,
-    'other': 16  // PSD, TXT, etc.
-  },
-
-  // Sample files for specific tests
+  // Sample files for specific tests (all from examples/)
   sampleFiles: {
-    fbx: 'ButlerModel.fbx',
-    glb: 'paul.glb',
-    jpg: '93_Sea_Museum.jpg',
-    png: 'Area_005_Library_full.png',
-    svg: 'IQ = 99.svg',
-    mp4: 'replicate-prediction-sq1b78rkz1rm80cntwmsf0z0e4.mp4',
-    mov: 'intro.mov',
-    mp3: 'Multimodal LLMs and Aesthetic Reasoning.mp3',
-    ogg: 'KingHelp.ogg',
-    ttf: 'GraviolaSoftBold.ttf',
-    pdf: 'Mikołaj_Dąbrowski_CV.pdf',
-    webp: 'out-1.webp'
+    fbx: 'simple-cube.fbx',
+    glb: 'duck.glb',
+    jpg: 'portrait1.jpg',
+    png: 'icon1.png',
+    svg: 'computer_icon.svg',
+    mp4: 'sample_video.mp4',
+    mov: 'sample.mov',
+    mp3: 'kalimba-melody.mp3',
+    wav: 'notification-sound.wav',
+    ttf: 'Roboto-Regular.ttf',
+    pdf: 'us_constitution.pdf',
+    webp: 'city1.webp'
   },
 
   // Performance benchmarks

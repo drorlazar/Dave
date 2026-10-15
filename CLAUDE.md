@@ -43,7 +43,7 @@ npm run test:headed         # With visible browser
 npm run test:report         # View HTML test report
 ```
 
-**Note**: Tests expect the server to be running on port 8080 (not the default 7777).
+**Note**: Playwright starts the server itself on port 8080 (`DAVE_TEST_PORT` overrides) and loads fixtures from `examples/`. Run `npm install` at the repo root first.
 
 ## Architecture
 
@@ -84,5 +84,5 @@ npm run test:report         # View HTML test report
 ### Important Considerations
 - No linting or formatting tools configured
 - Server runs on port 7777 by default
-- Tests require server on port 8080
+- Tests run the server on port 8080 (Playwright starts it)
 - No package.json at root (dependencies via CDN)
