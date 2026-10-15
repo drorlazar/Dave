@@ -93,7 +93,7 @@ test.describe('Memory and Performance Tests', () => {
 
   test('FBX viewer disposal', async ({ page }) => {
     // Load FBX files
-    const fbxFiles = ['ButlerModel.fbx', 'Fence.fbx', 'KateNew2.fbx'].map(
+    const fbxFiles = ['simple-cube.fbx'].map(
       f => path.join(TEST_CONFIG.testFolderPath, f)
     );
 
@@ -147,7 +147,7 @@ test.describe('Memory and Performance Tests', () => {
 
   test('Blob URL cleanup', async ({ page }) => {
     // Load image files that create blob URLs
-    const imageFiles = ['93_Sea_Museum.jpg', 'Background.jpg', 'Spin.png'].map(
+    const imageFiles = ['portrait1.jpg', 'landscape1.jpg', 'icon1.png'].map(
       f => path.join(TEST_CONFIG.testFolderPath, f)
     );
 
@@ -258,10 +258,10 @@ test.describe('Memory and Performance Tests', () => {
   test('Thumbnail loading performance', async ({ page }) => {
     // Load image files
     const imageFiles = [
-      '93_Sea_Museum.jpg',
-      'Background.jpg',
-      'Spin.png',
-      'Area_005_Library_full.png'
+      'portrait1.jpg',
+      'landscape1.jpg',
+      'icon1.png',
+      'car-967470_640.png'
     ].map(f => path.join(TEST_CONFIG.testFolderPath, f));
 
     await page.evaluate(() => {
@@ -313,10 +313,10 @@ test.describe('Memory and Performance Tests', () => {
   test('Fullscreen memory cleanup', async ({ page }) => {
     // Load mixed content
     const mixedFiles = [
-      'ButlerModel.fbx',
-      'paul.glb',
-      '93_Sea_Museum.jpg',
-      'Multimodal LLMs and Aesthetic Reasoning.mp3'
+      'simple-cube.fbx',
+      'duck.glb',
+      'portrait1.jpg',
+      'kalimba-melody.mp3'
     ].map(f => path.join(TEST_CONFIG.testFolderPath, f));
 
     await page.evaluate(() => {
@@ -353,7 +353,7 @@ test.describe('Memory and Performance Tests', () => {
     const initialMemory = await utils.getMemoryUsage();
 
     // Open and close fullscreen multiple times
-    for (const fileName of ['ButlerModel.fbx', 'paul.glb', '93_Sea_Museum.jpg']) {
+    for (const fileName of ['simple-cube.fbx', 'duck.glb', 'portrait1.jpg']) {
       await utils.openFullscreen(fileName);
       await page.waitForTimeout(1000);
       await utils.closeFullscreen();
@@ -383,13 +383,13 @@ test.describe('Memory and Performance Tests', () => {
 
     // Get all files from TestFolder
     const allFiles = [
-      '0 (1).glb', '93_Sea_Museum.jpg', 'Area_005_Library_full.png',
-      'ButlerModel.fbx', 'Background.jpg', 'Fence.fbx',
-      'GraviolaSoftBold.ttf', 'KingHelp.ogg', 'intro.mov',
-      'Multimodal LLMs and Aesthetic Reasoning.mp3', 'paul.glb',
-      'RobotoBold.ttf', 'Running.fbx', 'Running.glb',
-      'SPIN.svg', 'ScreenRecording_02-03-2025 19-12-40_1.MP4',
-      'WhatsApp Image 2025-07-02 at 10.59.08.jpeg'
+      'duck.glb', 'portrait1.jpg', 'car-967470_640.png',
+      'simple-cube.fbx', 'landscape1.jpg', 'box.gltf',
+      'Roboto-Regular.ttf', 'sample-audio.ogg', 'sample.mov',
+      'kalimba-melody.mp3', 'teapot.obj',
+      'OpenSans-Regular.ttf', 'notification-sound.wav', 'city1.webp',
+      'computer_icon.svg', 'sample_video.mp4',
+      'nature1.webp'
     ].map(f => path.join(TEST_CONFIG.testFolderPath, f));
 
     const startTime = Date.now();

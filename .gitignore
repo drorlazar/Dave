@@ -70,7 +70,7 @@ config/gdrive-tokens.json
 # Playwright test artifacts
 tests/test-results/
 tests/playwright-report/
-tests/e2e/test-results.json
+tests/test-results.json
 tests/package-lock.json
 
 # Security: credential/key patterns (defense in depth)
@@ -82,3 +82,5 @@ service-account*.json
 
 # Vercel project link (local)
 .vercel
+tests/.fixtures/
+.scratch/

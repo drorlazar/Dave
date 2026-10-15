@@ -78,7 +78,7 @@ fi
 
 # Make scripts executable
 echo -e "\n7. Making scripts executable..."
-chmod +x run_tests.js quick_test.js
+chmod +x quick_test.js
 echo -e "${GREEN}✓ Scripts are now executable${NC}"
 
 # Summary
