@@ -36,5 +36,8 @@
     "@aws-sdk/s3-request-presigner": "^3.700.0",
     "googleapis": "^144.0.0",
     "dotenv": "^16.4.7"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }
