@@ -11,9 +11,11 @@ in a grid layout. No build step, no bundler: plain ES6 modules loaded directly, 
 Three.js and Font Awesome from CDN.
 
 - **Live site**: https://dave-viewer.vercel.app/ — Vercel (Dror's personal account, project
-  `dave`); deploy with `vercel deploy --prod --scope drorlazar` (`.vercelignore` trims it). The
-  old https://drorlazar.github.io/Dave/ only redirects there (`.github/workflows/deploy.yml`),
-  keeping path, query and hash.
+  `dave`, connected to this GitHub repo since 2026-10-15): every push to `main` deploys to
+  production automatically; `vercel deploy --prod --scope drorlazar` still works for a manual
+  push (`.vercelignore` trims the upload). The old https://drorlazar.github.io/Dave/ only
+  redirects there (`.github/workflows/deploy.yml`, Pages source set to GitHub Actions),
+  keeping path, query and hash. `main` has no branch protection; merge PRs directly.
 - **Local dev**: `node scripts/server.cjs` → http://localhost:7777/. Express, serves the
   repo root statically plus API routes.
 - **Repo**: github.com/drorlazar/Dave (public). `main` is protected (code-owner review +
