@@ -1,0 +1,9 @@
+# Not part of the website (kept out of the Vercel upload)
+.claude
+.github
+examples
+plans
+retro
+tests
+test_text_files
+node_modules

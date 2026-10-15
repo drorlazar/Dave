@@ -10,8 +10,10 @@ managing digital assets — images, video, audio, 3D models (GLB/FBX), fonts, do
 in a grid layout. No build step, no bundler: plain ES6 modules loaded directly, with
 Three.js and Font Awesome from CDN.
 
-- **Live site**: https://drorlazar.github.io/Dave/ — GitHub Pages, auto-deploys from
-  `main` via `.github/workflows/deploy.yml`. Merging to main IS publishing.
+- **Live site**: https://dave-viewer.vercel.app/ — Vercel (Dror's personal account, project
+  `dave`); deploy with `vercel deploy --prod --scope drorlazar` (`.vercelignore` trims it). The
+  old https://drorlazar.github.io/Dave/ only redirects there (`.github/workflows/deploy.yml`),
+  keeping path, query and hash.
 - **Local dev**: `node scripts/server.cjs` → http://localhost:7777/. Express, serves the
   repo root statically plus API routes.
 - **Repo**: github.com/drorlazar/Dave (public). `main` is protected (code-owner review +

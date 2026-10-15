@@ -7,7 +7,7 @@ This directory is a **generated build artifact** — do not edit files here by h
 - Dave patch: `../openreel-bridge.patch`
 - Built with a **relative base** (`OPENREEL_BASE=./`) so it works from any
   sub-path — `http://localhost:7777/vendor/openreel/` in dev and
-  `https://drorlazar.github.io/Dave/vendor/openreel/` on GitHub Pages.
+  `https://dave-viewer.vercel.app/vendor/openreel/` on Vercel.
   The app uses hash routing, so no server rewrites are required.
 - Served as a plain static directory out of the repo root; there is no
   `/openreel` alias.
