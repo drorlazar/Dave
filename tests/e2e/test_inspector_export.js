@@ -5,7 +5,7 @@ import { TEST_CONFIG } from './test_config.js';
 import { TestUtils } from './test_utils.js';
 import * as path from 'path';
 
-// Helper: load a GLB file and open inspector export tab
+// Helper: load a GLB file, open it fullscreen and expand the inspector's Export section
 async function loadModelAndOpenInspector(page, utils) {
   const testFile = path.join(TEST_CONFIG.testFolderPath, TEST_CONFIG.sampleFiles.glb);
 
@@ -28,32 +28,59 @@ async function loadModelAndOpenInspector(page, utils) {
       new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt })
     );
   });
-  await page.waitForTimeout(1500);
 
-  // Open fullscreen
+  // Open fullscreen via the tile's fullscreen button (revealed on hover)
   const tileName = TEST_CONFIG.sampleFiles.glb;
   const tile = page.locator(`.model-tile[data-model-name="${tileName}"]`);
-  await tile.click();
-  await page.keyboard.press('Enter');
+  await tile.waitFor({ state: 'visible', timeout: 10000 });
+  await tile.hover();
+  await tile.locator('.fullscreen-btn').click({ force: true });
   await page.waitForSelector('#fullscreenOverlay[style*="display: flex"]', { timeout: 5000 });
-  await page.waitForTimeout(1000);
 
-  // Open inspector
-  const inspectorBtn = page.locator('#inspector-btn, [data-action="toggle-inspector"]');
-  if (await inspectorBtn.count() > 0) {
-    await inspectorBtn.first().click();
-  } else {
-    // Try keyboard shortcut
-    await page.keyboard.press('i');
-  }
-  await page.waitForTimeout(500);
+  // The 3D toolbar appears once the inspector is created for the model
+  await page.locator('#model3dToolbar').waitFor({ state: 'visible', timeout: 10000 });
 
-  // Navigate to export tab
-  const exportTab = page.locator('[data-tab="export"], [data-inspector-tab="export"]');
-  if (await exportTab.count() > 0) {
-    await exportTab.first().click();
-    await page.waitForTimeout(300);
+  // Open the inspector panel
+  await page.locator('#model3dToolbar [data-action="togglepanel"]').click();
+  await expect(page.locator('#modelInspectorPanel')).toHaveClass(/\bopen\b/);
+
+  // Expand the (collapsed by default) Export section
+  const exportSection = page.locator('#modelInspectorPanel .inspector-section').filter({ has: page.locator('#inspectorExport') });
+  if (await exportSection.evaluate(el => el.classList.contains('collapsed'))) {
+    await exportSection.locator('.inspector-section-header').click();
   }
+
+  // Export controls are populated once the model is ready
+  await page.locator('[data-export-action="export-glb-full"]').waitFor({ state: 'visible', timeout: 15000 });
+}
+
+// Helper: snapshot the loaded model (mesh count + texture sizes) from model-viewer's
+// internal Three.js scene, the same way the GLB inspector adapter reaches it.
+async function getModelSnapshot(page) {
+  return page.evaluate(() => {
+    const mv = document.querySelector('#fullscreenOverlay model-viewer');
+    if (!mv) return null;
+    let scene = null;
+    for (const sym of Object.getOwnPropertySymbols(mv)) {
+      if ((sym.description || '').includes('scene')) {
+        const obj = mv[sym];
+        if (obj && (obj.isScene || obj.scene)) { scene = obj.isScene ? obj : obj.scene; break; }
+      }
+    }
+    if (!scene) return null;
+    let meshes = 0;
+    const textures = [];
+    scene.traverse(c => {
+      if (!c.isMesh) return;
+      meshes++;
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach(m => {
+        const img = m?.map?.image;
+        if (img) textures.push(`${img.width}x${img.height}`);
+      });
+    });
+    return { meshes, textures };
+  });
 }
 
 test.describe('Inspector Export Tests', () => {
@@ -69,10 +96,6 @@ test.describe('Inspector Export Tests', () => {
 
     // Find and click the export GLB button
     const exportBtn = page.locator('[data-export-action="export-glb-full"]');
-    if (await exportBtn.count() === 0) {
-      test.skip('Export button not found - inspector may not be available for this model');
-      return;
-    }
 
     // Listen for download
     const downloadPromise = page.waitForEvent('download', { timeout: 30000 });
@@ -86,10 +109,6 @@ test.describe('Inspector Export Tests', () => {
     await loadModelAndOpenInspector(page, utils);
 
     const exportBtn = page.locator('[data-export-action="export-glb-full"]');
-    if (await exportBtn.count() === 0) {
-      test.skip('Export button not found');
-      return;
-    }
 
     // Track status text changes
     const statusMessages = [];
@@ -120,10 +139,6 @@ test.describe('Inspector Export Tests', () => {
     await loadModelAndOpenInspector(page, utils);
 
     const exportBtn = page.locator('[data-export-action="export-glb-full"]');
-    if (await exportBtn.count() === 0) {
-      test.skip('Export button not found');
-      return;
-    }
 
     // Click export - don't wait for download
     await exportBtn.click();
@@ -151,61 +166,38 @@ test.describe('Inspector Export Tests', () => {
   test('Restorers run even if export is cancelled', async ({ page }) => {
     await loadModelAndOpenInspector(page, utils);
 
-    // Get initial mesh count to verify model is intact after cancel
-    const initialMeshCount = await page.evaluate(() => {
-      const root = window.__daveInspector?.adapter?.getModelRoot?.();
-      if (!root) return -1;
-      let count = 0;
-      root.traverse(c => { if (c.isMesh) count++; });
-      return count;
-    });
+    // Snapshot the model before export so we can verify it is intact afterwards
+    const before = await getModelSnapshot(page);
+    expect(before).not.toBeNull();
+    expect(before.meshes).toBeGreaterThan(0);
 
-    const exportBtn = page.locator('[data-export-action="export-glb-full"]');
-    if (await exportBtn.count() === 0 || initialMeshCount <= 0) {
-      test.skip('Inspector or model not available');
-      return;
-    }
+    // Texture resize modifies the live textures during export; restorers must undo it
+    await page.locator('[data-export-param="tex-size"]').selectOption('128');
 
     // Start export then cancel
-    await exportBtn.click();
+    await page.locator('[data-export-action="export-glb-full"]').click();
     const cancelBtn = page.locator('.inspector-cancel-btn');
     try {
       await cancelBtn.waitFor({ state: 'visible', timeout: 3000 });
       await cancelBtn.click();
-      await page.waitForTimeout(500);
     } catch {
-      // Export finished too fast
+      // Export finished too fast - restorers still run in the finally block
     }
+    await expect(cancelBtn).toHaveCount(0, { timeout: 10000 });
 
-    // Verify model is still intact (same mesh count)
-    const afterMeshCount = await page.evaluate(() => {
-      const root = window.__daveInspector?.adapter?.getModelRoot?.();
-      if (!root) return -1;
-      let count = 0;
-      root.traverse(c => { if (c.isMesh) count++; });
-      return count;
-    });
-
-    expect(afterMeshCount).toBe(initialMeshCount);
+    // Verify model is still intact (same meshes, original texture sizes)
+    const after = await getModelSnapshot(page);
+    expect(after).toEqual(before);
   });
 
   test('Export with texture resize produces valid GLB', async ({ page }) => {
     await loadModelAndOpenInspector(page, utils);
 
     const exportBtn = page.locator('[data-export-action="export-glb-full"]');
-    if (await exportBtn.count() === 0) {
-      test.skip('Export button not found');
-      return;
-    }
 
     // Set texture resize to 256
     const texSizeInput = page.locator('[data-export-param="tex-size"]');
-    if (await texSizeInput.count() > 0) {
-      await texSizeInput.selectOption('256');
-    } else {
-      test.skip('Texture size control not found');
-      return;
-    }
+    await texSizeInput.selectOption('256');
 
     const downloadPromise = page.waitForEvent('download', { timeout: 30000 });
     await exportBtn.click();
