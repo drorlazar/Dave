@@ -1,6 +1,29 @@
 // test_utils.js - Test utility functions
 
+import { expect } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
 import { TEST_CONFIG } from './test_config.js';
+
+// Extensions that show up as tiles with the default (all-on) type filters;
+// used to pick deterministic fixture sets. Some loadable types (.gltf, .obj,
+// .stl, .flac, .pdf, ...) match no filter category and are hidden from the
+// grid, so they are left out here.
+const MEDIA_EXTENSIONS = new Set([
+  '.glb', '.fbx', '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp',
+  '.mp4', '.webm', '.mov', '.mp3', '.wav', '.ogg', '.ttf', '.otf', '.woff', '.woff2'
+]);
+
+// Absolute paths of the first `count` distinct media fixtures (sorted by name)
+export function getFixtureFiles(count) {
+  const names = fs.readdirSync(TEST_CONFIG.testFolderPath)
+    .filter(name => MEDIA_EXTENSIONS.has(path.extname(name).toLowerCase()))
+    .sort((a, b) => a.localeCompare(b));
+  if (names.length < count) {
+    throw new Error(`Need ${count} media fixtures but only ${names.length} exist in ${TEST_CONFIG.testFolderPath}`);
+  }
+  return names.slice(0, count).map(name => path.join(TEST_CONFIG.testFolderPath, name));
+}
 
 export class TestUtils {
   constructor(page) {
@@ -28,6 +51,38 @@ export class TestUtils {
     }, folderPath);
   }
 
+  // Drop files onto the grid the way a user drag-and-drop does. A drop
+  // replaces whatever was loaded before. Waits until `expectedTiles` tiles
+  // (default: min(files, 20 per page)) are rendered.
+  async dropFiles(filePaths, expectedTiles) {
+    const inputId = `test-drop-input-${Date.now()}`;
+    await this.page.evaluate((id) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.id = id;
+      input.multiple = true;
+      input.style.display = 'none';
+      document.body.appendChild(input);
+    }, inputId);
+
+    await this.page.locator(`#${inputId}`).setInputFiles(filePaths);
+
+    await this.page.evaluate((id) => {
+      const input = document.getElementById(id);
+      const dataTransfer = new DataTransfer();
+      Array.from(input.files).forEach(file => dataTransfer.items.add(file));
+      input.remove();
+      document.getElementById('viewerContainer').dispatchEvent(new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer
+      }));
+    }, inputId);
+
+    const tiles = this.page.locator('#viewerContainer .model-tile');
+    await expect(tiles).toHaveCount(expectedTiles ?? Math.min(filePaths.length, 20));
+  }
+
   // UI interaction helpers
   async searchFor(text) {
     const searchInput = await this.page.locator(TEST_CONFIG.uiElements.searchInput);
@@ -35,13 +90,38 @@ export class TestUtils {
     await this.page.waitForTimeout(350); // Wait for debounce
   }
 
+  // Toolbar dropdowns open on hover (.dropdown gets .active on mouseenter)
   async selectItemsPerPage(count) {
-    await this.page.click(TEST_CONFIG.uiElements.itemsPerPageBtn);
-    await this.page.click(`[data-value="${count}"]`);
+    await this.page.hover('#itemsPerPageBtn');
+    await this.page.click(`#itemsDropdown .items-option[data-value="${count}"]`);
   }
 
+  // Dark mode lives in the settings dropdown (#darkModeRow)
   async toggleTheme() {
-    await this.page.click(TEST_CONFIG.uiElements.themeToggle);
+    await this.page.hover('#settingsDropdown > .dropdown-btn');
+    await this.page.click('#darkModeRow');
+  }
+
+  // Selection is toggled through the tile's check indicator (plain tile
+  // clicks do not select). Pass a tile locator or a file name.
+  async toggleTileSelection(tileOrName, modifiers = []) {
+    const tile = typeof tileOrName === 'string'
+      ? this.page.locator(`.model-tile[data-model-name="${tileOrName}"]`)
+      : tileOrName;
+    await tile.hover();
+    await tile.locator('.selection-indicator').click({ modifiers });
+  }
+
+  async getSelectionCount() {
+    const text = await this.page.locator('#selectionDropdown').textContent();
+    const match = text.match(/(\d+)\s+Selected/);
+    return match ? parseInt(match[1], 10) : NaN;
+  }
+
+  async getPageInfo() {
+    const text = await this.page.locator('#pageInfo').textContent();
+    const match = text.match(/Page (\d+) of (\d+)/);
+    return match ? { page: parseInt(match[1], 10), total: parseInt(match[2], 10) } : null;
   }
 
   async setTileSize(size) {
@@ -142,16 +222,17 @@ export class TestUtils {
   }
 
   // Fullscreen helpers
+  // The overlay is shown/hidden via its display style (flex / none)
   async openFullscreen(fileName) {
-    const tile = await this.page.locator(`.model-tile[data-model-name="${fileName}"]`);
-    await tile.click();
-    await this.page.keyboard.press('Enter');
-    await this.page.waitForSelector('#fullscreenOverlay[style*="display: flex"]');
+    const tile = this.page.locator(`.model-tile[data-model-name="${fileName}"]`);
+    await tile.hover();
+    await tile.locator('.fullscreen-btn').click();
+    await expect(this.page.locator(TEST_CONFIG.uiElements.fullscreenOverlay)).toBeVisible();
   }
 
   async closeFullscreen() {
     await this.page.keyboard.press('Escape');
-    await this.page.waitForSelector('#fullscreenOverlay[style*="display: none"]', { state: 'hidden' });
+    await expect(this.page.locator(TEST_CONFIG.uiElements.fullscreenOverlay)).toBeHidden();
   }
 
   // Assertion helpers

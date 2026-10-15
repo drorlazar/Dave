@@ -4,12 +4,11 @@ This comprehensive test suite ensures all functionality of Dave - Dror's Assets 
 
 ## Prerequisites
 
-1. **Server Running**: The server must be running on `http://localhost:8080`
-   ```bash
-   npm start
-   ```
-
-2. **Test Folder**: Ensure the TestFolder exists at the expected location with 75 test files
+1. **Dependencies**: run `npm install` at the repo root (the server needs express) and in `tests/`.
+2. **Server**: none to start by hand. `playwright.config.js` starts `node scripts/server.cjs` on port 8080
+   (or reuses a server already listening there). Set `DAVE_TEST_PORT` to use another port.
+3. **Fixtures**: the specs load the sample assets in the repo's `examples/` folder. Before each run,
+   `e2e/global_setup.js` links them into a flat, gitignored `tests/.fixtures/` folder.
 
 ## Installation
 
@@ -99,8 +98,7 @@ npm run test:watch           # Run tests in UI mode
 ## Test Results
 
 After running tests, you'll find:
-- **Console Output**: Colored terminal output showing test progress
-- **test_report.json**: Detailed JSON report with all test results
+- **Console Output**: Playwright's list reporter
 - **test-results.json**: Playwright's raw test output
 - **playwright-report/**: HTML report (run `npm run test:report` to view)
 
@@ -117,19 +115,19 @@ Dave - Dror's Assets Viewing Experience is considered working correctly when:
 
 ## Troubleshooting
 
-1. **Server not running**: Start the server with `npm start`
-2. **Missing test files**: Ensure TestFolder contains all 75 expected files
-3. **Test timeouts**: Increase timeout in package.json if needed
-4. **Failed tests**: Check test_report.json for detailed error messages
+1. **Server fails to start**: run `npm install` at the repo root
+2. **Port 8080 busy**: run with `DAVE_TEST_PORT=<port> npm test`
+3. **Test timeouts**: Increase timeout in playwright.config.js if needed
+4. **Failed tests**: open the HTML report with `npm run test:report`
 
 ## Adding New Tests
 
 1. Create a new test file following the naming pattern: `test_[feature].js`
+   in `tests/e2e/` (`test_utils.js` and `test_config.js` are helpers and are excluded)
 2. Import required modules:
    ```javascript
    import { test, expect } from '@playwright/test';
    import { TEST_CONFIG } from './test_config.js';
    import { TestUtils } from './test_utils.js';
    ```
-3. Add the test suite to `TEST_SUITES` in `run_tests.js`
-4. Run the new tests to verify they work correctly
+3. Run the new tests to verify they work correctly

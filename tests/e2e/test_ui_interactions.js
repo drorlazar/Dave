@@ -2,55 +2,29 @@
 
 import { test, expect } from '@playwright/test';
 import { TEST_CONFIG } from './test_config.js';
-import { TestUtils } from './test_utils.js';
+import { TestUtils, getFixtureFiles } from './test_utils.js';
 import * as path from 'path';
 
 test.describe('UI Interaction Tests', () => {
   let utils;
 
+  // fbx, glb, jpg, mp3, mp4 - one tile per filter type used below
+  const testFiles = [
+    TEST_CONFIG.sampleFiles.fbx,
+    TEST_CONFIG.sampleFiles.glb,
+    TEST_CONFIG.sampleFiles.jpg,
+    TEST_CONFIG.sampleFiles.mp3,
+    TEST_CONFIG.sampleFiles.mp4
+  ];
+
   test.beforeEach(async ({ page }) => {
     utils = new TestUtils(page);
     await utils.navigateToViewer();
-
-    // Load test files
-    const testFiles = [
-      TEST_CONFIG.sampleFiles.fbx,
-      TEST_CONFIG.sampleFiles.glb,
-      TEST_CONFIG.sampleFiles.jpg,
-      TEST_CONFIG.sampleFiles.mp3,
-      TEST_CONFIG.sampleFiles.mp4
-    ].map(f => path.join(TEST_CONFIG.testFolderPath, f));
-
-    await page.evaluate(() => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.id = 'test-setup-input';
-      input.multiple = true;
-      input.style.display = 'none';
-      document.body.appendChild(input);
-    });
-
-    const fileInput = await page.locator('#test-setup-input');
-    await fileInput.setInputFiles(testFiles);
-
-    await page.evaluate(() => {
-      const input = document.getElementById('test-setup-input');
-      const files = Array.from(input.files);
-
-      const dataTransfer = new DataTransfer();
-      files.forEach(file => dataTransfer.items.add(file));
-
-      const dropEvent = new DragEvent('drop', {
-        bubbles: true,
-        cancelable: true,
-        dataTransfer: dataTransfer
-      });
-
-      document.getElementById('viewerContainer').dispatchEvent(dropEvent);
-    });
-
-    await page.waitForTimeout(2000);
+    await utils.dropFiles(testFiles.map(f => path.join(TEST_CONFIG.testFolderPath, f)));
   });
+
+  const tileNames = (page) =>
+    page.locator('#viewerContainer .model-tile').evaluateAll(tiles => tiles.map(t => t.dataset.modelName));
 
   test('Search functionality with debouncing', async ({ page }) => {
     // Test search
@@ -75,146 +49,89 @@ test.describe('UI Interaction Tests', () => {
   });
 
   test('Pagination controls', async ({ page }) => {
-    // Load more files to test pagination
-    const moreFiles = Array(25).fill(null).map((_, i) =>
-      path.join(TEST_CONFIG.testFolderPath, Object.values(TEST_CONFIG.sampleFiles)[i % 12])
-    );
+    // 25 distinct files: 2 pages at 20 per page
+    await utils.dropFiles(getFixtureFiles(25));
 
-    await page.evaluate(() => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.id = 'test-more-input';
-      input.multiple = true;
-      input.style.display = 'none';
-      document.body.appendChild(input);
-    });
-
-    const fileInput = await page.locator('#test-more-input');
-    await fileInput.setInputFiles(moreFiles);
-
-    await page.evaluate(() => {
-      const input = document.getElementById('test-more-input');
-      const files = Array.from(input.files);
-
-      const dataTransfer = new DataTransfer();
-      files.forEach(file => dataTransfer.items.add(file));
-
-      const dropEvent = new DragEvent('drop', {
-        bubbles: true,
-        cancelable: true,
-        dataTransfer: dataTransfer
-      });
-
-      document.getElementById('viewerContainer').dispatchEvent(dropEvent);
-    });
-
-    await page.waitForTimeout(2000);
-
-    // Test different items per page
     await utils.selectItemsPerPage(20);
-    await page.waitForTimeout(500);
-    let visibleCount = await utils.getVisibleTiles();
-    expect(visibleCount).toBeLessThanOrEqual(20);
+    await expect(page.locator('.model-tile')).toHaveCount(20);
+    expect(await utils.getPageInfo()).toEqual({ page: 1, total: 2 });
+    await expect(page.locator('#prevPage')).toBeDisabled();
 
-    // Navigate pages
-    const nextButton = await page.locator('#nextPageBtn');
-    if (await nextButton.isEnabled()) {
-      await nextButton.click();
-      await page.waitForTimeout(500);
+    // Navigate to page 2
+    await page.click('#nextPage');
+    await expect(page.locator('#pageInfo')).toHaveText('Page 2 of 2');
+    await expect(page.locator('.model-tile')).toHaveCount(5);
+    await expect(page.locator('#nextPage')).toBeDisabled();
 
-      // Verify we're on page 2
-      const pageInfo = await page.locator('.pagination-info').textContent();
-      expect(pageInfo).toContain('2');
-    }
+    // And back
+    await page.click('#prevPage');
+    await expect(page.locator('#pageInfo')).toHaveText('Page 1 of 2');
 
-    // Test 50 items per page
+    // 50 items per page fits everything on one page
     await utils.selectItemsPerPage(50);
-    await page.waitForTimeout(500);
-    visibleCount = await utils.getVisibleTiles();
-    expect(visibleCount).toBeLessThanOrEqual(50);
+    await expect(page.locator('.model-tile')).toHaveCount(25);
+    await expect(page.locator('#pageInfo')).toHaveText('Page 1 of 1');
   });
 
   test('Sorting functionality', async ({ page }) => {
-    // Click sort button
-    await page.click('#sortButton');
+    // Default sort is by name, ascending
+    await expect(page.locator('#sortBtn')).toContainText('Name');
+    const ascNames = await tileNames(page);
+    expect(ascNames).toEqual([...ascNames].sort((a, b) => a.localeCompare(b)));
 
-    // Sort by name
-    await page.click('[data-value="name"]');
-    await page.waitForTimeout(500);
+    // Clicking the sort button itself flips the direction
+    await page.click('#sortBtn');
+    await expect.poll(() => tileNames(page)).toEqual([...ascNames].reverse());
 
-    // Get first tile name
-    const firstTileName = await page.locator('.model-tile:first-child').getAttribute('data-model-name');
+    // Pick "size" from the sort dropdown (opens on hover)
+    await page.hover('#sortBtn');
+    await page.click('#sortDropdown .sort-option[data-value="size"]');
+    await expect(page.locator('#sortBtn')).toContainText('Size');
 
-    // Change sort direction
-    await page.click('#sortDirectionBtn');
-    await page.waitForTimeout(500);
-
-    // First tile should be different
-    const newFirstTileName = await page.locator('.model-tile:first-child').getAttribute('data-model-name');
-    expect(newFirstTileName).not.toBe(firstTileName);
-
-    // Sort by size
-    await page.click('#sortButton');
-    await page.click('[data-value="size"]');
-    await page.waitForTimeout(500);
-
-    // Verify sorting applied (we can't easily verify the order without knowing file sizes)
-    const sortButton = await page.locator('#sortButton');
-    const sortText = await sortButton.textContent();
-    expect(sortText).toContain('Size');
+    // Tiles are now ordered by file size (direction carried over: descending)
+    const sizes = await page.locator('#viewerContainer .model-tile')
+      .evaluateAll(tiles => tiles.map(t => t.model.size ?? t.model.file?.size ?? 0));
+    expect(sizes).toEqual([...sizes].sort((a, b) => b - a));
   });
 
   test('Filter by file type', async ({ page }) => {
-    // Open filter menu
-    await page.click('#filterButton');
+    const filterOption = (type) => page.locator(`.filter-option[data-type="${type}"]`);
 
-    // Filter by 3D models
-    await page.click('label:has-text("3D Models")');
-    await page.waitForTimeout(500);
+    // All types start enabled; the eye button turns every type off
+    await page.click('#assetTypeFilterToggleBtn');
+    await expect(page.locator('.model-tile')).toHaveCount(0);
 
-    // Should only show GLB and FBX files
-    const visibleTiles = await utils.getVisibleTiles();
-    expect(visibleTiles).toBe(2); // FBX and GLB
+    // Enable the 3D model types (dropdown opens on hover)
+    await page.hover('#assetTypeFilterToggleBtn');
+    await filterOption('fbx').click();
+    await filterOption('glb').click();
+    await expect(page.locator('.model-tile')).toHaveCount(2);
+    expect((await tileNames(page)).sort()).toEqual(
+      [TEST_CONFIG.sampleFiles.fbx, TEST_CONFIG.sampleFiles.glb].sort()
+    );
 
-    // Add image filter
-    await page.click('label:has-text("Images")');
-    await page.waitForTimeout(500);
+    // Add images
+    await filterOption('image').click();
+    await expect(page.locator('.model-tile')).toHaveCount(3);
+    await expect(page.locator(`.model-tile[data-model-name="${TEST_CONFIG.sampleFiles.jpg}"]`)).toBeVisible();
 
-    // Should show 3D models and images
-    const newVisibleTiles = await utils.getVisibleTiles();
-    expect(newVisibleTiles).toBe(3); // FBX, GLB, and JPG
-
-    // Clear filters
-    await page.click('#filterButton'); // Close dropdown
-    await page.click('#filterButton'); // Reopen
-    await page.click('label:has-text("3D Models")'); // Uncheck
-    await page.click('label:has-text("Images")'); // Uncheck
-    await page.waitForTimeout(500);
-
-    // All files should be visible
-    const allTiles = await utils.getVisibleTiles();
-    expect(allTiles).toBe(5);
+    // Eye button with some types on turns all types back on
+    await page.click('#assetTypeFilterToggleBtn');
+    await expect(page.locator('.model-tile')).toHaveCount(5);
   });
 
   test('Theme toggle', async ({ page }) => {
-    // Check initial theme
-    const isDarkMode = await page.evaluate(() => document.body.classList.contains('dark-mode'));
+    const isDark = () => page.evaluate(() => document.body.classList.contains('dark-mode'));
+
+    const isDarkMode = await isDark();
 
     // Toggle theme
     await utils.toggleTheme();
-    await page.waitForTimeout(500);
-
-    // Verify theme changed
-    const newIsDarkMode = await page.evaluate(() => document.body.classList.contains('dark-mode'));
-    expect(newIsDarkMode).toBe(!isDarkMode);
+    await expect.poll(isDark).toBe(!isDarkMode);
 
     // Toggle back
     await utils.toggleTheme();
-    await page.waitForTimeout(500);
-
-    // Should be back to original
-    const finalIsDarkMode = await page.evaluate(() => document.body.classList.contains('dark-mode'));
-    expect(finalIsDarkMode).toBe(isDarkMode);
+    await expect.poll(isDark).toBe(isDarkMode);
   });
 
   test('Tile size slider', async ({ page }) => {
@@ -248,97 +165,81 @@ test.describe('UI Interaction Tests', () => {
   });
 
   test('File selection', async ({ page }) => {
-    // Single click selection
-    const firstTile = await page.locator('.model-tile:first-child');
-    await firstTile.click();
+    const tiles = page.locator('#viewerContainer .model-tile');
+    const firstTile = tiles.nth(0);
+    const secondTile = tiles.nth(1);
 
-    // Verify selection
-    const isSelected = await firstTile.evaluate(el => el.classList.contains('selected'));
-    expect(isSelected).toBe(true);
+    // A plain click on the tile body does not select it
+    await firstTile.locator('.model-name, .video-name').click();
+    await expect(firstTile).not.toHaveClass(/\bselected\b/);
+    expect(await utils.getSelectionCount()).toBe(0);
 
-    // Check selection count
-    const selectionCount = await page.locator('.selection-count').textContent();
-    expect(selectionCount).toContain('1');
+    // The check indicator toggles selection
+    await utils.toggleTileSelection(firstTile);
+    await expect(firstTile).toHaveClass(/\bselected\b/);
+    await expect(page.locator('#selectionDropdown')).toContainText('1 Selected');
 
-    // Multi-select with Ctrl
-    const secondTile = await page.locator('.model-tile:nth-child(2)');
-    await secondTile.click({ modifiers: ['Control'] });
+    await utils.toggleTileSelection(secondTile);
+    await expect(secondTile).toHaveClass(/\bselected\b/);
+    await expect(page.locator('#selectionDropdown')).toContainText('2 Selected');
 
-    // Should have 2 selected
-    const newSelectionCount = await page.locator('.selection-count').textContent();
-    expect(newSelectionCount).toContain('2');
+    // Toggling the first again deselects it
+    await utils.toggleTileSelection(firstTile);
+    await expect(firstTile).not.toHaveClass(/\bselected\b/);
+    await expect(page.locator('#selectionDropdown')).toContainText('1 Selected');
 
-    // Click first tile again to deselect
-    await firstTile.click();
-
-    // Should have 1 selected
-    const finalSelectionCount = await page.locator('.selection-count').textContent();
-    expect(finalSelectionCount).toContain('1');
+    // Shift+click on an indicator selects the range from the last toggled
+    // tile (the first one, index 0) through this one
+    await utils.toggleTileSelection(tiles.nth(3), ['Shift']);
+    await expect(page.locator('.model-tile.selected')).toHaveCount(4); // tiles 1-4
+    await expect(tiles.nth(4)).not.toHaveClass(/\bselected\b/);
+    await expect(page.locator('#selectionDropdown')).toContainText('4 Selected');
   });
 
   test('Tree folder view toggle', async ({ page }) => {
-    // Check if tree panel is hidden initially
-    const treePanel = await page.locator('.tree-folder-panel');
-    const initiallyVisible = await treePanel.isVisible();
+    // The panel is shown/hidden via the body.tree-panel-visible class
+    const isTreeVisible = () => page.evaluate(() => document.body.classList.contains('tree-panel-visible'));
+    const initiallyVisible = await isTreeVisible();
 
-    // Toggle tree view
+    expect(initiallyVisible).toBe(false); // fresh profile: panel starts closed
+
+    // The side tab opens the panel
     await page.click('#treeFolderToggle');
-    await page.waitForTimeout(500);
+    await expect.poll(isTreeVisible).toBe(true);
+    await expect(page.locator('#treeFolderPanel')).toBeVisible();
 
-    // Check visibility changed
-    const nowVisible = await treePanel.isVisible();
-    expect(nowVisible).toBe(!initiallyVisible);
-
-    // Toggle back
-    await page.click('#treeFolderToggle');
-    await page.waitForTimeout(500);
-
-    // Should be back to original state
-    const finallyVisible = await treePanel.isVisible();
-    expect(finallyVisible).toBe(initiallyVisible);
+    // The open panel covers the side tab; it is closed with its own X button
+    await page.click('#treeClosePanel');
+    await expect.poll(isTreeVisible).toBe(false);
   });
 
-  test('Download button functionality', async ({ page }) => {
-    // Select a file
-    const firstTile = await page.locator('.model-tile:first-child');
-    await firstTile.click();
+  test('Download selected file', async ({ page }) => {
+    // There is no standalone download button any more; downloading is an
+    // action in the selection dropdown.
+    const fileName = TEST_CONFIG.sampleFiles.jpg;
+    await utils.toggleTileSelection(fileName);
+    await expect(page.locator('#selectionDropdown')).toContainText('1 Selected');
 
-    // Download button should be enabled
-    const downloadButton = await page.locator('#downloadButton');
-    const isEnabled = await downloadButton.isEnabled();
-    expect(isEnabled).toBe(true);
-
-    // Click download (we can't verify actual download in tests)
+    await page.hover('#selectionDropdown');
     const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 5000 }).catch(() => null),
-      downloadButton.click()
+      page.waitForEvent('download'),
+      page.click('.selection-option[data-action="download"]')
     ]);
 
-    // If download started, verify filename
-    if (download) {
-      const filename = download.suggestedFilename();
-      expect(filename).toBeTruthy();
-    }
+    // A single selected file downloads directly under its own name
+    expect(download.suggestedFilename()).toBe(fileName);
   });
 
   test('Fullscreen mode navigation', async ({ page }) => {
-    // Click on a tile to open fullscreen
+    // Open fullscreen from the tile's expand button
     const fileName = TEST_CONFIG.sampleFiles.jpg;
     await utils.openFullscreen(fileName);
 
-    // Verify fullscreen is open
-    const fullscreenVisible = await page.locator('#fullscreenOverlay').isVisible();
-    expect(fullscreenVisible).toBe(true);
-
     // Check filename is displayed
-    const displayedName = await page.locator('.fullscreen-filename').textContent();
-    expect(displayedName).toBe(fileName);
+    await expect(page.locator('#fullscreenOverlay .fullscreen-filename')).toHaveText(fileName);
 
     // Close fullscreen
     await utils.closeFullscreen();
-
-    // Verify fullscreen is closed
-    const fullscreenHidden = await page.locator('#fullscreenOverlay').isHidden();
-    expect(fullscreenHidden).toBe(true);
+    await expect(page.locator('#fullscreenOverlay .fullscreen-filename')).toHaveText('');
   });
 });

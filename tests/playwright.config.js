@@ -1,10 +1,14 @@
 // playwright.config.js - Playwright configuration
 
 import { defineConfig, devices } from '@playwright/test';
+import { TEST_PORT, TEST_CONFIG } from './e2e/test_config.js';
 
 export default defineConfig({
-  testDir: '.',
+  testDir: './e2e',
   testMatch: 'test_*.js',
+  // Helpers share the test_ prefix but are not specs
+  testIgnore: ['test_utils.js', 'test_config.js'],
+  globalSetup: './e2e/global_setup.js',
 
   // Test timeout
   timeout: 30 * 1000,
@@ -33,7 +37,7 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: 'http://localhost:8080',
+    baseURL: TEST_CONFIG.serverUrl,
 
     // Collect trace when retrying the failed test
     trace: 'retain-on-failure',
@@ -63,23 +67,14 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
-    // Uncomment to test on other browsers
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
   ],
 
-  // Run your local server before starting the tests
-  // Uncomment if you want Playwright to start the server
-  // webServer: {
-  //   command: 'npm start',
-  //   port: 8080,
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  // Start the Dave server on the test port (or reuse one already running there)
+  webServer: {
+    command: 'node scripts/server.cjs',
+    cwd: '..',
+    env: { PORT: String(TEST_PORT) },
+    url: TEST_CONFIG.serverUrl,
+    reuseExistingServer: !process.env.CI,
+  },
 });
