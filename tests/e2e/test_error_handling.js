@@ -131,10 +131,9 @@ test.describe('Error Handling Tests', () => {
     await expect(errorNotification).toHaveCount(0);
   });
 
-  // BUG: openreel_bridge.js and video_editor.js report problems via
-  // window.errorHandler?.showNotification(...), but nothing ever assigns window.errorHandler
-  // (main.js only imports the module), so those notifications are silently dropped.
-  test.fixme('ErrorHandler is exposed as window.errorHandler', async ({ page }) => {
+  // openreel_bridge.js, video_editor.js and image_viewer.js report problems via
+  // window.errorHandler?.showNotification(...), so the singleton must be global.
+  test('ErrorHandler is exposed as window.errorHandler', async ({ page }) => {
     const exposed = await page.evaluate(() => typeof window.errorHandler?.showNotification === 'function');
     expect(exposed).toBe(true);
   });

@@ -345,7 +345,7 @@ export class TextHandler extends BaseAssetHandler {
             pre.innerHTML = this.renderMarkdown(text);
           } else if (isJson) {
             pre.classList.remove('text-rendered-md');
-            if (lineNumbersEnabled) pre.classList.add('text-line-numbers');
+            pre.classList.toggle('text-line-numbers', lineNumbersEnabled);
             const formatted = this.tryFormatJson(text);
             if (lineNumbersEnabled) {
               pre.innerHTML = this.addLineNumbers(formatted);
@@ -355,7 +355,7 @@ export class TextHandler extends BaseAssetHandler {
           }
         } else {
           pre.classList.remove('text-rendered-md');
-          if (lineNumbersEnabled) pre.classList.add('text-line-numbers');
+          pre.classList.toggle('text-line-numbers', lineNumbersEnabled);
           if (lineNumbersEnabled) {
             pre.innerHTML = this.addLineNumbers(text);
           } else {

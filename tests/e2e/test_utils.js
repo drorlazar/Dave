@@ -5,13 +5,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { TEST_CONFIG } from './test_config.js';
 
-// Extensions that show up as tiles with the default (all-on) type filters;
-// used to pick deterministic fixture sets. Some loadable types (.gltf, .obj,
-// .stl, .flac, .pdf, ...) match no filter category and are hidden from the
-// grid, so they are left out here.
+// Every file type Dave accepts shows up as a tile with the default (all-on)
+// type filters; used to pick deterministic fixture sets.
 const MEDIA_EXTENSIONS = new Set([
-  '.glb', '.fbx', '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp',
-  '.mp4', '.webm', '.mov', '.mp3', '.wav', '.ogg', '.ttf', '.otf', '.woff', '.woff2'
+  '.glb', '.gltf', '.fbx', '.obj', '.dae', '.stl', '.ply', '.3ds',
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp',
+  '.mp4', '.webm', '.mov', '.mp3', '.wav', '.ogg', '.flac', '.m4a',
+  '.ttf', '.otf', '.woff', '.woff2', '.pdf'
 ]);
 
 // Absolute paths of the first `count` distinct media fixtures (sorted by name)

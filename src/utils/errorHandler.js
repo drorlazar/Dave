@@ -217,3 +217,9 @@ export class ErrorHandler {
 
 // Create singleton instance
 export const errorHandler = new ErrorHandler();
+
+// Expose globally: lazily-loaded viewers (openreel_bridge, video_editor, image_viewer)
+// report through window.errorHandler?.showNotification without importing this module.
+if (typeof window !== 'undefined') {
+  window.errorHandler = errorHandler;
+}

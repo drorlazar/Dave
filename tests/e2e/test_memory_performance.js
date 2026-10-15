@@ -209,15 +209,11 @@ test.describe('Memory and Performance Tests', () => {
     expect(disposed).toBe(registered);
   });
 
-  // APP BUG: loadTileContent() (src/core/asset_loading.js) creates a fresh
-  // URL.createObjectURL(model.file) for every local tile render but never
-  // stores it on model.blobUrl or registers it with memoryManager, so neither
-  // the out-of-view cleanup nor memoryManager.cleanupTile() ever revokes it.
-  // Each renderPage() leaks one blob URL per tile (3 images -> 18 live URLs
-  // after 5 re-renders).
-  test.fixme('Blob URL cleanup', async ({ page }) => {
-    // memoryManager.blobUrls is an unused registry (nothing calls
-    // registerBlobUrl), so track real URL.createObjectURL/revokeObjectURL calls.
+  // loadTileContent() registers each local tile's blob URL with memoryManager;
+  // renderPage() tears old tiles down via memoryManager.cleanupTile(), which
+  // must revoke them rather than leak one URL per tile per render.
+  test('Blob URL cleanup', async ({ page }) => {
+    // Track real URL.createObjectURL/revokeObjectURL calls.
     await page.addInitScript(() => {
       const live = new Set();
       const create = URL.createObjectURL.bind(URL);

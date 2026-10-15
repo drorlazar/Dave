@@ -806,6 +806,16 @@ export class SettingsModal {
   static _releaseLogEntriesHTML() {
     const releases = [
       {
+        version: '2.9.2', date: 'Oct 15, 2026', title: 'Fixes Found by the Repaired Test Suite',
+        features: [
+          '.gltf, .obj, .dae, .stl, .ply, .3ds, .flac, .m4a and .pdf files now show in the grid: they matched no type filter and stayed hidden even with every filter on. glTF counts as GLB; the rest fall under Other',
+          'Files with no previewer show a generic file tile instead of a spinner that never stops',
+          'Grid tiles no longer leak a blob URL each time a page is re-rendered',
+          'Video editor and OpenReel notifications now appear (window.errorHandler was never set, so they were dropped)',
+          'Text viewer: turning line numbers off now also clears the line-number padding',
+        ]
+      },
+      {
         version: '2.9.1', date: 'Sep 8, 2026', title: 'Sidebar Scrolling & Viewer Key Fixes',
         features: [
           'Folder tree sidebar now scrolls: large folders were silently clipped at 1000px, so no scrollbar appeared and the mouse wheel did nothing',
